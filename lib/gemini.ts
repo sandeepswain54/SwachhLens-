@@ -2,133 +2,184 @@ const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const GEMINI_MODEL = 'gemini-3.6-flash';
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-export type WasteAnalysis = {
-  category: { emoji: string; label: string; confidencePercent: number };
-  composition: { material: string; level: 'High' | 'Medium' | 'Low' }[];
-  severity: { emoji: string; label: string; score: number };
-  estimatedSize: { description: string; coveragePercent: number; scaleReference: string };
-  spread: { label: string; description: string };
-  environmentalRisk: { emoji: string; level: string; description: string };
-  locationSensitivity: { emoji: string; label: string; note: string };
-  urgency: { emoji: string; label: string; recommendation: string };
-  recommendedCleanup: { emoji: string; resource: string }[];
+export const WASTE_CATEGORIES = [
+  'Overflowing Bin',
+  'Garbage Dump',
+  'Plastic Waste',
+  'Construction Debris',
+  'Organic Waste',
+  'E-Waste',
+  'Hazardous Waste',
+  'Drain Blockage',
+] as const;
+
+export type WasteCategory = (typeof WASTE_CATEGORIES)[number];
+
+export type RiskItem = {
+  level: 'Low' | 'Medium' | 'High' | 'Critical';
+  percent: number;
+  explanation: string;
 };
+
+export type WasteTypeDetection = {
+  primaryType: WasteCategory;
+  secondaryType: WasteCategory | 'None';
+  confidencePercent: number;
+  detectedObjects: string[];
+  visualEvidence: string;
+  explanation: string;
+  typeComparison: { type: WasteCategory; percent: number }[];
+};
+
+export type VolumeEstimation = {
+  size: 'Small' | 'Medium' | 'Large' | 'Very Large';
+  estimatedVolumeLiters: string;
+  coveragePercent: number;
+  scaleReference: string;
+  confidencePercent: number;
+  explanation: string;
+};
+
+export type SeverityAnalysis = {
+  level: 'Low' | 'Medium' | 'High' | 'Critical';
+  score: number;
+  priority: 'Normal' | 'High' | 'Urgent';
+  risks: {
+    wasteVolume: RiskItem;
+    location: RiskItem;
+    drainage: RiskItem;
+    hazard: RiskItem;
+    spreadRoadBlocking: RiskItem;
+  };
+  reason: string;
+};
+
+export type WasteAnalysis = {
+  wasteType: WasteTypeDetection;
+  volume: VolumeEstimation;
+  severity: SeverityAnalysis;
+};
+
+const RISK_ITEM_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    level: { type: 'STRING', enum: ['Low', 'Medium', 'High', 'Critical'] },
+    percent: { type: 'NUMBER' },
+    explanation: { type: 'STRING' },
+  },
+  required: ['level', 'percent', 'explanation'],
+} as const;
 
 const RESPONSE_SCHEMA = {
   type: 'OBJECT',
   properties: {
-    category: {
+    wasteType: {
       type: 'OBJECT',
       properties: {
-        emoji: { type: 'STRING' },
-        label: { type: 'STRING' },
+        primaryType: { type: 'STRING', enum: WASTE_CATEGORIES },
+        secondaryType: { type: 'STRING', enum: [...WASTE_CATEGORIES, 'None'] },
         confidencePercent: { type: 'NUMBER' },
-      },
-      required: ['emoji', 'label', 'confidencePercent'],
-    },
-    composition: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: {
-          material: { type: 'STRING' },
-          level: { type: 'STRING', enum: ['High', 'Medium', 'Low'] },
+        detectedObjects: { type: 'ARRAY', items: { type: 'STRING' } },
+        visualEvidence: { type: 'STRING' },
+        explanation: { type: 'STRING' },
+        typeComparison: {
+          type: 'ARRAY',
+          items: {
+            type: 'OBJECT',
+            properties: {
+              type: { type: 'STRING', enum: WASTE_CATEGORIES },
+              percent: { type: 'NUMBER' },
+            },
+            required: ['type', 'percent'],
+          },
         },
-        required: ['material', 'level'],
       },
+      required: [
+        'primaryType',
+        'secondaryType',
+        'confidencePercent',
+        'detectedObjects',
+        'visualEvidence',
+        'explanation',
+        'typeComparison',
+      ],
+    },
+    volume: {
+      type: 'OBJECT',
+      properties: {
+        size: { type: 'STRING', enum: ['Small', 'Medium', 'Large', 'Very Large'] },
+        estimatedVolumeLiters: { type: 'STRING' },
+        coveragePercent: { type: 'NUMBER' },
+        scaleReference: { type: 'STRING' },
+        confidencePercent: { type: 'NUMBER' },
+        explanation: { type: 'STRING' },
+      },
+      required: [
+        'size',
+        'estimatedVolumeLiters',
+        'coveragePercent',
+        'scaleReference',
+        'confidencePercent',
+        'explanation',
+      ],
     },
     severity: {
       type: 'OBJECT',
       properties: {
-        emoji: { type: 'STRING' },
-        label: { type: 'STRING' },
+        level: { type: 'STRING', enum: ['Low', 'Medium', 'High', 'Critical'] },
         score: { type: 'NUMBER' },
-      },
-      required: ['emoji', 'label', 'score'],
-    },
-    estimatedSize: {
-      type: 'OBJECT',
-      properties: {
-        description: { type: 'STRING' },
-        coveragePercent: { type: 'NUMBER' },
-        scaleReference: { type: 'STRING' },
-      },
-      required: ['description', 'coveragePercent', 'scaleReference'],
-    },
-    spread: {
-      type: 'OBJECT',
-      properties: {
-        label: { type: 'STRING' },
-        description: { type: 'STRING' },
-      },
-      required: ['label', 'description'],
-    },
-    environmentalRisk: {
-      type: 'OBJECT',
-      properties: {
-        emoji: { type: 'STRING' },
-        level: { type: 'STRING' },
-        description: { type: 'STRING' },
-      },
-      required: ['emoji', 'level', 'description'],
-    },
-    locationSensitivity: {
-      type: 'OBJECT',
-      properties: {
-        emoji: { type: 'STRING' },
-        label: { type: 'STRING' },
-        note: { type: 'STRING' },
-      },
-      required: ['emoji', 'label', 'note'],
-    },
-    urgency: {
-      type: 'OBJECT',
-      properties: {
-        emoji: { type: 'STRING' },
-        label: { type: 'STRING' },
-        recommendation: { type: 'STRING' },
-      },
-      required: ['emoji', 'label', 'recommendation'],
-    },
-    recommendedCleanup: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: {
-          emoji: { type: 'STRING' },
-          resource: { type: 'STRING' },
+        priority: { type: 'STRING', enum: ['Normal', 'High', 'Urgent'] },
+        risks: {
+          type: 'OBJECT',
+          properties: {
+            wasteVolume: RISK_ITEM_SCHEMA,
+            location: RISK_ITEM_SCHEMA,
+            drainage: RISK_ITEM_SCHEMA,
+            hazard: RISK_ITEM_SCHEMA,
+            spreadRoadBlocking: RISK_ITEM_SCHEMA,
+          },
+          required: ['wasteVolume', 'location', 'drainage', 'hazard', 'spreadRoadBlocking'],
         },
-        required: ['emoji', 'resource'],
+        reason: { type: 'STRING' },
       },
+      required: ['level', 'score', 'priority', 'risks', 'reason'],
     },
   },
-  required: [
-    'category',
-    'composition',
-    'severity',
-    'estimatedSize',
-    'spread',
-    'environmentalRisk',
-    'locationSensitivity',
-    'urgency',
-    'recommendedCleanup',
-  ],
+  required: ['wasteType', 'volume', 'severity'],
 } as const;
 
-const PROMPT = `You are the waste-analysis engine behind SwachhLens, a civic app citizens use to report waste dumping issues to their city. Analyze the attached photo or video of a reported waste issue and produce a structured assessment for municipal cleanup crews.
+const PROMPT = `You are the AI analysis engine behind SwachhLens, a civic app citizens use to report waste issues to their city. Analyze the attached photo or video and return a structured assessment for municipal cleanup crews.
 
-Fill in every field of the JSON response:
-- category: the type of waste issue shown (e.g. "Garbage Dump", "Overflowing Bin", "Littering", "Construction Debris") with an emoji and your confidence (0-100) that this classification is correct.
-- composition: estimate the rough mix of materials visible (Plastic, Organic waste, Paper, Other mixed waste, etc.) each rated High/Medium/Low.
-- severity: an overall severity label (e.g. "Small", "Moderate", "Large") with an emoji (🟢/🟡/🔴) and a 0-100 severity score, based primarily on the visible waste volume and apparent risk. Note: report frequency and complaint age at this location aren't available to you yet, so base this purely on what's visible.
-- estimatedSize: a short description of the waste region, your best-guess percentage of the visible frame/area covered by waste, and what you used as a scale reference (e.g. nearby objects, road width). Always describe this as an approximate visual estimate, never an exact physical measurement.
-- spread: whether the waste is contained to one spot or spread across a wider area, with a one-sentence description.
-- environmentalRisk: a risk level (e.g. "Low", "Moderate", "Moderate-High", "High") with an emoji and a short note on the specific risk (blockage, contamination, health hazard, etc.).
-- locationSensitivity: given the location context below (if provided), classify how sensitive the location is (e.g. "Residential roadside", "Isolated / low-traffic", "Near water body", "Public park") with an emoji and a short note on why that matters for prioritization.
-- urgency: an overall priority label (e.g. "LOW PRIORITY", "MEDIUM PRIORITY", "HIGH PRIORITY") with an emoji and a one-sentence recommended response.
-- recommendedCleanup: 1-3 resources a cleanup crew would likely need (e.g. "Extra workers", "Mini truck", "Protective gear"), each with a fitting emoji.
+Strict accuracy rules — follow these exactly:
+- Only ever use these waste categories: ${WASTE_CATEGORIES.join(', ')}.
+- Never invent information you cannot actually see. If something isn't visible or determinable, say so honestly in the explanation and give it a lower confidence score rather than guessing.
+- Never claim an exact waste volume — always describe it as approximate.
+- Keep every explanation short (one or two sentences) and written for an ordinary citizen, not a technical audience.
 
-Be realistic and conservative — this feeds a real municipal dashboard.`;
+1. WASTE TYPE DETECTION
+- primaryType: the single best-matching category.
+- secondaryType: a second category if a meaningful secondary waste type is also visible, otherwise exactly "None".
+- confidencePercent: 0-100 confidence in the primary type.
+- detectedObjects: a short list of specific objects/materials you can see (e.g. "plastic bottles", "food waste", "cardboard").
+- visualEvidence: a short phrase citing what you saw that supports this classification.
+- explanation: one short sentence explaining the classification.
+- typeComparison: if more than one waste type is meaningfully present, list each with an approximate relative percentage (should sum to roughly 100). If only one type is present, return a single entry at your confidence level.
+
+2. WASTE VOLUME ESTIMATION
+- size: one of Small, Medium, Large, Very Large.
+- estimatedVolumeLiters: an approximate range as a string, e.g. "120-150 L". Never a single exact number.
+- coveragePercent: your estimate of what percentage of the visible dumping area/frame is covered by waste.
+- scaleReference: something visible in the frame you used to judge scale (e.g. "Dustbin detected", "Road width"), or an empty string if nothing usable is visible.
+- confidencePercent: 0-100 confidence in this estimate.
+- explanation: one short sentence.
+
+3. SEVERITY ANALYSIS
+- level: Low, Medium, High, or Critical.
+- score: 0-100.
+- priority: Normal, High, or Urgent.
+- risks.wasteVolume / risks.drainage / risks.hazard / risks.spreadRoadBlocking: each a { level, percent (0-100), explanation } based only on what's visible in the image.
+- risks.location: same shape, but base it on the location context given below. If no location context is given, return { level: "Low", percent: 0, explanation: "Not available - no location was provided." }.
+- reason: one short sentence summarizing why this severity was assigned.`;
 
 function stripCodeFence(text: string) {
   const trimmed = text.trim();
@@ -149,7 +200,7 @@ export async function analyzeWasteMedia(params: {
 
   const locationContext = params.address
     ? `\n\nLocation context for this report: ${params.address}`
-    : '';
+    : '\n\nNo location context was provided for this report.';
 
   const response = await fetch(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
     method: 'POST',

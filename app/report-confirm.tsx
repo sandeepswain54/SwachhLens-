@@ -29,7 +29,8 @@ function formatSubmittedAt(iso: string) {
 }
 
 export default function ReportConfirmScreen() {
-  const { media, analysis, location, comments, setComments, applySubmission } = useReportFlow();
+  const { media, analysis, duplicate, location, comments, setComments, applySubmission } =
+    useReportFlow();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,7 +45,7 @@ export default function ReportConfirmScreen() {
     setError(null);
     setSubmitting(true);
     try {
-      const result = await submitReport({ media, analysis, location, comments });
+      const result = await submitReport({ media, analysis, duplicate, location, comments });
       applySubmission({
         reportId: result.reportCode,
         submittedAt: formatSubmittedAt(result.createdAt),

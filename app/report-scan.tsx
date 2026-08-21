@@ -7,6 +7,7 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useReportFlow, type ReportLocation } from '@/contexts/report-flow-context';
+import { checkForDuplicate } from '@/lib/duplicate-check';
 import { reverseGeocode } from '@/lib/geocoding';
 import { analyzeWasteMedia } from '@/lib/gemini';
 
@@ -15,6 +16,7 @@ const STEPS = [
   'Estimating volume...',
   'Checking severity...',
   'Finding location...',
+  'Checking for duplicates...',
 ];
 
 async function fetchLocation(): Promise<ReportLocation | null> {
@@ -32,7 +34,7 @@ async function fetchLocation(): Promise<ReportLocation | null> {
 }
 
 export default function ReportScanScreen() {
-  const { media, setAnalysis, setLocation } = useReportFlow();
+  const { media, setAnalysis, setDuplicate, setLocation } = useReportFlow();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [spin] = useState(() => new Animated.Value(0));
@@ -78,8 +80,18 @@ export default function ReportScanScreen() {
           address: location?.address,
         });
         if (cancelled) return;
-
         setAnalysis(analysis);
+
+        const duplicate = location
+          ? await checkForDuplicate({
+              category: analysis.wasteType.primaryType,
+              latitude: location.latitude,
+              longitude: location.longitude,
+            }).catch(() => ({ status: 'not_available' as const }))
+          : ({ status: 'not_available' as const });
+        if (cancelled) return;
+        setDuplicate(duplicate);
+
         setCompletedSteps(STEPS.length);
         router.replace('/report-result');
       } catch (err) {

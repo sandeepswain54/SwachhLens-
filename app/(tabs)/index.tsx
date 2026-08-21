@@ -1,23 +1,143 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import * as Location from 'expo-location';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const AI_FEATURES = [
-  { icon: 'brain', iconSet: 'community', color: '#1B6B3A', bg: '#e3f3ea', label: 'Detect Waste\nType' },
-  { icon: 'cube-outline', iconSet: 'ion', color: '#2563eb', bg: '#e6eefd', label: 'Estimate\nVolume' },
-  { icon: 'warning-outline', iconSet: 'ion', color: '#7c3aed', bg: '#ede6fb', label: 'Check\nSeverity' },
-  { icon: 'finger-print-outline', iconSet: 'ion', color: '#d97706', bg: '#fbead2', label: 'Find\nDuplicates' },
-] as const;
+import { reverseGeocode } from '@/lib/geocoding';
+import { getCurrentProfile, updateProfileLocation, type UserProfile } from '@/lib/profile';
+import {
+  formatRelativeTime,
+  getMyImpactStats,
+  getMyReports,
+  STATUS_COLOR,
+  STATUS_LABEL,
+  type ImpactStats,
+  type ReportRow,
+} from '@/lib/reports';
 
-const IMPACT_STATS = [
-  { icon: 'hand-left-outline', iconSet: 'ion', value: '3', label: 'Reports\nSubmitted' },
-  { icon: 'checkmark-circle-outline', iconSet: 'ion', value: '2', label: 'Reports\nResolved' },
-  { icon: 'recycle', iconSet: 'community', value: '12 kg', label: 'Waste\nRemoved' },
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good Morning';
+  if (hour < 17) return 'Good Afternoon';
+  return 'Good Evening';
+}
+
+const SEVERITY_BADGE: Record<string, { bg: string; text: string }> = {
+  Low: { bg: '#e3f3ea', text: '#1B6B3A' },
+  Medium: { bg: '#fdecd2', text: '#b9770e' },
+  High: { bg: '#fce4e1', text: '#c0392b' },
+  Critical: { bg: '#fce4e1', text: '#c0392b' },
+};
+
+const AI_FEATURES = [
+  {
+    icon: 'brain',
+    iconSet: 'community',
+    color: '#1B6B3A',
+    bg: '#e3f3ea',
+    label: 'Detect Waste\nType',
+    feature: 'detect',
+  },
+  {
+    icon: 'cube-outline',
+    iconSet: 'ion',
+    color: '#2563eb',
+    bg: '#e6eefd',
+    label: 'Estimate\nVolume',
+    feature: 'volume',
+  },
+  {
+    icon: 'warning-outline',
+    iconSet: 'ion',
+    color: '#7c3aed',
+    bg: '#ede6fb',
+    label: 'Check\nSeverity',
+    feature: 'severity',
+  },
+  {
+    icon: 'finger-print-outline',
+    iconSet: 'ion',
+    color: '#d97706',
+    bg: '#fbead2',
+    label: 'Find\nDuplicates',
+    feature: 'duplicate',
+  },
 ] as const;
 
 export default function HomeScreen() {
+  const [latestReport, setLatestReport] = useState<ReportRow | null | undefined>(undefined);
+  const [impact, setImpact] = useState<ImpactStats>({ submitted: 0, resolved: 0, wasteRemovedKg: 0 });
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [locationLabel, setLocationLabel] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+
+      async function autoDetectLocation() {
+        setLocating(true);
+        try {
+          const permission = await Location.requestForegroundPermissionsAsync();
+          if (!permission.granted) {
+            if (!cancelled) setLocationLabel('Set your location');
+            return;
+          }
+          const position = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          const address = await reverseGeocode(
+            position.coords.latitude,
+            position.coords.longitude
+          ).catch(() => null);
+
+          if (cancelled) return;
+          if (!address) {
+            setLocationLabel('Set your location');
+            return;
+          }
+          setLocationLabel(address);
+          // Save it as the profile's location so it's remembered next time
+          // and stays in sync with the Profile screen.
+          await updateProfileLocation({
+            address,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          }).catch(() => null);
+        } catch {
+          if (!cancelled) setLocationLabel('Set your location');
+        } finally {
+          if (!cancelled) setLocating(false);
+        }
+      }
+
+      async function load() {
+        const [reports, stats, currentProfile] = await Promise.all([
+          getMyReports().catch(() => []),
+          getMyImpactStats().catch(() => ({ submitted: 0, resolved: 0, wasteRemovedKg: 0 })),
+          getCurrentProfile().catch(() => null),
+        ]);
+        if (cancelled) return;
+        setLatestReport(reports[0] ?? null);
+        setImpact(stats);
+        setProfile(currentProfile);
+
+        if (currentProfile?.location) {
+          setLocationLabel(currentProfile.location.address);
+        } else {
+          autoDetectLocation();
+        }
+      }
+      load();
+      return () => {
+        cancelled = true;
+      };
+    }, [])
+  );
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -30,10 +150,6 @@ export default function HomeScreen() {
             />
 
             <View style={styles.headerRow}>
-              <Pressable hitSlop={8}>
-                <Ionicons name="menu" size={26} color="#1A2E22" />
-              </Pressable>
-
               <Pressable hitSlop={8} style={styles.bellButton}>
                 <Ionicons name="notifications-outline" size={24} color="#1A2E22" />
                 <View style={styles.bellDot} />
@@ -41,17 +157,26 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.greetingBlock}>
-              <Text style={styles.greeting}>Good Morning, Sandeep! 👋</Text>
+              <Text style={styles.greeting}>
+                {getGreeting()}
+                {profile ? `, ${profile.fullName}` : ''}
+              </Text>
 
-              <Pressable style={styles.locationRow}>
+              <Pressable
+                style={styles.locationRow}
+                onPress={() => router.push('/profile-location-picker')}>
                 <Ionicons name="location-outline" size={16} color="#1B6B3A" />
-                <Text style={styles.locationText}>Bhubaneswar, Odisha</Text>
-                <Ionicons name="chevron-down" size={16} color="#6b7770" />
+                <Text style={styles.locationText} numberOfLines={1}>
+                  {locating ? 'Detecting location...' : (locationLabel ?? 'Set your location')}
+                </Text>
+                {locating ? (
+                  <ActivityIndicator size="small" color="#1B6B3A" />
+                ) : (
+                  <Ionicons name="chevron-down" size={16} color="#6b7770" />
+                )}
               </Pressable>
 
-              <Text style={styles.greetingSubtitle}>
-                &apos;
-              </Text>
+              <Text style={styles.greetingSubtitle}>&apos;</Text>
             </View>
           </View>
 
@@ -85,7 +210,11 @@ export default function HomeScreen() {
                 {AI_FEATURES.map((feature, index) => (
                   <View key={feature.label} style={styles.aiItemWrapper}>
                     {index > 0 && <View style={styles.aiDivider} />}
-                    <View style={styles.aiItem}>
+                    <Pressable
+                      style={styles.aiItem}
+                      onPress={() =>
+                        router.push({ pathname: '/report', params: { feature: feature.feature } })
+                      }>
                       <View style={[styles.aiIconCircle, { backgroundColor: feature.bg }]}>
                         {feature.iconSet === 'community' ? (
                           <MaterialCommunityIcons
@@ -98,7 +227,7 @@ export default function HomeScreen() {
                         )}
                       </View>
                       <Text style={styles.aiLabel}>{feature.label}</Text>
-                    </View>
+                    </Pressable>
                   </View>
                 ))}
               </View>
@@ -107,48 +236,96 @@ export default function HomeScreen() {
             {/* Your Active Report */}
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionHeading}>Your Active Report</Text>
-              <Pressable>
+              <Pressable onPress={() => router.push('/(tabs)/my-reports')}>
                 <Text style={styles.linkText}>View All</Text>
               </Pressable>
             </View>
 
-            <View style={styles.activeReportCard}>
-              <View style={styles.activeReportThumb}>
-                <Ionicons name="image-outline" size={28} color="#9aa5a0" />
+            {latestReport === undefined ? null : latestReport === null ? (
+              <View style={styles.emptyReportCard}>
+                <Ionicons name="camera-outline" size={22} color="#9aa5a0" />
+                <Text style={styles.emptyReportText}>
+                  No reports yet. Tap Report Now to submit your first one.
+                </Text>
               </View>
+            ) : (
+              <View style={styles.activeReportCard}>
+                <Image
+                  source={{ uri: latestReport.media_url }}
+                  style={styles.activeReportThumb}
+                  contentFit="cover"
+                />
 
-              <View style={styles.activeReportBody}>
-                <View style={styles.badgeHigh}>
-                  <Text style={styles.badgeHighText}>HIGH</Text>
-                </View>
-                <Text style={styles.activeReportTitle}>Garbage Dump</Text>
-                <View style={styles.metaRow}>
-                  <Ionicons name="location-outline" size={13} color="#6b7770" />
-                  <Text style={styles.metaText}>Khandagiri Road, Bhubaneswar</Text>
-                </View>
-                <View style={styles.metaRow}>
-                  <Ionicons name="time-outline" size={13} color="#6b7770" />
-                  <Text style={styles.metaText}>Reported 20 min ago</Text>
-                </View>
-              </View>
-
-              <View style={styles.activeReportAside}>
-                <View style={styles.assignedRow}>
-                  <View style={styles.badgeAssigned}>
-                    <Text style={styles.badgeAssignedText}>Team Assigned</Text>
+                <View style={styles.activeReportBody}>
+                  <View
+                    style={[
+                      styles.badgeHigh,
+                      {
+                        backgroundColor: (
+                          SEVERITY_BADGE[latestReport.severity_label] ?? SEVERITY_BADGE.Low
+                        ).bg,
+                      },
+                    ]}>
+                    <Text
+                      style={[
+                        styles.badgeHighText,
+                        {
+                          color: (SEVERITY_BADGE[latestReport.severity_label] ?? SEVERITY_BADGE.Low)
+                            .text,
+                        },
+                      ]}>
+                      {latestReport.severity_label.toUpperCase()}
+                    </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color="#9aa5a0" />
+                  <Text style={styles.activeReportTitle}>{latestReport.category}</Text>
+                  <View style={styles.metaRow}>
+                    <Ionicons name="location-outline" size={13} color="#6b7770" />
+                    <Text style={styles.metaText} numberOfLines={1}>
+                      {latestReport.address}
+                    </Text>
+                  </View>
+                  <View style={styles.metaRow}>
+                    <Ionicons name="time-outline" size={13} color="#6b7770" />
+                    <Text style={styles.metaText}>
+                      Reported {formatRelativeTime(latestReport.created_at)}
+                    </Text>
+                  </View>
                 </View>
-                <Pressable style={styles.trackButton}>
-                  <Text style={styles.trackButtonText}>Track Status</Text>
-                </Pressable>
+
+                <View style={styles.activeReportAside}>
+                  <View style={styles.assignedRow}>
+                    <View
+                      style={[
+                        styles.badgeAssigned,
+                        { backgroundColor: STATUS_COLOR[latestReport.status].bg },
+                      ]}>
+                      <Text
+                        style={[
+                          styles.badgeAssignedText,
+                          { color: STATUS_COLOR[latestReport.status].text },
+                        ]}>
+                        {STATUS_LABEL[latestReport.status]}
+                      </Text>
+                    </View>
+                  </View>
+                  <Pressable
+                    style={styles.trackButton}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/report-status',
+                        params: { id: latestReport.id },
+                      })
+                    }>
+                    <Text style={styles.trackButtonText}>Track Status</Text>
+                  </Pressable>
+                </View>
               </View>
-            </View>
+            )}
 
             {/* Waste Hotspots Near You */}
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionHeading}>Waste Hotspots Near You</Text>
-              <Pressable>
+              <Pressable onPress={() => router.push('/waste-hotspots')}>
                 <Text style={styles.linkText}>View Map</Text>
               </Pressable>
             </View>
@@ -205,19 +382,27 @@ export default function HomeScreen() {
             <Text style={styles.sectionHeading}>Your Impact</Text>
             <View style={styles.card}>
               <View style={styles.impactRow}>
-                {IMPACT_STATS.map((stat) => (
-                  <View key={stat.label} style={styles.impactItem}>
-                    <View style={styles.impactIconCircle}>
-                      {stat.iconSet === 'community' ? (
-                        <MaterialCommunityIcons name={stat.icon as never} size={20} color="#1B6B3A" />
-                      ) : (
-                        <Ionicons name={stat.icon as never} size={20} color="#1B6B3A" />
-                      )}
-                    </View>
-                    <Text style={styles.impactValue}>{stat.value}</Text>
-                    <Text style={styles.impactLabel}>{stat.label}</Text>
+                <View style={styles.impactItem}>
+                  <View style={styles.impactIconCircle}>
+                    <Ionicons name="hand-left-outline" size={20} color="#1B6B3A" />
                   </View>
-                ))}
+                  <Text style={styles.impactValue}>{impact.submitted}</Text>
+                  <Text style={styles.impactLabel}>{'Reports\nSubmitted'}</Text>
+                </View>
+                <View style={styles.impactItem}>
+                  <View style={styles.impactIconCircle}>
+                    <Ionicons name="checkmark-circle-outline" size={20} color="#1B6B3A" />
+                  </View>
+                  <Text style={styles.impactValue}>{impact.resolved}</Text>
+                  <Text style={styles.impactLabel}>{'Reports\nResolved'}</Text>
+                </View>
+                <View style={styles.impactItem}>
+                  <View style={styles.impactIconCircle}>
+                    <MaterialCommunityIcons name="recycle" size={20} color="#1B6B3A" />
+                  </View>
+                  <Text style={styles.impactValue}>{impact.wasteRemovedKg} kg</Text>
+                  <Text style={styles.impactLabel}>{'Waste\nRemoved'}</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -247,7 +432,7 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     paddingHorizontal: 20,
     paddingTop: 8,
   },
@@ -397,6 +582,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#1B6B3A',
+  },
+  emptyReportCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    padding: 16,
+    marginTop: -8,
+  },
+  emptyReportText: {
+    flex: 1,
+    fontSize: 12.5,
+    color: '#6b7770',
   },
   activeReportCard: {
     flexDirection: 'row',

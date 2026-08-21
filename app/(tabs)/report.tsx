@@ -1,12 +1,58 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useReportFlow } from '@/contexts/report-flow-context';
 
 type PickedAsset = ImagePicker.ImagePickerAsset;
+
+const FEATURE_CONFIG = {
+  detect: {
+    title: 'Detect Waste Type',
+    question: 'Capture the waste so AI can detect its type',
+    description: "We'll identify what kind of waste this is.",
+    icon: 'brain',
+    iconSet: 'community',
+    color: '#1B6B3A',
+    bg: '#e3f3ea',
+  },
+  volume: {
+    title: 'Estimate Volume',
+    question: 'Capture the waste so AI can estimate its volume',
+    description: "We'll estimate how much waste is present.",
+    icon: 'cube-outline',
+    iconSet: 'ion',
+    color: '#2563eb',
+    bg: '#e6eefd',
+  },
+  severity: {
+    title: 'Check Severity',
+    question: 'Capture the waste so AI can check its severity',
+    description: "We'll assess how urgent this issue is.",
+    icon: 'warning-outline',
+    iconSet: 'ion',
+    color: '#7c3aed',
+    bg: '#ede6fb',
+  },
+  duplicate: {
+    title: 'Find Duplicates',
+    question: 'Capture the waste so AI can check for duplicates',
+    description: "We'll check if this has already been reported nearby.",
+    icon: 'finger-print-outline',
+    iconSet: 'ion',
+    color: '#d97706',
+    bg: '#fbead2',
+  },
+} as const;
+
+type FeatureKey = keyof typeof FEATURE_CONFIG;
+
+const DEFAULT_CONFIG = {
+  title: 'Report Waste',
+  question: 'What did you want to report?',
+};
 
 const OPTIONS = [
   {
@@ -30,7 +76,11 @@ const OPTIONS = [
 ] as const;
 
 export default function ReportScreen() {
+  const { feature } = useLocalSearchParams<{ feature?: string }>();
   const { setMedia } = useReportFlow();
+
+  const activeFeature =
+    feature && feature in FEATURE_CONFIG ? FEATURE_CONFIG[feature as FeatureKey] : null;
 
   function goToScan(asset: PickedAsset, kind: 'image' | 'video') {
     setMedia({
@@ -90,17 +140,33 @@ export default function ReportScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Pressable
-          hitSlop={8}
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}>
-          <Ionicons name="arrow-back" size={22} color="#1A2E22" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Report Waste</Text>
-        <View style={{ width: 22 }} />
+        <Text style={styles.headerTitle}>{activeFeature?.title ?? DEFAULT_CONFIG.title}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.question}>What did you want to report?</Text>
+        {activeFeature && (
+          <View style={[styles.featureBanner, { backgroundColor: activeFeature.bg }]}>
+            <View style={[styles.featureIconCircle, { backgroundColor: '#ffffff' }]}>
+              {activeFeature.iconSet === 'community' ? (
+                <MaterialCommunityIcons
+                  name={activeFeature.icon as never}
+                  size={22}
+                  color={activeFeature.color}
+                />
+              ) : (
+                <Ionicons name={activeFeature.icon as never} size={22} color={activeFeature.color} />
+              )}
+            </View>
+            <View style={styles.featureBannerText}>
+              <Text style={[styles.featureBannerTitle, { color: activeFeature.color }]}>
+                {activeFeature.title}
+              </Text>
+              <Text style={styles.featureBannerDescription}>{activeFeature.description}</Text>
+            </View>
+          </View>
+        )}
+
+        <Text style={styles.question}>{activeFeature?.question ?? DEFAULT_CONFIG.question}</Text>
 
         <View style={styles.optionList}>
           {OPTIONS.map((option) => (
@@ -142,7 +208,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 4,
@@ -160,6 +226,32 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#1A2E22',
+  },
+  featureBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 16,
+    padding: 14,
+  },
+  featureIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureBannerText: {
+    flex: 1,
+  },
+  featureBannerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  featureBannerDescription: {
+    marginTop: 2,
+    fontSize: 12,
+    color: '#57635d',
   },
   optionList: {
     gap: 12,

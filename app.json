@@ -39,7 +39,12 @@
       ],
       "expo-font",
       "expo-image",
-      "expo-status-bar",
+      [
+        "expo-status-bar",
+        {
+          "hidden": true
+        }
+      ],
       "expo-web-browser",
       [
         "expo-image-picker",

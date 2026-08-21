@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react';
 
+import type { DuplicateCheck } from '@/lib/duplicate-check';
 import type { WasteAnalysis } from '@/lib/gemini';
 
 export type ReportMedia = {
@@ -17,12 +18,14 @@ export type ReportLocation = {
 type ReportFlowState = {
   media: ReportMedia | null;
   analysis: WasteAnalysis | null;
+  duplicate: DuplicateCheck | null;
   location: ReportLocation | null;
   comments: string;
   reportId: string | null;
   submittedAt: string | null;
   setMedia: (media: ReportMedia | null) => void;
   setAnalysis: (analysis: WasteAnalysis | null) => void;
+  setDuplicate: (duplicate: DuplicateCheck | null) => void;
   setLocation: (location: ReportLocation | null) => void;
   setComments: (comments: string) => void;
   applySubmission: (result: { reportId: string; submittedAt: string }) => void;
@@ -34,6 +37,7 @@ const ReportFlowContext = createContext<ReportFlowState | null>(null);
 export function ReportFlowProvider({ children }: PropsWithChildren) {
   const [media, setMedia] = useState<ReportMedia | null>(null);
   const [analysis, setAnalysis] = useState<WasteAnalysis | null>(null);
+  const [duplicate, setDuplicate] = useState<DuplicateCheck | null>(null);
   const [location, setLocation] = useState<ReportLocation | null>(null);
   const [comments, setComments] = useState('');
   const [reportId, setReportId] = useState<string | null>(null);
@@ -43,12 +47,14 @@ export function ReportFlowProvider({ children }: PropsWithChildren) {
     () => ({
       media,
       analysis,
+      duplicate,
       location,
       comments,
       reportId,
       submittedAt,
       setMedia,
       setAnalysis,
+      setDuplicate,
       setLocation,
       setComments,
       applySubmission: (result) => {
@@ -58,13 +64,14 @@ export function ReportFlowProvider({ children }: PropsWithChildren) {
       reset: () => {
         setMedia(null);
         setAnalysis(null);
+        setDuplicate(null);
         setLocation(null);
         setComments('');
         setReportId(null);
         setSubmittedAt(null);
       },
     }),
-    [media, analysis, location, comments, reportId, submittedAt]
+    [media, analysis, duplicate, location, comments, reportId, submittedAt]
   );
 
   return <ReportFlowContext.Provider value={value}>{children}</ReportFlowContext.Provider>;
