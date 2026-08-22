@@ -13,9 +13,15 @@ import Login from '@/pages/Login';
 import Placeholder from '@/pages/Placeholder';
 import TeamsAssignments from '@/pages/TeamsAssignments';
 import Vehicles from '@/pages/Vehicles';
+import WasteHotspots from '@/pages/WasteHotspots';
 
 const OTHER_NAV_ITEMS = [...MAIN_NAV, ...SYSTEM_NAV].filter(
-  (item) => item.path !== '/' && item.path !== '/teams' && item.path !== '/complaints' && item.path !== '/vehicles'
+  (item) =>
+    item.path !== '/' &&
+    item.path !== '/teams' &&
+    item.path !== '/complaints' &&
+    item.path !== '/vehicles' &&
+    item.path !== '/waste-hotspots'
 );
 
 function ProtectedArea() {
@@ -54,6 +60,7 @@ export default function App() {
               <Route path="/complaints" element={<Complaints />} />
               <Route path="/teams" element={<TeamsAssignments />} />
               <Route path="/vehicles" element={<Vehicles />} />
+              <Route path="/waste-hotspots" element={<WasteHotspots />} />
               {OTHER_NAV_ITEMS.map((item) => (
                 <Route
                   key={item.path}
