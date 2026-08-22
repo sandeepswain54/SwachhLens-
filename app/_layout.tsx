@@ -27,6 +27,7 @@ export default function RootLayout() {
           <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
           <Stack.Screen name="reset-password" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(field)" options={{ headerShown: false }} />
           <Stack.Screen name="report-scan" options={{ headerShown: false }} />
           <Stack.Screen name="report-result" options={{ headerShown: false }} />
           <Stack.Screen name="report-confirm" options={{ headerShown: false }} />

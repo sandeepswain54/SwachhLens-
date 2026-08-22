@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getMyTeam } from '@/lib/field-team';
 import { supabase } from '@/lib/supabase';
 
 type AccountType = 'user' | 'fieldTeam';
@@ -29,14 +30,33 @@ export default function LoginScreen() {
       email: email.trim(),
       password,
     });
-    setLoading(false);
 
     if (signInError) {
+      setLoading(false);
       setError(signInError.message);
       return;
     }
 
-    router.replace('/(tabs)');
+    // A "team" login only exists as a `teams` row created by an admin (see
+    // admin_panel's create-team-member function) — that's the only signal
+    // that tells a field-team account apart from a citizen account, so
+    // cross-check it against whichever tab the user picked and bounce them
+    // back out if they don't match.
+    const team = await getMyTeam().catch(() => null);
+    setLoading(false);
+
+    if (accountType === 'fieldTeam' && !team) {
+      await supabase.auth.signOut();
+      setError('This account is not registered as a field team. Use the User tab instead.');
+      return;
+    }
+    if (accountType === 'user' && team) {
+      await supabase.auth.signOut();
+      setError('This is a field team login. Switch to the Field Team tab to continue.');
+      return;
+    }
+
+    router.replace(team ? '/(field)' : '/(tabs)');
   }
 
   return (

@@ -32,6 +32,10 @@ refresh needed.
      `profiles.is_blocked` / `blocked_at` / `blocked_by` (a mirror of the real
      Supabase Auth ban state) and turns on realtime for `profiles`, behind the
      Users page's Block/Unblock action.
+   - [`supabase/006_field_team_notifications.sql`](supabase/006_field_team_notifications.sql)
+     — adds a `notifications` table and a trigger that writes one every time
+     an assignment is created/reassigned to a team, behind the mobile app's
+     Field Team Home screen bell icon.
 2. **Deploy the edge functions** (`create-team-member` is already done for the
    live project; `set-user-blocked` and `list-users-auth-meta` are new — only
    needed again if you're pointing this at a different Supabase project):
