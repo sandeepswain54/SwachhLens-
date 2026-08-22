@@ -2,6 +2,7 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-d
 
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { ProfilesProvider } from '@/contexts/ProfilesContext';
 import { ReportsProvider } from '@/contexts/ReportsContext';
 import { TeamsProvider } from '@/contexts/TeamsContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -14,6 +15,7 @@ import Login from '@/pages/Login';
 import Placeholder from '@/pages/Placeholder';
 import ReportsInsights from '@/pages/ReportsInsights';
 import TeamsAssignments from '@/pages/TeamsAssignments';
+import Users from '@/pages/Users';
 import Vehicles from '@/pages/Vehicles';
 import WasteHotspots from '@/pages/WasteHotspots';
 
@@ -25,7 +27,8 @@ const OTHER_NAV_ITEMS = [...MAIN_NAV, ...SYSTEM_NAV].filter(
     item.path !== '/vehicles' &&
     item.path !== '/waste-hotspots' &&
     item.path !== '/ai-analytics' &&
-    item.path !== '/reports-insights'
+    item.path !== '/reports-insights' &&
+    item.path !== '/users'
 );
 
 function ProtectedArea() {
@@ -67,6 +70,14 @@ export default function App() {
               <Route path="/waste-hotspots" element={<WasteHotspots />} />
               <Route path="/ai-analytics" element={<AIAnalytics />} />
               <Route path="/reports-insights" element={<ReportsInsights />} />
+              <Route
+                path="/users"
+                element={
+                  <ProfilesProvider>
+                    <Users />
+                  </ProfilesProvider>
+                }
+              />
               {OTHER_NAV_ITEMS.map((item) => (
                 <Route
                   key={item.path}

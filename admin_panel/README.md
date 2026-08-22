@@ -25,16 +25,26 @@ refresh needed.
      so "Reported By" can show a real name) and `reports.escalated`, plus two
      narrowly-scoped functions (`set_report_escalated`, `mark_report_resolved`)
      behind the Complaints page's Escalate / Mark Resolved actions.
-2. **Deploy the `create-team-member` edge function** (already done for the
-   live project — only needed again if you're pointing this at a different
-   Supabase project):
+   - [`supabase/004_vehicles.sql`](supabase/004_vehicles.sql) — adds the
+     `vehicles`, `vehicle_activity`, and `vehicle_maintenance` tables behind
+     the Vehicles page.
+   - [`supabase/005_users_page.sql`](supabase/005_users_page.sql) — adds
+     `profiles.is_blocked` / `blocked_at` / `blocked_by` (a mirror of the real
+     Supabase Auth ban state) and turns on realtime for `profiles`, behind the
+     Users page's Block/Unblock action.
+2. **Deploy the edge functions** (`create-team-member` is already done for the
+   live project; `set-user-blocked` and `list-users-auth-meta` are new — only
+   needed again if you're pointing this at a different Supabase project):
    ```bash
    npx supabase link --project-ref <ref>
    npx supabase functions deploy create-team-member --project-ref <ref>
+   npx supabase functions deploy set-user-blocked --project-ref <ref>
+   npx supabase functions deploy list-users-auth-meta --project-ref <ref>
    ```
-   This has to be an edge function, not a client-side call: creating another
-   user's login needs the service-role key, which must never ship in the
-   browser bundle. It runs with that key server-side only, and refuses
+   These have to be edge functions, not client-side calls: creating another
+   user's login, banning/unbanning a login, and reading `auth.users` metadata
+   all need the service-role key, which must never ship in the browser
+   bundle. Each runs with that key server-side only, and refuses
    unauthenticated callers.
 3. **Install & configure:**
    ```bash
@@ -129,12 +139,47 @@ tables and updates live, same realtime pattern as the other pages:
   `003_complaints_page.sql` — see that file's comments for why they're
   SECURITY DEFINER functions rather than a direct table update.
 
+## Users page
+
+Everything here reads the real `profiles`/`teams`/`reports` tables and
+updates live (profiles realtime is new in `005_users_page.sql`):
+
+- **User type** is derived, not stored: a `profiles` row whose id matches a
+  `teams.auth_user_id` is a **Field Team User** (role "Team Leader", zone =
+  the team's zone); every other profile is a **Citizen User** (role "Citizen
+  User", zone = the locality of their most recent submitted report, same
+  heuristic as the Complaints page's Location filter). There's no separate
+  "Municipal Staff" table or admin-role system yet (see Known limitations
+  below and `create-team-member`'s comments), so those are the only two real
+  user types shown — unlike a generic reference mock, this page doesn't
+  invent a third bucket with no backing data.
+- **Email**, not Phone: the schema has no phone-number field for citizens
+  (only `teams.phone`), so the table shows each account's real email instead
+  of a phone column that would be blank for most rows.
+- **Block / Unblock** calls the `set-user-blocked` edge function
+  (service-role only — see that file's comments), which bans/unbans the
+  account at the Supabase Auth level via `auth.admin.updateUserById`. This is
+  a real, immediate effect: a blocked citizen or field-team login is
+  rejected on their very next sign-in attempt, mobile app or admin panel,
+  until an admin unblocks them. `profiles.is_blocked` mirrors that ban state
+  for instant, realtime-subscribable reads.
+- **Last Sign-In** (shown in the user detail modal) comes from
+  `auth.users.last_sign_in_at`, fetched via the read-only
+  `list-users-auth-meta` edge function — best-effort: the page still works
+  off `profiles` alone if that call fails.
+- **Recent User Activity** merges "Complaint Submitted" (real, all-time,
+  from `reports.created_at`) with new-registration and block/unblock events
+  observed via realtime while the tab is open — the latter are session-only,
+  same limitation as the Dashboard/Teams "Recent Activity" panels below.
+
 ## Known limitations (by design, for this pass)
 
 - **No admin roles** — sign-in accepts any SwachhLens account (citizen or
   team), matching the RLS policy the mobile app's community map already
   relies on. Add a real admin-role check before giving this URL to anyone
-  outside your team, and before letting field teams create other teams.
+  outside your team, and before letting field teams create other teams or
+  block/unblock other users (`set-user-blocked` currently only requires
+  *some* signed-in account, same as `create-team-member`).
 - **Mobile "Field Team" login** now actually signs in (it was previously a
   no-op stub), but it lands on the same citizen tabs as everyone else — there
   is no dedicated field-team mobile screen (task list, status updates, etc.)
