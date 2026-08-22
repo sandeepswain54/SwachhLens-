@@ -1,3 +1,4 @@
+import { hasModernAnalysis } from './analysis';
 import { deriveLocality, duplicateFlagged } from './complaints';
 import { MSW_KG_PER_LITER, parseVolumeLitersMidpoint } from './hotspots';
 import type { ReportRow } from './reports';
@@ -36,14 +37,16 @@ export type AIOverviewStats = {
 // stats.ts's snapshotAt, so week-over-week deltas are real history.
 function snapshotAt(reports: ReportRow[], cutoffMs: number) {
   const existing = reports.filter((r) => new Date(r.created_at).getTime() <= cutoffMs);
-  const analyzed = existing.filter((r) => r.analysis !== null);
+  // `hasModernAnalysis` (not a bare `!== null` check) — some early reports
+  // carry an older, differently-shaped analysis blob (see lib/analysis.ts).
+  const analyzed = existing.filter((r) => hasModernAnalysis(r.analysis));
 
   const classificationScores = analyzed
     .map((r) => r.category_confidence)
     .filter((v): v is number => v !== null);
 
   const volumeScores = analyzed
-    .map((r) => r.analysis?.volume.confidencePercent)
+    .map((r) => r.analysis?.volume?.confidencePercent)
     .filter((v): v is number => v !== undefined && v !== null);
 
   const duplicateChecked = analyzed.filter((r) => r.analysis?.duplicate && r.analysis.duplicate.status !== 'not_available');
@@ -241,14 +244,14 @@ export function computeConfidenceTrend(reports: ReportRow[], days = 7): Confiden
 
     const dayReports = reports.filter((r) => {
       const t = new Date(r.created_at).getTime();
-      return t >= dayStart.getTime() && t <= dayEnd.getTime() && r.analysis !== null;
+      return t >= dayStart.getTime() && t <= dayEnd.getTime() && hasModernAnalysis(r.analysis);
     });
 
     const classification = avg(
       dayReports.map((r) => r.category_confidence).filter((v): v is number => v !== null)
     );
     const volume = avg(
-      dayReports.map((r) => r.analysis?.volume.confidencePercent).filter((v): v is number => v !== undefined && v !== null)
+      dayReports.map((r) => r.analysis?.volume?.confidencePercent).filter((v): v is number => v !== undefined && v !== null)
     );
     const severity = avg(dayReports.map((r) => r.severity_score));
 

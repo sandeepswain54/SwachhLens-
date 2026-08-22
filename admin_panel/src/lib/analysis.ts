@@ -65,3 +65,15 @@ export type ReportAnalysis = {
   severity: SeverityAnalysis;
   duplicate: DuplicateCheck | null;
 };
+
+// Some early reports were written by an older analysis pipeline whose JSON
+// shape doesn't match ReportAnalysis at all (no `wasteType`/`volume` keys —
+// different fields entirely, e.g. `category`/`urgency`/`spread`). The `analysis`
+// column's `ReportAnalysis | null` type only promises "null or the current
+// shape", which isn't true for those legacy rows, so anything reading
+// `analysis.volume`/`analysis.wasteType` must go through this guard rather
+// than trusting `analysis !== null` — that's what was crashing the AI
+// Analytics page (and would crash the Complaints AI tab) on old data.
+export function hasModernAnalysis(analysis: ReportAnalysis | null): analysis is ReportAnalysis {
+  return !!analysis && 'wasteType' in analysis && 'volume' in analysis;
+}

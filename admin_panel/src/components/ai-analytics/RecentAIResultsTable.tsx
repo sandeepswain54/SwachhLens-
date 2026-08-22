@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { hasModernAnalysis } from '@/lib/analysis';
 import { SEVERITY_BADGE } from '@/lib/badges';
 import { formatRelativeTime, type ReportRow } from '@/lib/reports';
 
@@ -36,7 +37,10 @@ export function RecentAIResultsTable({ reports }: { reports: ReportRow[] }) {
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<ReportRow | null>(null);
 
-  const analyzed = useMemo(() => reports.filter((r) => r.analysis !== null), [reports]);
+  // hasModernAnalysis, not a bare `analysis !== null` check — some early
+  // reports carry an older, differently-shaped analysis blob that this
+  // table (and the modal it opens) can't render.
+  const analyzed = useMemo(() => reports.filter((r) => hasModernAnalysis(r.analysis)), [reports]);
   const pageCount = Math.max(1, Math.ceil(analyzed.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
   const pageRows = analyzed.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
@@ -92,7 +96,9 @@ export function RecentAIResultsTable({ reports }: { reports: ReportRow[] }) {
                   )}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2.5 text-slate-500 dark:text-slate-400">
-                  {r.analysis ? `${r.analysis.volume.size} (${r.analysis.volume.estimatedVolumeLiters})` : '—'}
+                  {hasModernAnalysis(r.analysis)
+                    ? `${r.analysis.volume.size} (${r.analysis.volume.estimatedVolumeLiters})`
+                    : '—'}
                 </td>
                 <td className="px-3 py-2.5">
                   <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${SEVERITY_BADGE[r.severity_label]}`}>

@@ -1,5 +1,6 @@
 import { AlertTriangle, Box, CheckCircle2, Sparkles } from 'lucide-react';
 
+import { hasModernAnalysis } from '@/lib/analysis';
 import type { ReportRow } from '@/lib/reports';
 
 import { SeverityGauge } from '../SeverityGauge';
@@ -17,7 +18,11 @@ function StatBlock({ label, value, sub }: { label: string; value: string; sub?: 
 export function AIAnalysisTab({ report }: { report: ReportRow }) {
   const analysis = report.analysis;
 
-  if (!analysis) {
+  // hasModernAnalysis, not a bare truthiness check — some early reports
+  // carry an older, differently-shaped analysis blob (no wasteType/volume
+  // keys) that this view can't render; treat those the same as "no
+  // analysis recorded" rather than crashing on the missing fields.
+  if (!hasModernAnalysis(analysis)) {
     return (
       <div className="flex flex-col items-center gap-2 py-10 text-center">
         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-white/5">
