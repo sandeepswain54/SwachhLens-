@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -22,7 +23,11 @@ export default function CheckEmailScreen() {
     setError(null);
     setInfo(null);
     setResending(true);
-    const { error: resendError } = await supabase.auth.resend({ type: 'signup', email });
+    const { error: resendError } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: Linking.createURL('verify-email', { scheme: 'swachhlens' }) },
+    });
     setResending(false);
 
     if (resendError) {

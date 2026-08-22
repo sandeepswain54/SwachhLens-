@@ -1,14 +1,28 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getMyTeam } from '@/lib/field-team';
 import { supabase } from '@/lib/supabase';
 
 type AccountType = 'user' | 'fieldTeam';
+
+const ILLUSTRATION_HEIGHT = 240;
 
 export default function LoginScreen() {
   const [accountType, setAccountType] = useState<AccountType>('user');
@@ -17,6 +31,33 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const illustrationHeight = useRef(new Animated.Value(ILLUSTRATION_HEIGHT)).current;
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      Animated.timing(illustrationHeight, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      Animated.timing(illustrationHeight, {
+        toValue: ILLUSTRATION_HEIGHT,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [illustrationHeight]);
 
   async function handleLogin() {
     if (!email.trim() || !password) {
@@ -62,98 +103,123 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.illustrationContainer}>
-          <Image
-            source={require('@/assets/images/loginlogo.png')}
-            style={styles.illustration}
-            contentFit="cover"
-          />
-        </View>
-
-        <View style={styles.sheet}>
-          <Text style={styles.title}>Welcome Back!</Text>
-          <Text style={styles.subtitle}>Log in to continue</Text>
-
-          <View style={styles.tabRow}>
-            <Pressable style={styles.tab} onPress={() => setAccountType('user')}>
-              <Text style={[styles.tabText, accountType === 'user' && styles.tabTextActive]}>
-                User
-              </Text>
-              {accountType === 'user' && <View style={styles.tabIndicator} />}
-            </Pressable>
-            <Pressable style={styles.tab} onPress={() => setAccountType('fieldTeam')}>
-              <Text style={[styles.tabText, accountType === 'fieldTeam' && styles.tabTextActive]}>
-                Field Team
-              </Text>
-              {accountType === 'fieldTeam' && <View style={styles.tabIndicator} />}
-            </Pressable>
-          </View>
-
-          <View style={styles.form}>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="mail-outline" size={20} color="#8a9590" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#9aa5a0"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
+        <KeyboardAvoidingView
+          style={styles.safeArea}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive">
+            <Animated.View style={[styles.illustrationContainer, { height: illustrationHeight }]}>
+              <Image
+                source={require('@/assets/images/loginlogo.png')}
+                style={styles.illustration}
+                contentFit="cover"
               />
-            </View>
+            </Animated.View>
 
-            <View style={styles.inputWrapper}>
-              <Ionicons
-                name="lock-closed-outline"
-                size={20}
-                color="#8a9590"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor="#9aa5a0"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-              />
-              <Pressable onPress={() => setShowPassword((prev) => !prev)}>
-                <Ionicons
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={20}
-                  color="#8a9590"
-                />
-              </Pressable>
-            </View>
+            <View style={styles.sheet}>
+              <Text style={styles.title}>Welcome Back!</Text>
+              <Text style={styles.subtitle}>Log in to continue</Text>
 
-            <Pressable style={styles.forgotPassword} onPress={() => router.push('/forgot-password')}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </Pressable>
-
-            {error && <Text style={styles.errorText}>{error}</Text>}
-
-            <Pressable
-              style={[styles.loginButton, loading && styles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={loading}>
-              {loading ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text style={styles.loginButtonText}>Login</Text>
-              )}
-            </Pressable>
-
-            {accountType === 'user' && (
-              <View style={styles.signUpRow}>
-                <Text style={styles.signUpText}>Don&apos;t have an account? </Text>
-                <Pressable onPress={() => router.push('/signup')}>
-                  <Text style={styles.signUpLink}>Sign Up</Text>
+              <View style={styles.tabRow}>
+                <Pressable style={styles.tab} onPress={() => setAccountType('user')}>
+                  <Text style={[styles.tabText, accountType === 'user' && styles.tabTextActive]}>
+                    User
+                  </Text>
+                  {accountType === 'user' && <View style={styles.tabIndicator} />}
+                </Pressable>
+                <Pressable style={styles.tab} onPress={() => setAccountType('fieldTeam')}>
+                  <Text
+                    style={[styles.tabText, accountType === 'fieldTeam' && styles.tabTextActive]}>
+                    Field Team
+                  </Text>
+                  {accountType === 'fieldTeam' && <View style={styles.tabIndicator} />}
                 </Pressable>
               </View>
-            )}
-          </View>
-        </View>
+
+              <View style={styles.form}>
+                <View style={styles.inputWrapper}>
+                  <Ionicons
+                    name="mail-outline"
+                    size={20}
+                    color="#8a9590"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    placeholderTextColor="#9aa5a0"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="email-address"
+                    textContentType="emailAddress"
+                    returnKeyType="next"
+                    value={email}
+                    onChangeText={setEmail}
+                  />
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={20}
+                    color="#8a9590"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    placeholderTextColor="#9aa5a0"
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="password"
+                    returnKeyType="done"
+                    onSubmitEditing={handleLogin}
+                    value={password}
+                    onChangeText={setPassword}
+                  />
+                  <Pressable onPress={() => setShowPassword((prev) => !prev)}>
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color="#8a9590"
+                    />
+                  </Pressable>
+                </View>
+
+                <Pressable
+                  style={styles.forgotPassword}
+                  onPress={() => router.push('/forgot-password')}>
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </Pressable>
+
+                {error && <Text style={styles.errorText}>{error}</Text>}
+
+                <Pressable
+                  style={[styles.loginButton, loading && styles.buttonDisabled]}
+                  onPress={handleLogin}
+                  disabled={loading}>
+                  {loading ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <Text style={styles.loginButtonText}>Login</Text>
+                  )}
+                </Pressable>
+
+                {accountType === 'user' && (
+                  <View style={styles.signUpRow}>
+                    <Text style={styles.signUpText}>Don&apos;t have an account? </Text>
+                    <Pressable onPress={() => router.push('/signup')}>
+                      <Text style={styles.signUpLink}>Sign Up</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
@@ -167,8 +233,10 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+  },
   illustrationContainer: {
-    height: 240,
     backgroundColor: '#eaf3ef',
     overflow: 'hidden',
   },
@@ -177,13 +245,14 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   sheet: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#ffffff',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     marginTop: -20,
     paddingHorizontal: 24,
     paddingTop: 28,
+    paddingBottom: 24,
   },
   title: {
     fontSize: 26,

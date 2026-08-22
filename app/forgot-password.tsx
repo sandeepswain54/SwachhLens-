@@ -2,9 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,12 +22,41 @@ import { useCooldown } from '@/hooks/use-cooldown';
 import { parseAuthError } from '@/lib/auth-errors';
 import { supabase } from '@/lib/supabase';
 
+const ILLUSTRATION_HEIGHT = 220;
+
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [cooldown, setCooldown] = useCooldown();
+
+  const illustrationHeight = useRef(new Animated.Value(ILLUSTRATION_HEIGHT)).current;
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      Animated.timing(illustrationHeight, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      Animated.timing(illustrationHeight, {
+        toValue: ILLUSTRATION_HEIGHT,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [illustrationHeight]);
 
   async function handleSendResetLink() {
     if (cooldown > 0) return;
@@ -52,101 +85,110 @@ export default function ForgotPasswordScreen() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled">
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#1B6B3A" />
-          </Pressable>
-
-          <View style={styles.header}>
-            <Text style={styles.title}>Forgot Password?</Text>
-            <Text style={styles.subtitle}>
-              Don&apos;t worry! Enter your email and we&apos;ll send you a link to reset your
-              password.
-            </Text>
-          </View>
-
-          <View style={styles.illustrationContainer}>
-            <Image
-              source={require('@/assets/images/loginlogo.png')}
-              style={styles.illustration}
-              contentFit="cover"
-            />
-          </View>
-
-          <View style={styles.sheet}>
-            <Text style={styles.label}>Email</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="mail-outline" size={20} color="#1B6B3A" />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor="#9aa5a0"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                editable={!sent}
-                value={email}
-                onChangeText={(text) => {
-                  setError(null);
-                  setEmail(text);
-                }}
-              />
-            </View>
-
-            {sent ? (
-              <View style={styles.infoRow}>
-                <Ionicons name="checkmark-circle-outline" size={18} color="#1B6B3A" />
-                <Text style={styles.infoText}>
-                  Reset link sent! Check your inbox and follow the link to set a new password.
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.infoRow}>
-                <Ionicons name="information-circle-outline" size={18} color="#1B6B3A" />
-                <Text style={styles.infoText}>
-                  We will send a password reset link to your email.
-                </Text>
-              </View>
-            )}
-
-            {error && <Text style={styles.errorText}>{error}</Text>}
-
-            <Pressable
-              style={[
-                styles.sendButton,
-                (loading || sent || cooldown > 0) && styles.buttonDisabled,
-              ]}
-              onPress={handleSendResetLink}
-              disabled={loading || sent || cooldown > 0}>
-              {loading ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text style={styles.sendButtonText}>
-                  {sent
-                    ? 'Link Sent'
-                    : cooldown > 0
-                      ? `Try again in ${cooldown}s`
-                      : 'Send Reset Link'}
-                </Text>
-              )}
+        <KeyboardAvoidingView
+          style={styles.safeArea}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive">
+            <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color="#1B6B3A" />
             </Pressable>
 
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
+            <View style={styles.header}>
+              <Text style={styles.title}>Forgot Password?</Text>
+              <Text style={styles.subtitle}>
+                Don&apos;t worry! Enter your email and we&apos;ll send you a link to reset your
+                password.
+              </Text>
             </View>
 
-            <View style={styles.rememberRow}>
-              <Ionicons name="lock-closed-outline" size={18} color="#1B6B3A" />
-              <Text style={styles.rememberText}>Remember your password? </Text>
-              <Pressable onPress={() => router.replace('/login')}>
-                <Text style={styles.loginLink}>Login</Text>
+            <Animated.View style={[styles.illustrationContainer, { height: illustrationHeight }]}>
+              <Image
+                source={require('@/assets/images/loginlogo.png')}
+                style={styles.illustration}
+                contentFit="cover"
+              />
+            </Animated.View>
+
+            <View style={styles.sheet}>
+              <Text style={styles.label}>Email</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="mail-outline" size={20} color="#1B6B3A" />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#9aa5a0"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  returnKeyType="send"
+                  onSubmitEditing={handleSendResetLink}
+                  editable={!sent}
+                  value={email}
+                  onChangeText={(text) => {
+                    setError(null);
+                    setEmail(text);
+                  }}
+                />
+              </View>
+
+              {sent ? (
+                <View style={styles.infoRow}>
+                  <Ionicons name="checkmark-circle-outline" size={18} color="#1B6B3A" />
+                  <Text style={styles.infoText}>
+                    Reset link sent! Check your inbox and follow the link to set a new password.
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.infoRow}>
+                  <Ionicons name="information-circle-outline" size={18} color="#1B6B3A" />
+                  <Text style={styles.infoText}>
+                    We will send a password reset link to your email.
+                  </Text>
+                </View>
+              )}
+
+              {error && <Text style={styles.errorText}>{error}</Text>}
+
+              <Pressable
+                style={[
+                  styles.sendButton,
+                  (loading || sent || cooldown > 0) && styles.buttonDisabled,
+                ]}
+                onPress={handleSendResetLink}
+                disabled={loading || sent || cooldown > 0}>
+                {loading ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <Text style={styles.sendButtonText}>
+                    {sent
+                      ? 'Link Sent'
+                      : cooldown > 0
+                        ? `Try again in ${cooldown}s`
+                        : 'Send Reset Link'}
+                  </Text>
+                )}
               </Pressable>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>OR</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <View style={styles.rememberRow}>
+                <Ionicons name="lock-closed-outline" size={18} color="#1B6B3A" />
+                <Text style={styles.rememberText}>Remember your password? </Text>
+                <Pressable onPress={() => router.replace('/login')}>
+                  <Text style={styles.loginLink}>Login</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
@@ -187,7 +229,6 @@ const styles = StyleSheet.create({
     color: '#5a655f',
   },
   illustrationContainer: {
-    height: 220,
     marginTop: 12,
     overflow: 'hidden',
   },

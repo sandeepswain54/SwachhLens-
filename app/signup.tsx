@@ -56,7 +56,7 @@ export default function SignUpScreen() {
       password,
       options: {
         data: { full_name: fullName.trim(), role: 'user' },
-        emailRedirectTo: Linking.createURL('verify-email'),
+        emailRedirectTo: Linking.createURL('verify-email', { scheme: 'swachhlens' }),
       },
     });
     setLoading(false);

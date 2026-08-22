@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -15,7 +14,11 @@ export default function WelcomeScreen() {
 
       <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
         <View style={styles.topContent}>
-          <Ionicons name="leaf" size={44} color="#1F8A46" />
+          <Image
+            source={require('@/assets/images/applogo.png')}
+            style={styles.appLogo}
+            contentFit="contain"
+          />
 
           <Text style={styles.logo}>
             <Text style={styles.logoDark}>Swachh</Text>
@@ -52,6 +55,10 @@ const styles = StyleSheet.create({
   topContent: {
     alignItems: 'center',
     marginTop: 40,
+  },
+  appLogo: {
+    width: 64,
+    height: 64,
   },
   logo: {
     marginTop: 10,
