@@ -79,6 +79,19 @@ export function formatAbsoluteDateTime(iso: string): string {
   });
 }
 
+// Same as formatAbsoluteDateTime but without the year — for feeds like
+// Reports & Insights' "Recent Insights" list, where every item is recent
+// enough that the year would just be noise.
+export function formatShortDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 // Pulls everything the dashboard needs. Reports come in steadily rather than
 // in bulk, so a single bounded fetch (most recent 2000) comfortably covers
 // the dashboard's trend window and tables without pagination.

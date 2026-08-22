@@ -12,6 +12,7 @@ import Complaints from '@/pages/Complaints';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 import Placeholder from '@/pages/Placeholder';
+import ReportsInsights from '@/pages/ReportsInsights';
 import TeamsAssignments from '@/pages/TeamsAssignments';
 import Vehicles from '@/pages/Vehicles';
 import WasteHotspots from '@/pages/WasteHotspots';
@@ -23,7 +24,8 @@ const OTHER_NAV_ITEMS = [...MAIN_NAV, ...SYSTEM_NAV].filter(
     item.path !== '/complaints' &&
     item.path !== '/vehicles' &&
     item.path !== '/waste-hotspots' &&
-    item.path !== '/ai-analytics'
+    item.path !== '/ai-analytics' &&
+    item.path !== '/reports-insights'
 );
 
 function ProtectedArea() {
@@ -64,6 +66,7 @@ export default function App() {
               <Route path="/vehicles" element={<Vehicles />} />
               <Route path="/waste-hotspots" element={<WasteHotspots />} />
               <Route path="/ai-analytics" element={<AIAnalytics />} />
+              <Route path="/reports-insights" element={<ReportsInsights />} />
               {OTHER_NAV_ITEMS.map((item) => (
                 <Route
                   key={item.path}
