@@ -6,13 +6,14 @@ import { ReportsProvider } from '@/contexts/ReportsContext';
 import { TeamsProvider } from '@/contexts/TeamsContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { MAIN_NAV, SYSTEM_NAV } from '@/lib/nav';
+import Complaints from '@/pages/Complaints';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 import Placeholder from '@/pages/Placeholder';
 import TeamsAssignments from '@/pages/TeamsAssignments';
 
 const OTHER_NAV_ITEMS = [...MAIN_NAV, ...SYSTEM_NAV].filter(
-  (item) => item.path !== '/' && item.path !== '/teams'
+  (item) => item.path !== '/' && item.path !== '/teams' && item.path !== '/complaints'
 );
 
 function ProtectedArea() {
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route element={<ProtectedArea />}>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/complaints" element={<Complaints />} />
               <Route path="/teams" element={<TeamsAssignments />} />
               {OTHER_NAV_ITEMS.map((item) => (
                 <Route

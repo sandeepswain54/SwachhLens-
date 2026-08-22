@@ -17,14 +17,19 @@ function formatDateRange(days: number): string {
 export function Topbar({
   title,
   subtitle,
+  breadcrumb,
   searchQuery,
   onSearchChange,
+  searchPlaceholder,
   action,
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
+  /** When provided, renders as a "Dashboard > Complaints > All Complaints" trail instead of `subtitle`. */
+  breadcrumb?: string[];
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
   action?: ReactNode;
 }) {
   const { theme, toggleTheme } = useTheme();
@@ -52,7 +57,20 @@ export function Topbar({
             {connected ? 'Live' : 'Connecting'}
           </span>
         </div>
-        <p className="truncate text-[13px] text-slate-500 dark:text-slate-400">{subtitle}</p>
+        {breadcrumb ? (
+          <p className="truncate text-[13px] text-slate-400">
+            {breadcrumb.map((crumb, i) => (
+              <span key={crumb}>
+                {i > 0 && <span className="mx-1.5 text-slate-300">/</span>}
+                <span className={i === breadcrumb.length - 1 ? 'text-slate-500 dark:text-slate-300' : ''}>
+                  {crumb}
+                </span>
+              </span>
+            ))}
+          </p>
+        ) : (
+          <p className="truncate text-[13px] text-slate-500 dark:text-slate-400">{subtitle}</p>
+        )}
       </div>
 
       <div className="hidden items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-600 dark:border-white/10 dark:text-slate-300 md:flex">
@@ -65,7 +83,7 @@ export function Topbar({
         <input
           value={searchQuery ?? ''}
           onChange={(e) => onSearchChange?.(e.target.value)}
-          placeholder="Search anything..."
+          placeholder={searchPlaceholder ?? 'Search anything...'}
           className="w-40 bg-transparent text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200 lg:w-56"
         />
       </label>

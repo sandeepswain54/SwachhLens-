@@ -1,3 +1,4 @@
+import type { ReportAnalysis } from './analysis';
 import { supabase } from './supabase';
 
 export type ReportStatus = 'submitted' | 'team_assigned' | 'in_progress' | 'resolved';
@@ -39,14 +40,19 @@ export type ReportRow = {
   severity_score: number;
   urgency_label: string;
   status: ReportStatus;
-  analysis: unknown;
+  analysis: ReportAnalysis | null;
   created_at: string;
   resolved_at: string | null;
   user_id: string;
+  // Added by 003_complaints_page.sql for the Complaints page's Escalate
+  // action / Escalated tab & badge — there was no escalation concept before.
+  escalated: boolean;
+  escalated_at: string | null;
+  escalated_by: string | null;
 };
 
 const REPORT_COLUMNS =
-  'id, report_code, media_url, media_type, latitude, longitude, address, comments, category, category_confidence, severity_label, severity_score, urgency_label, status, created_at, resolved_at, user_id';
+  'id, report_code, media_url, media_type, latitude, longitude, address, comments, category, category_confidence, severity_label, severity_score, urgency_label, status, analysis, created_at, resolved_at, user_id, escalated, escalated_at, escalated_by';
 
 export function formatRelativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -57,6 +63,20 @@ export function formatRelativeTime(iso: string): string {
   if (hours < 24) return `${hours} ${hours === 1 ? 'hr' : 'hrs'} ago`;
   const days = Math.round(hours / 24);
   return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+}
+
+// Full date/time for the Complaint Details panel, where "Reported At" needs
+// to read as an absolute timestamp rather than the relative time used in
+// tables (formatRelativeTime above).
+export function formatAbsoluteDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
 }
 
 // Pulls everything the dashboard needs. Reports come in steadily rather than
@@ -97,4 +117,21 @@ export function subscribeToReportChanges(handlers: {
   return () => {
     supabase.removeChannel(channel);
   };
+}
+
+// Both call the SECURITY DEFINER functions from 003_complaints_page.sql
+// rather than updating `reports` directly — there's no general "authenticated
+// users can update reports" policy (see that migration's comments), so an RPC
+// call is the only way the Complaints page can escalate or resolve a report.
+export async function setReportEscalated(reportId: string, escalated: boolean): Promise<void> {
+  const { error } = await supabase.rpc('set_report_escalated', {
+    p_report_id: reportId,
+    p_escalated: escalated,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function markReportResolved(reportId: string): Promise<void> {
+  const { error } = await supabase.rpc('mark_report_resolved', { p_report_id: reportId });
+  if (error) throw new Error(error.message);
 }

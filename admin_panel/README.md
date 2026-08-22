@@ -20,6 +20,11 @@ refresh needed.
      Assignments page (auto-generated `TEAM-01`/`ASN-1200`-style codes,
      realtime, and a trigger that keeps a report's `status` in sync with its
      assignment automatically).
+   - [`supabase/003_complaints_page.sql`](supabase/003_complaints_page.sql) —
+     adds a `profiles` table (auto-populated from `auth.users` via trigger,
+     so "Reported By" can show a real name) and `reports.escalated`, plus two
+     narrowly-scoped functions (`set_report_escalated`, `mark_report_resolved`)
+     behind the Complaints page's Escalate / Mark Resolved actions.
 2. **Deploy the `create-team-member` edge function** (already done for the
    live project — only needed again if you're pointing this at a different
    Supabase project):
@@ -101,6 +106,29 @@ live (via the same `postgres_changes` realtime pattern as the Dashboard):
   placeholder), so this is a lightweight stand-in rather than a fabricated
   fleet module.
 
+## Complaints page
+
+Everything here reads and writes the real `reports`/`assignments`/`profiles`
+tables and updates live, same realtime pattern as the other pages:
+
+- **All Complaints** table — tabs (All/New/Pending/In Progress/Resolved/
+  Escalated/Duplicates) plus Status/Priority/Category/Location/Date Range
+  filters, a checkbox column with real bulk Escalate/Mark Resolved actions,
+  and pagination. "Duplicates" and per-row Priority come from the AI
+  analysis and severity already stored on each report; "Location" groups
+  reports by a best-effort locality parsed out of the free-text reverse-
+  geocoded address (there's no dedicated zone column on `reports`).
+- **Complaint Details** panel — Details / AI Analysis / Timeline / Assignment
+  / History tabs for whichever complaint is selected. AI Analysis renders
+  the actual Gemini output stored in `reports.analysis` (waste category,
+  volume estimate, severity gauge, duplicate check) — complaints submitted
+  before that column existed show an explicit "not available" state rather
+  than a fabricated one. Assignment reuses the same `assignTeamToReport` /
+  `updateAssignmentStatus` calls as the Teams & Assignments page.
+- **Escalate** and **Mark Resolved** call the two functions added in
+  `003_complaints_page.sql` — see that file's comments for why they're
+  SECURITY DEFINER functions rather than a direct table update.
+
 ## Known limitations (by design, for this pass)
 
 - **No admin roles** — sign-in accepts any SwachhLens account (citizen or
@@ -111,9 +139,8 @@ live (via the same `postgres_changes` realtime pattern as the Dashboard):
   no-op stub), but it lands on the same citizen tabs as everyone else — there
   is no dedicated field-team mobile screen (task list, status updates, etc.)
   yet. That's a separate, bigger piece of mobile-app work.
-- **"Reported By"** is omitted from the complaints table — the anon key can't
-  read `auth.users`, so there's no citizen name to show without a `profiles`
-  table.
+- **Complaint Location filter** is a heuristic (parsed from the reverse-
+  geocoded address string), not a real zone/ward field.
 - **Recent Activity** (on both pages) is session-only (it's driven by
   realtime events seen while the tab is open), not a persisted audit log.
 

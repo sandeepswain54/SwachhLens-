@@ -1,3 +1,4 @@
+import type { ComplaintStatus } from './complaints';
 import type { ReportStatus, SeverityLabel } from './reports';
 import type { Priority } from './team-stats';
 import type { AssignmentStatus, TeamStatus } from './teams';
@@ -14,6 +15,11 @@ export const STATUS_BADGE: Record<ReportStatus, string> = {
   team_assigned: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
   in_progress: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400',
   resolved: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
+};
+
+export const COMPLAINT_STATUS_BADGE: Record<ComplaintStatus, string> = {
+  ...STATUS_BADGE,
+  escalated: 'bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400',
 };
 
 export const TEAM_STATUS_BADGE: Record<TeamStatus, string> = {

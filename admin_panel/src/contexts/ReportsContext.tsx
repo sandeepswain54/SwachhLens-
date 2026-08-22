@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 
+import { getAllProfiles, type ProfileRow } from '@/lib/profiles';
 import { getAllReports, subscribeToReportChanges, type ReportRow } from '@/lib/reports';
 
 export type ActivityEvent = {
@@ -12,6 +13,10 @@ export type ActivityEvent = {
 
 type ReportsContextValue = {
   reports: ReportRow[];
+  // Who submitted each report — see 003_complaints_page.sql's `profiles`
+  // table. Fetched once (not realtime): a citizen's name essentially never
+  // changes mid-session, so this isn't worth a second subscription.
+  profiles: ProfileRow[];
   loading: boolean;
   error: string | null;
   activity: ActivityEvent[];
@@ -24,6 +29,7 @@ const MAX_ACTIVITY = 30;
 
 export function ReportsProvider({ children }: { children: ReactNode }) {
   const [reports, setReports] = useState<ReportRow[]>([]);
+  const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activity, setActivity] = useState<ActivityEvent[]>([]);
@@ -43,6 +49,17 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setError(err.message);
         setLoading(false);
+      });
+
+    // Fetched separately and failure isolated: a admin who hasn't run
+    // 003_complaints_page.sql yet should still get a working Dashboard/Teams
+    // page, just without citizen names on the Complaints page.
+    getAllProfiles()
+      .then((profileRows) => {
+        if (!cancelled) setProfiles(profileRows);
+      })
+      .catch(() => {
+        if (!cancelled) setProfiles([]);
       });
 
     const unsubscribe = subscribeToReportChanges({
@@ -93,7 +110,7 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <ReportsContext.Provider value={{ reports, loading, error, activity, connected }}>
+    <ReportsContext.Provider value={{ reports, profiles, loading, error, activity, connected }}>
       {children}
     </ReportsContext.Provider>
   );
