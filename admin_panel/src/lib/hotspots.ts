@@ -198,7 +198,9 @@ export function computeHotspotWeekOverWeek(
   return result;
 }
 
-function parseVolumeLitersMidpoint(range: string | undefined): number | null {
+// Exported for reuse by ai-stats.ts (Volume Estimation chart on the AI
+// Analytics page needs the same liters -> tons conversion).
+export function parseVolumeLitersMidpoint(range: string | undefined): number | null {
   if (!range) return null;
   const numbers = range.match(/\d+(\.\d+)?/g);
   if (!numbers || numbers.length === 0) return null;
@@ -210,7 +212,7 @@ function parseVolumeLitersMidpoint(range: string | undefined): number | null {
 // liter estimate into a tonnage figure for the insights tile — uncompacted
 // mixed waste is commonly cited around 250-350 kg/m^3 (0.25-0.35 kg/L); 0.3
 // is the midpoint. This is an approximation, not a measured weight.
-const MSW_KG_PER_LITER = 0.3;
+export const MSW_KG_PER_LITER = 0.3;
 
 export type HotspotInsights = {
   mostCommonCategory: string | null;

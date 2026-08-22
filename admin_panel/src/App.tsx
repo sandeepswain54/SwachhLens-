@@ -7,6 +7,7 @@ import { TeamsProvider } from '@/contexts/TeamsContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { VehiclesProvider } from '@/contexts/VehiclesContext';
 import { MAIN_NAV, SYSTEM_NAV } from '@/lib/nav';
+import AIAnalytics from '@/pages/AIAnalytics';
 import Complaints from '@/pages/Complaints';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
@@ -21,7 +22,8 @@ const OTHER_NAV_ITEMS = [...MAIN_NAV, ...SYSTEM_NAV].filter(
     item.path !== '/teams' &&
     item.path !== '/complaints' &&
     item.path !== '/vehicles' &&
-    item.path !== '/waste-hotspots'
+    item.path !== '/waste-hotspots' &&
+    item.path !== '/ai-analytics'
 );
 
 function ProtectedArea() {
@@ -61,6 +63,7 @@ export default function App() {
               <Route path="/teams" element={<TeamsAssignments />} />
               <Route path="/vehicles" element={<Vehicles />} />
               <Route path="/waste-hotspots" element={<WasteHotspots />} />
+              <Route path="/ai-analytics" element={<AIAnalytics />} />
               {OTHER_NAV_ITEMS.map((item) => (
                 <Route
                   key={item.path}
