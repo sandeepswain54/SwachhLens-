@@ -6,7 +6,6 @@ import {
   History,
   LayoutDashboard,
   MapPinned,
-  Recycle,
   Settings,
   Truck,
   Users2,
@@ -26,7 +25,6 @@ export const MAIN_NAV: NavItem[] = [
   { label: 'Waste Hotspots', path: '/waste-hotspots', icon: MapPinned },
   { label: 'Teams & Assignments', path: '/teams', icon: UsersRound },
   { label: 'Vehicles', path: '/vehicles', icon: Truck },
-  { label: 'Recycling Partners', path: '/recycling-partners', icon: Recycle },
   { label: 'Reports & Insights', path: '/reports-insights', icon: FileBarChart2 },
 ];
 
