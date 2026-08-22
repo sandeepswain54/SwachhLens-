@@ -32,7 +32,9 @@ export const TEAM_STATUS_BADGE: Record<TeamStatus, string> = {
 export const ASSIGNMENT_STATUS_BADGE: Record<AssignmentStatus | 'unassigned', string> = {
   unassigned: 'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-300',
   pending: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
+  on_the_way: 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400',
   in_progress: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400',
+  pending_review: 'bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400',
   completed: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
 };
 

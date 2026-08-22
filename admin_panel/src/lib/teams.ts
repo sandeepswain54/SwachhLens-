@@ -103,11 +103,20 @@ export async function createTeam(params: CreateTeamParams): Promise<CreateTeamRe
 
 // ---------------- assignments ----------------
 
-export type AssignmentStatus = 'pending' | 'in_progress' | 'completed';
+// pending -> on_the_way -> in_progress -> pending_review -> completed. The
+// three middle statuses are driven entirely by the mobile field app (Task
+// Details -> On the Way -> Work in Progress); this admin panel only ever
+// sets 'pending' (Assign Team), a manual 'in_progress'/'completed' override
+// (the Start/Complete quick-advance button), or the review outcome of a
+// 'pending_review' submission (Approve / Request Changes below). See
+// admin_panel/supabase/007_task_review_feedback.sql.
+export type AssignmentStatus = 'pending' | 'on_the_way' | 'in_progress' | 'pending_review' | 'completed';
 
 export const ASSIGNMENT_STATUS_LABEL: Record<AssignmentStatus, string> = {
   pending: 'Pending',
+  on_the_way: 'On the Way',
   in_progress: 'In Progress',
+  pending_review: 'Pending Review',
   completed: 'Completed',
 };
 
@@ -122,11 +131,17 @@ export type AssignmentRow = {
   assigned_at: string | null;
   started_at: string | null;
   completed_at: string | null;
+  submitted_for_review_at: string | null;
+  progress_photos: string[];
+  progress_notes: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  review_note: string | null;
   created_at: string;
 };
 
 const ASSIGNMENT_COLUMNS =
-  'id, assignment_code, report_id, team_id, vehicle_id, vehicle_label, status, assigned_at, started_at, completed_at, created_at';
+  'id, assignment_code, report_id, team_id, vehicle_id, vehicle_label, status, assigned_at, started_at, completed_at, submitted_for_review_at, progress_photos, progress_notes, reviewed_at, reviewed_by, review_note, created_at';
 
 export async function getAllAssignments(): Promise<AssignmentRow[]> {
   const { data, error } = await supabase
@@ -189,5 +204,42 @@ export async function assignTeamToReport(params: {
 
 export async function updateAssignmentStatus(id: string, status: AssignmentStatus): Promise<void> {
   const { error } = await supabase.from('assignments').update({ status }).eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
+// ---------------- pending_review actions ----------------
+
+// A plain client update (not an RPC) is enough here, same as
+// updateAssignmentStatus above — `assignments` already grants "authenticated
+// users can update" (002_teams_assignments.sql), and
+// trg_sync_assignment_update / trg_notify_team_on_review
+// (007_task_review_feedback.sql) do the rest: mirroring the report's status
+// to "resolved" and notifying the team, respectively.
+export async function approveAssignment(id: string): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from('assignments')
+    .update({ status: 'completed', reviewed_at: new Date().toISOString(), reviewed_by: user?.id ?? null })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
+// Sends a pending_review submission back to the team as 'in_progress' so
+// they can fix and resubmit — the trigger notifies them with `note`.
+export async function requestAssignmentChanges(id: string, note: string): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from('assignments')
+    .update({
+      status: 'in_progress',
+      review_note: note.trim() || null,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: user?.id ?? null,
+    })
+    .eq('id', id);
   if (error) throw new Error(error.message);
 }

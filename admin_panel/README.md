@@ -36,6 +36,14 @@ refresh needed.
      — adds a `notifications` table and a trigger that writes one every time
      an assignment is created/reassigned to a team, behind the mobile app's
      Field Team Home screen bell icon.
+   - [`supabase/007_task_review_feedback.sql`](supabase/007_task_review_feedback.sql)
+     — adds two `assignments.status` values (`on_the_way`, `pending_review`)
+     and review/evidence columns behind the mobile app's Task Details -> On
+     the Way -> Work in Progress flow; an `assignment-media` storage bucket
+     for the field team's "after" photos; a trigger that notifies a team when
+     their submission is approved or sent back; and a `feedback` table (plus
+     its own notify trigger) behind the citizen star-rating flow and the new
+     Feedback admin page.
 2. **Deploy the edge functions** (`create-team-member` is already done for the
    live project; `set-user-blocked` and `list-users-auth-meta` are new — only
    needed again if you're pointing this at a different Supabase project):
@@ -119,6 +127,16 @@ live (via the same `postgres_changes` realtime pattern as the Dashboard):
   there's no fleet/vehicles table yet (the Vehicles nav page is still a
   placeholder), so this is a lightweight stand-in rather than a fabricated
   fleet module.
+- **Pending Review tab** — once a field team submits evidence photos from
+  the mobile app (`on_the_way` -> `in_progress` -> `pending_review`, entirely
+  driven by their device), the assignment lands here. **Review** opens a
+  before/after photo comparison (the citizen's original report photo next to
+  the team's submitted photos) and two actions: **Approve** (-> `completed`,
+  report becomes `resolved`, team gets a "Task approved" notification) or
+  **Request Changes** (-> back to `in_progress` with an optional note, team
+  gets a "Changes requested" notification). The **Start/Complete**
+  quick-advance button on other rows is a manual override for teams not
+  using the mobile flow — it never touches a `pending_review` row.
 
 ## Complaints page
 
@@ -176,6 +194,22 @@ updates live (profiles realtime is new in `005_users_page.sql`):
   observed via realtime while the tab is open — the latter are session-only,
   same limitation as the Dashboard/Teams "Recent Activity" panels below.
 
+## Feedback page
+
+Reads the real `feedback` table (citizen star-ratings submitted from
+`app/report-feedback.tsx` once a report is `resolved`) and updates live:
+
+- **Stat cards** — Average Rating, Total Reviews, This Week, and Needs
+  Attention (1-2★ count), all computed directly from the rows that exist (no
+  synthetic baseline — Average Rating shows "—" until at least one review is
+  submitted).
+- **All Reviews** table — report code/category, team, star rating, comment,
+  and relative date, with a rating filter and search.
+- **Rating Distribution** — a real 5★-to-1★ count breakdown of every review.
+- Submitting a review also writes a "New review" row to the field team's
+  `notifications` (same bell icon as an assignment notification) via
+  `notify_team_on_feedback()` in `007_task_review_feedback.sql`.
+
 ## Known limitations (by design, for this pass)
 
 - **No admin roles** — sign-in accepts any SwachhLens account (citizen or
@@ -184,10 +218,16 @@ updates live (profiles realtime is new in `005_users_page.sql`):
   outside your team, and before letting field teams create other teams or
   block/unblock other users (`set-user-blocked` currently only requires
   *some* signed-in account, same as `create-team-member`).
-- **Mobile "Field Team" login** now actually signs in (it was previously a
-  no-op stub), but it lands on the same citizen tabs as everyone else — there
-  is no dedicated field-team mobile screen (task list, status updates, etc.)
-  yet. That's a separate, bigger piece of mobile-app work.
+- **Mobile "Field Team" login** now signs in to a dedicated `(field)` tab
+  group with its own Home/task flow (Task Details -> On the Way -> Work in
+  Progress -> submitted for review), separate from the citizen tabs. Only
+  the Home tab and the task flow itself are built; Tasks/Map/Reports/Profile
+  in the field app's own tab bar are still "Coming Soon" placeholders.
+- **Live tracking route** (the field app's "On the Way" map) uses the free
+  public OSRM demo router for a real road-snapped route + ETA — it's a
+  best-effort service with no uptime guarantee, not a paid routing API, so a
+  failed request just falls back silently (no route line / ETA shown) rather
+  than breaking the screen.
 - **Complaint Location filter** is a heuristic (parsed from the reverse-
   geocoded address string), not a real zone/ward field.
 - **Recent Activity** (on both pages) is session-only (it's driven by

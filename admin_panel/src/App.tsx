@@ -2,6 +2,7 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-d
 
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { FeedbackProvider } from '@/contexts/FeedbackContext';
 import { ProfilesProvider } from '@/contexts/ProfilesContext';
 import { ReportsProvider } from '@/contexts/ReportsContext';
 import { TeamsProvider } from '@/contexts/TeamsContext';
@@ -11,6 +12,7 @@ import { MAIN_NAV, SYSTEM_NAV } from '@/lib/nav';
 import AIAnalytics from '@/pages/AIAnalytics';
 import Complaints from '@/pages/Complaints';
 import Dashboard from '@/pages/Dashboard';
+import Feedback from '@/pages/Feedback';
 import Login from '@/pages/Login';
 import Placeholder from '@/pages/Placeholder';
 import ReportsInsights from '@/pages/ReportsInsights';
@@ -28,7 +30,8 @@ const OTHER_NAV_ITEMS = [...MAIN_NAV, ...SYSTEM_NAV].filter(
     item.path !== '/waste-hotspots' &&
     item.path !== '/ai-analytics' &&
     item.path !== '/reports-insights' &&
-    item.path !== '/users'
+    item.path !== '/users' &&
+    item.path !== '/feedback'
 );
 
 function ProtectedArea() {
@@ -76,6 +79,14 @@ export default function App() {
                   <ProfilesProvider>
                     <Users />
                   </ProfilesProvider>
+                }
+              />
+              <Route
+                path="/feedback"
+                element={
+                  <FeedbackProvider>
+                    <Feedback />
+                  </FeedbackProvider>
                 }
               />
               {OTHER_NAV_ITEMS.map((item) => (

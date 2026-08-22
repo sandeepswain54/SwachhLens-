@@ -5,6 +5,7 @@ import {
   Gauge,
   LayoutDashboard,
   MapPinned,
+  Star,
   Truck,
   Users2,
   UsersRound,
@@ -28,5 +29,6 @@ export const MAIN_NAV: NavItem[] = [
 
 export const SYSTEM_NAV: NavItem[] = [
   { label: 'Users', path: '/users', icon: Users2 },
+  { label: 'Feedback', path: '/feedback', icon: Star },
   { label: 'Notifications', path: '/notifications', icon: Bell },
 ];

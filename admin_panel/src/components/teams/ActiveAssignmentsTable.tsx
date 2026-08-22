@@ -9,8 +9,17 @@ import { ASSIGNMENT_STATUS_LABEL, updateAssignmentStatus, type AssignmentRow, ty
 import { buildAssignmentViews, type AssignmentView } from '@/lib/team-stats';
 
 import { AssignTeamModal } from './AssignTeamModal';
+import { ReviewAssignmentModal } from './ReviewAssignmentModal';
 
-type TabValue = 'all' | 'pending' | 'in_progress' | 'completed';
+type TabValue = 'all' | 'pending' | 'in_progress' | 'pending_review' | 'completed';
+
+// The 'pending' tab bucket also covers 'on_the_way' and 'unassigned' — both
+// are "not actively being worked yet" from an admin triage point of view,
+// and splitting them into their own tabs would fragment a page that's
+// already 4 tabs wide for no real benefit.
+function inPendingBucket(status: AssignmentView['status']): boolean {
+  return status === 'pending' || status === 'on_the_way' || status === 'unassigned';
+}
 
 const PAGE_SIZE = 8;
 
@@ -28,6 +37,7 @@ export function ActiveAssignmentsTable({
   const [page, setPage] = useState(1);
   const [viewing, setViewing] = useState<ReportRow | null>(null);
   const [assigning, setAssigning] = useState<AssignmentView | null>(null);
+  const [reviewing, setReviewing] = useState<AssignmentView | null>(null);
   const { vehicles } = useVehicles();
 
   const views = useMemo(() => buildAssignmentViews(reports, assignments, teams, 80), [reports, assignments, teams]);
@@ -35,8 +45,9 @@ export function ActiveAssignmentsTable({
   const counts = useMemo(
     () => ({
       all: views.length,
-      pending: views.filter((v) => v.status === 'pending' || v.status === 'unassigned').length,
+      pending: views.filter((v) => inPendingBucket(v.status)).length,
       in_progress: views.filter((v) => v.status === 'in_progress').length,
+      pending_review: views.filter((v) => v.status === 'pending_review').length,
       completed: views.filter((v) => v.status === 'completed').length,
     }),
     [views]
@@ -45,8 +56,9 @@ export function ActiveAssignmentsTable({
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return views.filter((v) => {
-      if (tab === 'pending' && v.status !== 'pending' && v.status !== 'unassigned') return false;
+      if (tab === 'pending' && !inPendingBucket(v.status)) return false;
       if (tab === 'in_progress' && v.status !== 'in_progress') return false;
+      if (tab === 'pending_review' && v.status !== 'pending_review') return false;
       if (tab === 'completed' && v.status !== 'completed') return false;
       if (
         q &&
@@ -68,9 +80,15 @@ export function ActiveAssignmentsTable({
     setPage(1);
   }
 
+  // Manual override for assignments not (yet) using the mobile field-team
+  // flow — collapses pending/on_the_way/unassigned into a single "Start"
+  // step (there's no admin-side equivalent of the live "On the Way" map) and
+  // treats "Complete" as a direct admin sign-off, bypassing review. A
+  // pending_review assignment never reaches this — see the Review button
+  // below instead.
   async function advance(view: AssignmentView) {
     if (!view.assignment) return;
-    const next = view.status === 'pending' ? 'in_progress' : 'completed';
+    const next = view.status === 'in_progress' ? 'completed' : 'in_progress';
     await updateAssignmentStatus(view.assignment.id, next);
   }
 
@@ -78,6 +96,7 @@ export function ActiveAssignmentsTable({
     { label: `All (${counts.all})`, value: 'all' },
     { label: `Pending (${counts.pending})`, value: 'pending' },
     { label: `In Progress (${counts.in_progress})`, value: 'in_progress' },
+    { label: `Pending Review (${counts.pending_review})`, value: 'pending_review' },
     { label: `Completed (${counts.completed})`, value: 'completed' },
   ];
 
@@ -188,12 +207,19 @@ export function ActiveAssignmentsTable({
                           className="rounded-lg p-1.5 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-500/10">
                           <UserPlus size={15} />
                         </button>
+                      ) : v.status === 'pending_review' ? (
+                        <button
+                          type="button"
+                          onClick={() => setReviewing(v)}
+                          className="rounded-lg bg-purple-50 px-2 py-1 text-[11px] font-semibold text-purple-600 hover:bg-purple-100 dark:bg-purple-500/15 dark:text-purple-400">
+                          Review
+                        </button>
                       ) : v.status !== 'completed' ? (
                         <button
                           type="button"
                           onClick={() => void advance(v)}
                           className="rounded-lg px-2 py-1 text-[11px] font-semibold text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-500/10">
-                          {v.status === 'pending' ? 'Start' : 'Complete'}
+                          {v.status === 'in_progress' ? 'Complete' : 'Start'}
                         </button>
                       ) : null}
                     </div>
@@ -251,6 +277,14 @@ export function ActiveAssignmentsTable({
           vehicles={vehicles}
           existingAssignment={assigning.assignment}
           onClose={() => setAssigning(null)}
+        />
+      )}
+      {reviewing?.assignment && (
+        <ReviewAssignmentModal
+          assignment={reviewing.assignment}
+          report={reviewing.report}
+          team={reviewing.team}
+          onClose={() => setReviewing(null)}
         />
       )}
     </div>
