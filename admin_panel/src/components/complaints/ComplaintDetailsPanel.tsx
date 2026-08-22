@@ -7,6 +7,7 @@ import type { ProfileRow } from '@/lib/profiles';
 import { markReportResolved, setReportEscalated, type ReportRow } from '@/lib/reports';
 import { priorityForSeverity } from '@/lib/team-stats';
 import type { AssignmentRow, TeamRow } from '@/lib/teams';
+import type { VehicleRow } from '@/lib/vehicles';
 
 import { AIAnalysisTab } from './tabs/AIAnalysisTab';
 import { AssignmentTab } from './tabs/AssignmentTab';
@@ -29,6 +30,7 @@ export function ComplaintDetailsPanel({
   assignment,
   team,
   teams,
+  vehicles,
   reporter,
   escalatedBy,
   initialTab,
@@ -38,6 +40,7 @@ export function ComplaintDetailsPanel({
   assignment: AssignmentRow | null;
   team: TeamRow | null;
   teams: TeamRow[];
+  vehicles: VehicleRow[];
   reporter: ProfileRow | undefined;
   escalatedBy: ProfileRow | undefined;
   initialTab?: PanelTab;
@@ -116,7 +119,7 @@ export function ComplaintDetailsPanel({
         {tab === 'details' && <DetailsTab report={report} reporter={reporter} />}
         {tab === 'ai' && <AIAnalysisTab report={report} />}
         {tab === 'timeline' && <TimelineTab report={report} assignment={assignment} team={team} />}
-        {tab === 'assignment' && <AssignmentTab report={report} assignment={assignment} teams={teams} />}
+        {tab === 'assignment' && <AssignmentTab report={report} assignment={assignment} teams={teams} vehicles={vehicles} />}
         {tab === 'history' && (
           <HistoryTab report={report} assignment={assignment} team={team} reporter={reporter} escalatedBy={escalatedBy} />
         )}

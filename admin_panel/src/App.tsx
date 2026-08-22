@@ -5,15 +5,17 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ReportsProvider } from '@/contexts/ReportsContext';
 import { TeamsProvider } from '@/contexts/TeamsContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { VehiclesProvider } from '@/contexts/VehiclesContext';
 import { MAIN_NAV, SYSTEM_NAV } from '@/lib/nav';
 import Complaints from '@/pages/Complaints';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 import Placeholder from '@/pages/Placeholder';
 import TeamsAssignments from '@/pages/TeamsAssignments';
+import Vehicles from '@/pages/Vehicles';
 
 const OTHER_NAV_ITEMS = [...MAIN_NAV, ...SYSTEM_NAV].filter(
-  (item) => item.path !== '/' && item.path !== '/teams' && item.path !== '/complaints'
+  (item) => item.path !== '/' && item.path !== '/teams' && item.path !== '/complaints' && item.path !== '/vehicles'
 );
 
 function ProtectedArea() {
@@ -32,7 +34,9 @@ function ProtectedArea() {
   return (
     <ReportsProvider>
       <TeamsProvider>
-        <AppLayout />
+        <VehiclesProvider>
+          <AppLayout />
+        </VehiclesProvider>
       </TeamsProvider>
     </ReportsProvider>
   );
@@ -49,6 +53,7 @@ export default function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/complaints" element={<Complaints />} />
               <Route path="/teams" element={<TeamsAssignments />} />
+              <Route path="/vehicles" element={<Vehicles />} />
               {OTHER_NAV_ITEMS.map((item) => (
                 <Route
                   key={item.path}

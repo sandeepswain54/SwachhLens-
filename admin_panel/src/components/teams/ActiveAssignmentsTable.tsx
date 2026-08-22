@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, Eye, Search, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ReportDetailModal } from '@/components/dashboard/ReportDetailModal';
+import { useVehicles } from '@/contexts/VehiclesContext';
 import { ASSIGNMENT_STATUS_BADGE, PRIORITY_BADGE } from '@/lib/badges';
 import { formatRelativeTime, type ReportRow } from '@/lib/reports';
 import { ASSIGNMENT_STATUS_LABEL, updateAssignmentStatus, type AssignmentRow, type TeamRow } from '@/lib/teams';
@@ -27,6 +28,7 @@ export function ActiveAssignmentsTable({
   const [page, setPage] = useState(1);
   const [viewing, setViewing] = useState<ReportRow | null>(null);
   const [assigning, setAssigning] = useState<AssignmentView | null>(null);
+  const { vehicles } = useVehicles();
 
   const views = useMemo(() => buildAssignmentViews(reports, assignments, teams, 80), [reports, assignments, teams]);
 
@@ -246,6 +248,7 @@ export function ActiveAssignmentsTable({
         <AssignTeamModal
           report={assigning.report}
           teams={teams}
+          vehicles={vehicles}
           existingAssignment={assigning.assignment}
           onClose={() => setAssigning(null)}
         />

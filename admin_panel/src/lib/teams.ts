@@ -116,6 +116,7 @@ export type AssignmentRow = {
   assignment_code: string;
   report_id: string;
   team_id: string | null;
+  vehicle_id: string | null;
   vehicle_label: string | null;
   status: AssignmentStatus;
   assigned_at: string | null;
@@ -125,7 +126,7 @@ export type AssignmentRow = {
 };
 
 const ASSIGNMENT_COLUMNS =
-  'id, assignment_code, report_id, team_id, vehicle_label, status, assigned_at, started_at, completed_at, created_at';
+  'id, assignment_code, report_id, team_id, vehicle_id, vehicle_label, status, assigned_at, started_at, completed_at, created_at';
 
 export async function getAllAssignments(): Promise<AssignmentRow[]> {
   const { data, error } = await supabase
@@ -161,11 +162,13 @@ export function subscribeToAssignmentChanges(handlers: {
 }
 
 // Creates the assignment (status starts at 'pending') — the DB trigger
-// moves the linked report to "Team Assigned" automatically.
+// moves the linked report to "Team Assigned" automatically, and (if a
+// vehicle was picked) 004_vehicles.sql's triggers mark that vehicle Assigned
+// and mirror its plate number into vehicle_label automatically.
 export async function assignTeamToReport(params: {
   reportId: string;
   teamId: string;
-  vehicleLabel?: string;
+  vehicleId?: string | null;
 }): Promise<void> {
   const {
     data: { user },
@@ -175,7 +178,7 @@ export async function assignTeamToReport(params: {
     {
       report_id: params.reportId,
       team_id: params.teamId,
-      vehicle_label: params.vehicleLabel?.trim() || null,
+      vehicle_id: params.vehicleId || null,
       status: 'pending',
       assigned_by: user?.id ?? null,
     },

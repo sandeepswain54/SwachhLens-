@@ -2,6 +2,7 @@ import type { ComplaintStatus } from './complaints';
 import type { ReportStatus, SeverityLabel } from './reports';
 import type { Priority } from './team-stats';
 import type { AssignmentStatus, TeamStatus } from './teams';
+import type { VehicleStatus } from './vehicles';
 
 export const SEVERITY_BADGE: Record<SeverityLabel, string> = {
   Critical: 'bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400',
@@ -39,4 +40,11 @@ export const PRIORITY_BADGE: Record<Priority, string> = {
   High: 'bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400',
   Medium: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
   Low: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
+};
+
+export const VEHICLE_STATUS_BADGE: Record<VehicleStatus, string> = {
+  on_duty: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
+  assigned: 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400',
+  maintenance: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
+  idle: 'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-300',
 };

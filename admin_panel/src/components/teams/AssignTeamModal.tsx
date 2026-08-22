@@ -4,22 +4,29 @@ import { useState } from 'react';
 import { TEAM_STATUS_BADGE } from '@/lib/badges';
 import type { ReportRow } from '@/lib/reports';
 import { assignTeamToReport, TEAM_STATUS_LABEL, type AssignmentRow, type TeamRow } from '@/lib/teams';
+import { VEHICLE_STATUS_LABEL, type VehicleRow } from '@/lib/vehicles';
 
 export function AssignTeamModal({
   report,
   teams,
+  vehicles,
   existingAssignment,
   onClose,
 }: {
   report: ReportRow;
   teams: TeamRow[];
+  vehicles: VehicleRow[];
   existingAssignment: AssignmentRow | null;
   onClose: () => void;
 }) {
   const [teamId, setTeamId] = useState(existingAssignment?.team_id ?? '');
-  const [vehicle, setVehicle] = useState(existingAssignment?.vehicle_label ?? '');
+  const [vehicleId, setVehicleId] = useState(existingAssignment?.vehicle_id ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const availableVehicles = vehicles.filter(
+    (v) => v.status === 'idle' || v.status === 'on_duty' || v.id === existingAssignment?.vehicle_id
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,7 +37,7 @@ export function AssignTeamModal({
     setSubmitting(true);
     setError(null);
     try {
-      await assignTeamToReport({ reportId: report.id, teamId, vehicleLabel: vehicle });
+      await assignTeamToReport({ reportId: report.id, teamId, vehicleId: vehicleId || null });
       onClose();
     } catch (err) {
       setError((err as Error).message);
@@ -94,12 +101,23 @@ export function AssignTeamModal({
             <label className="mb-1 block text-[12px] font-medium text-slate-500 dark:text-slate-400">
               Assigned Vehicle <span className="text-slate-300">(optional)</span>
             </label>
-            <input
-              value={vehicle}
-              onChange={(e) => setVehicle(e.target.value)}
-              placeholder="e.g. Mini Truck OD-02-AB-1234"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
-            />
+            {availableVehicles.length === 0 ? (
+              <p className="rounded-lg bg-slate-50 px-3 py-2 text-[12px] text-slate-500 dark:bg-white/5 dark:text-slate-400">
+                No available vehicles — add one from the Vehicles page.
+              </p>
+            ) : (
+              <select
+                value={vehicleId}
+                onChange={(e) => setVehicleId(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-100">
+                <option value="">No vehicle</option>
+                {availableVehicles.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.vehicle_no} · {v.vehicle_type} ({VEHICLE_STATUS_LABEL[v.status]})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {error && (

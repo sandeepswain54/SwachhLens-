@@ -7,11 +7,13 @@ import { ComplaintsTable } from '@/components/complaints/ComplaintsTable';
 import { Topbar } from '@/components/layout/Topbar';
 import { useReports } from '@/contexts/ReportsContext';
 import { useTeams } from '@/contexts/TeamsContext';
+import { useVehicles } from '@/contexts/VehiclesContext';
 import type { ProfileRow } from '@/lib/profiles';
 
 export default function Complaints() {
   const { reports, profiles, loading, error } = useReports();
   const { teams, assignments } = useTeams();
+  const { vehicles } = useVehicles();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -73,6 +75,7 @@ export default function Complaints() {
                 assignment={selectedAssignment}
                 team={selectedTeam}
                 teams={teams}
+                vehicles={vehicles}
                 reporter={profileById.get(selectedReport.user_id)}
                 escalatedBy={selectedReport.escalated_by ? profileById.get(selectedReport.escalated_by) : undefined}
                 initialTab={panelTab}

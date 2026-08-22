@@ -11,24 +11,30 @@ import {
   type AssignmentStatus,
   type TeamRow,
 } from '@/lib/teams';
+import { VEHICLE_STATUS_LABEL, type VehicleRow } from '@/lib/vehicles';
 
 export function AssignmentTab({
   report,
   assignment,
   teams,
+  vehicles,
 }: {
   report: ReportRow;
   assignment: AssignmentRow | null;
   teams: TeamRow[];
+  vehicles: VehicleRow[];
 }) {
   const [teamId, setTeamId] = useState(assignment?.team_id ?? '');
-  const [vehicle, setVehicle] = useState(assignment?.vehicle_label ?? '');
+  const [vehicleId, setVehicleId] = useState(assignment?.vehicle_id ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [advancing, setAdvancing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const status = assignment?.status ?? 'unassigned';
-  const dirty = teamId !== (assignment?.team_id ?? '') || vehicle !== (assignment?.vehicle_label ?? '');
+  const dirty = teamId !== (assignment?.team_id ?? '') || vehicleId !== (assignment?.vehicle_id ?? '');
+  const availableVehicles = vehicles.filter(
+    (v) => v.status === 'idle' || v.status === 'on_duty' || v.id === assignment?.vehicle_id
+  );
 
   async function handleUpdate() {
     if (!teamId) {
@@ -38,7 +44,7 @@ export function AssignmentTab({
     setSubmitting(true);
     setError(null);
     try {
-      await assignTeamToReport({ reportId: report.id, teamId, vehicleLabel: vehicle });
+      await assignTeamToReport({ reportId: report.id, teamId, vehicleId: vehicleId || null });
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -85,12 +91,23 @@ export function AssignmentTab({
           <label className="mb-1 block text-[12px] font-medium text-slate-500 dark:text-slate-400">
             Assigned Vehicle
           </label>
-          <input
-            value={vehicle}
-            onChange={(e) => setVehicle(e.target.value)}
-            placeholder="e.g. Mini Truck OD-02-AB-1234"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
-          />
+          {availableVehicles.length === 0 ? (
+            <p className="rounded-lg bg-slate-50 px-3 py-2 text-[12px] text-slate-500 dark:bg-white/5 dark:text-slate-400">
+              No available vehicles.
+            </p>
+          ) : (
+            <select
+              value={vehicleId}
+              onChange={(e) => setVehicleId(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-100">
+              <option value="">No vehicle</option>
+              {availableVehicles.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.vehicle_no} · {v.vehicle_type} ({VEHICLE_STATUS_LABEL[v.status]})
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
