@@ -3,10 +3,8 @@ import {
   ClipboardList,
   FileBarChart2,
   Gauge,
-  History,
   LayoutDashboard,
   MapPinned,
-  Settings,
   Truck,
   Users2,
   UsersRound,
@@ -31,6 +29,4 @@ export const MAIN_NAV: NavItem[] = [
 export const SYSTEM_NAV: NavItem[] = [
   { label: 'Users', path: '/users', icon: Users2 },
   { label: 'Notifications', path: '/notifications', icon: Bell },
-  { label: 'Settings', path: '/settings', icon: Settings },
-  { label: 'Audit Logs', path: '/audit-logs', icon: History },
 ];
