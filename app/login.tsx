@@ -18,12 +18,6 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
 
   async function handleLogin() {
-    if (accountType !== 'user') {
-      // Field Team accounts are provisioned separately — sign-in for that
-      // role isn't wired up yet.
-      return;
-    }
-
     if (!email.trim() || !password) {
       setError('Please enter your email and password.');
       return;
