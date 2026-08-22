@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, uniqueChannel } from '@/lib/supabase';
 
 export type FieldNotification = {
   id: string;
@@ -32,7 +32,7 @@ export function subscribeToMyNotifications(
   onInsert: (row: FieldNotification) => void
 ) {
   const channel = supabase
-    .channel(`field-notifications-${teamId}`)
+    .channel(uniqueChannel(`field-notifications-${teamId}`))
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'notifications', filter: `team_id=eq.${teamId}` },

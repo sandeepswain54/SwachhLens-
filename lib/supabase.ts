@@ -29,3 +29,16 @@ AppState.addEventListener('change', (state) => {
     supabase.auth.stopAutoRefresh();
   }
 });
+
+// supabase-js caches realtime channels by topic name and throws
+// ("cannot add `postgres_changes` callbacks... after `subscribe()`") if a
+// second call tries to attach a listener to a topic that's already
+// subscribed — which happens the moment the same subscribeToX() is called
+// from two screens mounted at once (e.g. two tabs that stay mounted side by
+// side). Every subscribeToX() below should build its channel name with this
+// so concurrent callers never collide, even when watching the same row(s).
+let channelSeq = 0;
+export function uniqueChannel(topic: string): string {
+  channelSeq += 1;
+  return `${topic}-${channelSeq}`;
+}

@@ -4,7 +4,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import type { ReportLocation, ReportMedia } from '@/contexts/report-flow-context';
 import type { DuplicateCheck } from '@/lib/duplicate-check';
 import type { WasteAnalysis } from '@/lib/gemini';
-import { supabase } from '@/lib/supabase';
+import { supabase, uniqueChannel } from '@/lib/supabase';
 
 const REPORT_MEDIA_BUCKET = 'report-media';
 
@@ -48,6 +48,7 @@ export type ReportRow = {
   status: ReportStatus;
   analysis: (WasteAnalysis & { duplicate: DuplicateCheck | null }) | null;
   created_at: string;
+  resolved_at: string | null;
 };
 
 export type ReportPin = {
@@ -83,7 +84,7 @@ export type SubmittedReport = {
 // Rough kg estimate per AI-detected size tier, used only to give the "Waste
 // Removed" impact stat a live, non-static number. This is explicitly an
 // approximation, not a measured weight.
-const SIZE_KG_ESTIMATE: Record<string, number> = {
+export const SIZE_KG_ESTIMATE: Record<string, number> = {
   Small: 15,
   Medium: 50,
   Large: 120,
@@ -94,6 +95,17 @@ function extensionFor(media: ReportMedia) {
   const fromMime = media.mimeType.split('/')[1]?.split('+')[0];
   if (fromMime) return fromMime;
   return media.kind === 'image' ? 'jpg' : 'mp4';
+}
+
+export function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
 }
 
 export function formatRelativeTime(iso: string): string {
@@ -227,7 +239,7 @@ export async function getCommunityReportPins(): Promise<ReportPin[]> {
 // Requires `alter publication supabase_realtime add table public.reports;`
 export function subscribeToNewReportPins(onInsert: (pin: ReportPin) => void) {
   const channel = supabase
-    .channel('report-pins')
+    .channel(uniqueChannel('report-pins'))
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'reports' },
@@ -241,4 +253,42 @@ export function subscribeToNewReportPins(onInsert: (pin: ReportPin) => void) {
   return () => {
     supabase.removeChannel(channel);
   };
+}
+
+// Live-updates app/report-status.tsx the moment a team or admin advances
+// this report's status — e.g. the citizen sees "Resolved" the instant an
+// admin approves the field team's submission, no need to leave and reopen
+// the screen.
+export function subscribeToReportStatus(reportId: string, onUpdate: (row: ReportRow) => void) {
+  const channel = supabase
+    .channel(uniqueChannel(`report-status-${reportId}`))
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'reports', filter: `id=eq.${reportId}` },
+      (payload) => onUpdate(payload.new as ReportRow)
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+export type CompletionEvidence = { photos: string[]; notes: string | null };
+
+// The field team's "after" photos for this report, once their assignment
+// has moved into pending_review/completed — read-only here (the mobile
+// field app is the only writer, via lib/field-tasks.ts's
+// submitTaskForReview). `assignments` already grants "authenticated users
+// can view all" (002_teams_assignments.sql), so a citizen's own client can
+// read their own report's assignment row directly, no extra policy needed.
+export async function getCompletionEvidence(reportId: string): Promise<CompletionEvidence | null> {
+  const { data, error } = await supabase
+    .from('assignments')
+    .select('progress_photos, progress_notes')
+    .eq('report_id', reportId)
+    .maybeSingle();
+
+  if (error || !data || !data.progress_photos || data.progress_photos.length === 0) return null;
+  return { photos: data.progress_photos, notes: data.progress_notes };
 }

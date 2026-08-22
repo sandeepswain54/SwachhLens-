@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, uniqueChannel } from '@/lib/supabase';
 
 export type TeamStatus = 'on_duty' | 'available' | 'maintenance';
 
@@ -15,9 +15,10 @@ export type MyTeam = {
   leader_name: string;
   zone: string;
   status: TeamStatus;
+  work_since: string;
 };
 
-const TEAM_COLUMNS = 'id, team_code, team_name, leader_name, zone, status';
+const TEAM_COLUMNS = 'id, team_code, team_name, leader_name, zone, status, work_since';
 
 // Looks up the `teams` row backing the currently signed-in auth user, if
 // any. Returns null for a citizen login — that's how the login screen tells
@@ -42,7 +43,7 @@ export async function getMyTeam(): Promise<MyTeam | null> {
 // team's record while the app is open.
 export function subscribeToMyTeam(teamId: string, onUpdate: (row: MyTeam) => void) {
   const channel = supabase
-    .channel(`field-team-${teamId}`)
+    .channel(uniqueChannel(`field-team-${teamId}`))
     .on(
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'teams', filter: `id=eq.${teamId}` },

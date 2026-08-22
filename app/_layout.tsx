@@ -28,6 +28,10 @@ export default function RootLayout() {
           <Stack.Screen name="reset-password" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(field)" options={{ headerShown: false }} />
+          <Stack.Screen name="field-task-detail" options={{ headerShown: false }} />
+          <Stack.Screen name="field-task-on-the-way" options={{ headerShown: false }} />
+          <Stack.Screen name="field-task-progress" options={{ headerShown: false }} />
+          <Stack.Screen name="field-task-submitted" options={{ headerShown: false }} />
           <Stack.Screen name="report-scan" options={{ headerShown: false }} />
           <Stack.Screen name="report-result" options={{ headerShown: false }} />
           <Stack.Screen name="report-confirm" options={{ headerShown: false }} />
@@ -35,6 +39,7 @@ export default function RootLayout() {
           <Stack.Screen name="profile-location-picker" options={{ headerShown: false }} />
           <Stack.Screen name="report-submitted" options={{ headerShown: false }} />
           <Stack.Screen name="report-status" options={{ headerShown: false }} />
+          <Stack.Screen name="report-feedback" options={{ headerShown: false }} />
           <Stack.Screen name="waste-hotspots" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>

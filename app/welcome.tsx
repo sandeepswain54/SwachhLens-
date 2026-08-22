@@ -33,10 +33,6 @@ export default function WelcomeScreen() {
           <Pressable style={styles.primaryButton} onPress={() => router.push('/login')}>
             <Text style={styles.primaryButtonText}>Get Started</Text>
           </Pressable>
-
-          <Pressable style={styles.secondaryButton} onPress={() => router.replace('/(tabs)')}>
-            <Text style={styles.secondaryButtonText}>Learn More</Text>
-          </Pressable>
         </View>
       </SafeAreaView>
     </View>
@@ -83,28 +79,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   buttonContainer: {
-    paddingBottom: 24,
+    paddingBottom: 100,
     gap: 14,
   },
   primaryButton: {
-    backgroundColor: '#1B6B3A',
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  secondaryButton: {
     backgroundColor: '#ffffff',
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
   },
-  secondaryButtonText: {
-    color: '#1A2E22',
+  primaryButtonText: {
+    color: '#1B6B3A',
     fontSize: 16,
     fontWeight: '700',
   },

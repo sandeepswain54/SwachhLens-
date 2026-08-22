@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import * as Location from 'expo-location';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -12,7 +13,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   type FieldNotification,
@@ -22,13 +23,15 @@ import {
   subscribeToMyNotifications,
 } from '@/lib/field-notifications';
 import {
-  completeFieldTask,
+  FIELD_TASK_STATUS_LABEL,
   type FieldTask,
   getMyTasks,
-  startFieldTask,
+  routeForTaskStatus,
   subscribeToMyTasks,
 } from '@/lib/field-tasks';
+import { priorityMeta } from '@/lib/field-ui';
 import { getMyTeam, subscribeToMyTeam, TEAM_STATUS_LABEL, type MyTeam } from '@/lib/field-team';
+import { formatDistance, haversineMeters } from '@/lib/geo';
 import { getCurrentProfile } from '@/lib/profile';
 import { formatRelativeTime } from '@/lib/reports';
 import { supabase } from '@/lib/supabase';
@@ -50,14 +53,10 @@ function isToday(iso: string): boolean {
   );
 }
 
-const PRIORITY_META: Record<string, { label: string; bg: string; text: string }> = {
-  Urgent: { label: 'High', bg: '#fce4e1', text: '#c0392b' },
-  High: { label: 'Medium', bg: '#fdecd2', text: '#b9770e' },
-  Normal: { label: 'Low', bg: '#e3f3ea', text: '#1B6B3A' },
-};
-
-function priorityMeta(urgency: string) {
-  return PRIORITY_META[urgency] ?? PRIORITY_META.Normal;
+function formatDuration(ms: number): string {
+  const hours = ms / 3600000;
+  if (hours < 1) return `${Math.max(1, Math.round(ms / 60000))}m`;
+  return `${hours.toFixed(1)}h`;
 }
 
 const STATUS_DOT: Record<MyTeam['status'], string> = {
@@ -66,7 +65,10 @@ const STATUS_DOT: Record<MyTeam['status'], string> = {
   maintenance: '#e0a13a',
 };
 
+const SHEET_BG = '#eaf3ef';
+
 export default function FieldHomeScreen() {
+  const insets = useSafeAreaInsets();
   const [team, setTeam] = useState<MyTeam | null | undefined>(undefined);
   const [fullName, setFullName] = useState('');
   const [tasks, setTasks] = useState<FieldTask[]>([]);
@@ -74,13 +76,33 @@ export default function FieldHomeScreen() {
   const [loadingTasks, setLoadingTasks] = useState(true);
   const [notifOpen, setNotifOpen] = useState(false);
   const [, setGreetingTick] = useState(0);
-  const [actingOn, setActingOn] = useState<string | null>(null);
+  const [myLocation, setMyLocation] = useState<{ latitude: number; longitude: number } | null>(
+    null
+  );
 
   // Keeps "Good Morning/Afternoon/Evening" accurate if the app is left open
   // across the boundary between them.
   useEffect(() => {
     const interval = setInterval(() => setGreetingTick((t) => t + 1), 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Powers the "away" distance readout on task cards — best-effort only: if
+  // permission is denied or location fails, those readouts just stay hidden
+  // rather than showing a made-up number.
+  useEffect(() => {
+    (async () => {
+      try {
+        const permission = await Location.requestForegroundPermissionsAsync();
+        if (!permission.granted) return;
+        const position = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        setMyLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+      } catch {
+        // no distance readout — not fatal
+      }
+    })();
   }, []);
 
   const reloadTasks = useCallback(async (teamId: string) => {
@@ -146,57 +168,89 @@ export default function FieldHomeScreen() {
 
   const activeTasks = useMemo(() => tasks.filter((t) => t.status !== 'completed'), [tasks]);
 
+  // pending_review tasks are excluded from "next task" — they're already
+  // submitted and waiting on the admin, there's no field action left to
+  // take on them, so surfacing one as "what to do next" would be misleading.
+  // They still show up in the list below with a "Pending Review" badge.
   const nextTask = useMemo(() => {
-    if (activeTasks.length === 0) return null;
+    const candidates = activeTasks.filter((t) => t.status !== 'pending_review');
+    if (candidates.length === 0) return null;
     const weight = (u: string) => (u === 'Urgent' ? 3 : u === 'High' ? 2 : 1);
-    return [...activeTasks].sort((a, b) => {
+    return [...candidates].sort((a, b) => {
       const byPriority = weight(b.report.urgency_label) - weight(a.report.urgency_label);
       if (byPriority !== 0) return byPriority;
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     })[0];
   }, [activeTasks]);
 
-  const otherTasks = useMemo(
-    () => tasks.filter((t) => t.id !== nextTask?.id),
-    [tasks, nextTask]
-  );
+  const otherTasks = useMemo(() => tasks.filter((t) => t.id !== nextTask?.id), [tasks, nextTask]);
 
   const stats = useMemo(
     () => ({
       assignedToday: tasks.filter((t) => isToday(t.assigned_at ?? t.created_at)).length,
       completed: tasks.filter((t) => t.status === 'completed').length,
-      inProgress: tasks.filter((t) => t.status === 'in_progress').length,
+      inProgress: tasks.filter(
+        (t) => t.status === 'on_the_way' || t.status === 'in_progress' || t.status === 'pending_review'
+      ).length,
       pending: tasks.filter((t) => t.status === 'pending').length,
     }),
     [tasks]
   );
 
+  // Everything here is derived straight from real assignment timestamps and
+  // (when location permission is granted) the device's real GPS fix — no
+  // placeholder numbers.
+  const overview = useMemo(() => {
+    const todaysTasks = tasks.filter((t) => isToday(t.assigned_at ?? t.created_at));
+    const todaysCompleted = todaysTasks.filter((t) => t.status === 'completed').length;
+
+    const responded = todaysTasks.filter(
+      (t) => t.status === 'completed' && t.completed_at
+    );
+    const avgResponseMs = responded.length
+      ? responded.reduce((sum, t) => {
+          const started = new Date(t.assigned_at ?? t.created_at).getTime();
+          const done = new Date(t.completed_at as string).getTime();
+          return sum + Math.max(0, done - started);
+        }, 0) / responded.length
+      : null;
+
+    const urgentActive = activeTasks.filter((t) => t.report.urgency_label === 'Urgent').length;
+
+    const nextDistanceMeters =
+      myLocation && nextTask
+        ? haversineMeters(
+            myLocation.latitude,
+            myLocation.longitude,
+            nextTask.report.latitude,
+            nextTask.report.longitude
+          )
+        : null;
+
+    return {
+      completedRatio: `${todaysCompleted}/${todaysTasks.length}`,
+      avgResponseLabel: avgResponseMs === null ? '—' : formatDuration(avgResponseMs),
+      urgentActive,
+      nextDistanceLabel: nextDistanceMeters === null ? '—' : formatDistance(nextDistanceMeters).replace(' away', ''),
+    };
+  }, [tasks, activeTasks, myLocation, nextTask]);
+
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  async function handleStart(task: FieldTask) {
-    setActingOn(task.id);
-    try {
-      await startFieldTask(task.id);
-      setTasks((prev) =>
-        prev.map((t) => (t.id === task.id ? { ...t, status: 'in_progress' } : t))
-      );
-    } catch (err) {
-      Alert.alert('Could not start task', err instanceof Error ? err.message : 'Please try again.');
-    } finally {
-      setActingOn(null);
-    }
+  function distanceFor(task: FieldTask): string | null {
+    if (!myLocation) return null;
+    return formatDistance(
+      haversineMeters(
+        myLocation.latitude,
+        myLocation.longitude,
+        task.report.latitude,
+        task.report.longitude
+      )
+    );
   }
 
-  async function handleComplete(task: FieldTask) {
-    setActingOn(task.id);
-    try {
-      await completeFieldTask(task.id);
-      setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: 'completed' } : t)));
-    } catch (err) {
-      Alert.alert('Could not complete task', err instanceof Error ? err.message : 'Please try again.');
-    } finally {
-      setActingOn(null);
-    }
+  function openTask(task: FieldTask) {
+    router.push({ pathname: routeForTaskStatus(task.status), params: { id: task.id } });
   }
 
   function handleNotificationPress(n: FieldNotification) {
@@ -246,10 +300,11 @@ export default function FieldHomeScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <View style={styles.headerRow}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+          <View style={styles.headerRow}>
               <Pressable hitSlop={8} onPress={handleMenuPress}>
                 <Ionicons name="menu" size={26} color="#ffffff" />
               </Pressable>
@@ -278,10 +333,22 @@ export default function FieldHomeScreen() {
           <View style={styles.sheet}>
             <View style={styles.statsRow}>
               <StatCard icon="clipboard-outline" color="#1B6B3A" bg="#e3f3ea" value={stats.assignedToday} label={'Assigned\nToday'} />
-              <StatCard icon="list-outline" color="#2563eb" bg="#e6eefd" value={stats.completed} label="Completed" />
+              <StatCard icon="checkmark-done-outline" color="#2563eb" bg="#e6eefd" value={stats.completed} label="Completed" />
               <StatCard icon="hourglass-outline" color="#d97706" bg="#fbead2" value={stats.inProgress} label={'In\nProgress'} />
               <StatCard icon="time-outline" color="#7c3aed" bg="#ede6fb" value={stats.pending} label="Pending" />
             </View>
+
+            {tasks.length > 0 && (
+              <View style={styles.overviewCard}>
+                <Text style={styles.overviewHeading}>Today&apos;s Overview</Text>
+                <View style={styles.overviewRow}>
+                  <OverviewTile icon="flag-outline" value={String(overview.urgentActive)} label="Urgent Now" />
+                  <OverviewTile icon="list-outline" value={overview.completedRatio} label="Completed" />
+                  <OverviewTile icon="stopwatch-outline" value={overview.avgResponseLabel} label="Avg. Response" />
+                  <OverviewTile icon="navigate-outline" value={overview.nextDistanceLabel} label="Next Task" />
+                </View>
+              </View>
+            )}
 
             {loadingTasks ? (
               <ActivityIndicator color="#1B6B3A" style={{ marginTop: 24 }} />
@@ -326,41 +393,30 @@ export default function FieldHomeScreen() {
                               {nextTask.report.address}
                             </Text>
                           </View>
-                          <Text style={styles.metaTimeText}>
-                            Assigned {formatRelativeTime(nextTask.assigned_at ?? nextTask.created_at)}
-                          </Text>
+                          <View style={styles.metaBottomRow}>
+                            <Text style={styles.metaTimeText}>
+                              Assigned {formatRelativeTime(nextTask.assigned_at ?? nextTask.created_at)}
+                            </Text>
+                            {distanceFor(nextTask) && (
+                              <>
+                                <View style={styles.metaDivider} />
+                                <Text style={styles.metaTimeText}>{distanceFor(nextTask)}</Text>
+                              </>
+                            )}
+                          </View>
                         </View>
                       </View>
 
-                      {nextTask.status === 'pending' ? (
-                        <Pressable
-                          style={styles.startButton}
-                          disabled={actingOn === nextTask.id}
-                          onPress={() => handleStart(nextTask)}>
-                          {actingOn === nextTask.id ? (
-                            <ActivityIndicator color="#ffffff" size="small" />
-                          ) : (
-                            <>
-                              <Ionicons name="send" size={16} color="#ffffff" />
-                              <Text style={styles.startButtonText}>Start Task</Text>
-                            </>
-                          )}
-                        </Pressable>
-                      ) : (
-                        <Pressable
-                          style={[styles.startButton, styles.completeButton]}
-                          disabled={actingOn === nextTask.id}
-                          onPress={() => handleComplete(nextTask)}>
-                          {actingOn === nextTask.id ? (
-                            <ActivityIndicator color="#ffffff" size="small" />
-                          ) : (
-                            <>
-                              <Ionicons name="checkmark" size={16} color="#ffffff" />
-                              <Text style={styles.startButtonText}>Mark Complete</Text>
-                            </>
-                          )}
-                        </Pressable>
-                      )}
+                      <Pressable style={styles.startButton} onPress={() => openTask(nextTask)}>
+                        <Ionicons name="send" size={16} color="#ffffff" />
+                        <Text style={styles.startButtonText}>
+                          {nextTask.status === 'pending'
+                            ? 'Start Task'
+                            : nextTask.status === 'on_the_way'
+                              ? 'Continue: On the Way'
+                              : 'Continue: Upload Progress'}
+                        </Text>
+                      </Pressable>
                     </View>
                   </View>
                 )}
@@ -371,8 +427,9 @@ export default function FieldHomeScreen() {
                   </Text>
                   <View style={styles.recentList}>
                     {otherTasks.map((task, index) => (
-                      <View
+                      <Pressable
                         key={task.id}
+                        onPress={() => openTask(task)}
                         style={[
                           styles.recentRow,
                           index === otherTasks.length - 1 && styles.recentRowLast,
@@ -391,6 +448,9 @@ export default function FieldHomeScreen() {
                               {task.report.address}
                             </Text>
                           </View>
+                          {distanceFor(task) && (
+                            <Text style={styles.recentDistanceText}>{distanceFor(task)}</Text>
+                          )}
                         </View>
                         <View style={styles.recentAside}>
                           <View
@@ -406,23 +466,17 @@ export default function FieldHomeScreen() {
                               {priorityMeta(task.report.urgency_label).label}
                             </Text>
                           </View>
-                          <Text style={styles.recentStatusText}>
-                            {task.status === 'in_progress'
-                              ? 'In Progress'
-                              : task.status === 'completed'
-                                ? 'Completed'
-                                : 'Pending'}
-                          </Text>
+                          <Text style={styles.recentStatusText}>{FIELD_TASK_STATUS_LABEL[task.status]}</Text>
                         </View>
-                      </View>
+                        <Ionicons name="chevron-forward" size={16} color="#c3cdc7" />
+                      </Pressable>
                     ))}
                   </View>
                 </View>
               </>
             )}
           </View>
-        </ScrollView>
-      </SafeAreaView>
+      </ScrollView>
 
       <Modal visible={notifOpen} animationType="slide" transparent onRequestClose={() => setNotifOpen(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setNotifOpen(false)}>
@@ -493,13 +547,28 @@ function StatCard({
   );
 }
 
+function OverviewTile({
+  icon,
+  value,
+  label,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  value: string;
+  label: string;
+}) {
+  return (
+    <View style={styles.overviewTile}>
+      <Ionicons name={icon} size={17} color="#1B6B3A" />
+      <Text style={styles.overviewValue}>{value}</Text>
+      <Text style={styles.overviewLabel}>{label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f3d2b',
-  },
-  safeArea: {
-    flex: 1,
+    backgroundColor: SHEET_BG,
   },
   loadingContainer: {
     flex: 1,
@@ -528,13 +597,14 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingBottom: 32,
   },
   header: {
     backgroundColor: '#0f3d2b',
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 40,
+    paddingBottom: 44,
   },
   headerRow: {
     flexDirection: 'row',
@@ -564,7 +634,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   greeting: {
-    marginTop: 20,
+    marginTop: 22,
     fontSize: 16,
     fontWeight: '600',
     color: '#dcefe3',
@@ -575,7 +645,7 @@ const styles = StyleSheet.create({
   },
   teamName: {
     marginTop: 4,
-    fontSize: 25,
+    fontSize: 23,
     fontWeight: '800',
     color: '#ffffff',
   },
@@ -583,7 +653,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 8,
+    marginTop: 10,
   },
   statusDot: {
     width: 8,
@@ -597,11 +667,11 @@ const styles = StyleSheet.create({
   },
   sheet: {
     flex: 1,
-    backgroundColor: '#eaf3ef',
+    backgroundColor: SHEET_BG,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    marginTop: -24,
-    paddingTop: 20,
+    marginTop: -28,
+    paddingTop: 22,
     paddingHorizontal: 20,
     gap: 20,
   },
@@ -635,6 +705,35 @@ const styles = StyleSheet.create({
     color: '#6b7770',
     textAlign: 'center',
     lineHeight: 12,
+  },
+  overviewCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    padding: 16,
+    gap: 14,
+  },
+  overviewHeading: {
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: '#1A2E22',
+  },
+  overviewRow: {
+    flexDirection: 'row',
+  },
+  overviewTile: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 5,
+  },
+  overviewValue: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1A2E22',
+  },
+  overviewLabel: {
+    fontSize: 10,
+    color: '#8a9590',
+    textAlign: 'center',
   },
   emptyCard: {
     backgroundColor: '#ffffff',
@@ -671,8 +770,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   nextTaskThumb: {
-    width: 76,
-    height: 76,
+    width: 84,
+    height: 84,
     borderRadius: 14,
     backgroundColor: '#eef1ef',
   },
@@ -700,7 +799,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   taskTitle: {
-    fontSize: 15,
+    fontSize: 15.5,
     fontWeight: '700',
     color: '#1A2E22',
     marginTop: 2,
@@ -715,10 +814,21 @@ const styles = StyleSheet.create({
     color: '#6b7770',
     flexShrink: 1,
   },
+  metaBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
   metaTimeText: {
     fontSize: 11,
     color: '#8a9590',
-    marginTop: 2,
+  },
+  metaDivider: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#c3cdc7',
   },
   startButton: {
     flexDirection: 'row',
@@ -728,9 +838,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1B6B3A',
     borderRadius: 14,
     paddingVertical: 14,
-  },
-  completeButton: {
-    backgroundColor: '#2563eb',
   },
   startButtonText: {
     color: '#ffffff',
@@ -757,8 +864,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   recentThumb: {
-    width: 52,
-    height: 52,
+    width: 56,
+    height: 56,
     borderRadius: 12,
     backgroundColor: '#eef1ef',
   },
@@ -770,6 +877,11 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontWeight: '700',
     color: '#1A2E22',
+  },
+  recentDistanceText: {
+    fontSize: 10.5,
+    color: '#8a9590',
+    marginTop: 1,
   },
   recentAside: {
     alignItems: 'flex-end',
