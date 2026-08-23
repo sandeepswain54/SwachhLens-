@@ -123,9 +123,34 @@ export default function Vehicles() {
         </div>
 
         <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-12">
-          <Card className="xl:col-span-8">
-            <VehiclesTable vehicles={vehicles} teams={teams} selectedId={selectedId} onSelect={(v) => setSelectedId(v.id)} />
-          </Card>
+          {/* Everything that doesn't need to match the detail panel's height
+              lives in this stacked left column, so a tall panel on the right
+              never leaves a huge empty gap above these sections. */}
+          <div className="flex flex-col gap-4 xl:col-span-8">
+            <Card>
+              <VehiclesTable vehicles={vehicles} teams={teams} selectedId={selectedId} onSelect={(v) => setSelectedId(v.id)} />
+            </Card>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              <Card title="Vehicle Status Overview">
+                <DonutChart
+                  data={statusSlices.map((s) => ({ name: s.name, count: s.count, percent: s.percent, color: VEHICLE_STATUS_COLOR[s.status] }))}
+                  centerValue={counts.total}
+                  centerLabel="Total"
+                />
+              </Card>
+              <Card title="Fuel Status">
+                <FuelStatusBars buckets={fuelBuckets} />
+              </Card>
+              <Card title="Vehicle Type Distribution">
+                <DonutChart data={typeSlices} centerValue={counts.total} centerLabel="Total" />
+              </Card>
+            </div>
+
+            <Card title="Recent Vehicle Activity">
+              <RecentVehicleActivity activity={activity} vehicles={vehicles} />
+            </Card>
+          </div>
 
           <div className="xl:col-span-4">
             {selectedVehicle ? (
@@ -152,26 +177,6 @@ export default function Vehicles() {
             )}
           </div>
         </div>
-
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <Card title="Vehicle Status Overview">
-            <DonutChart
-              data={statusSlices.map((s) => ({ name: s.name, count: s.count, percent: s.percent, color: VEHICLE_STATUS_COLOR[s.status] }))}
-              centerValue={counts.total}
-              centerLabel="Total"
-            />
-          </Card>
-          <Card title="Fuel Status">
-            <FuelStatusBars buckets={fuelBuckets} />
-          </Card>
-          <Card title="Vehicle Type Distribution">
-            <DonutChart data={typeSlices} centerValue={counts.total} centerLabel="Total" />
-          </Card>
-        </div>
-
-        <Card title="Recent Vehicle Activity">
-          <RecentVehicleActivity activity={activity} vehicles={vehicles} />
-        </Card>
 
         {loading && <p className="text-center text-[12px] text-slate-400">Loading vehicles…</p>}
       </div>

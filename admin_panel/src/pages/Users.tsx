@@ -92,9 +92,18 @@ export default function Users() {
         </div>
 
         <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-12">
-          <Card title="All Users" className="xl:col-span-8">
-            <UsersTable users={users} search={searchQuery} />
-          </Card>
+          {/* Recent User Activity lives inside this stacked left column (not
+              as its own row below) so it starts right after the table
+              instead of waiting on the taller right column's height. */}
+          <div className="flex flex-col gap-4 xl:col-span-8">
+            <Card title="All Users">
+              <UsersTable users={users} search={searchQuery} />
+            </Card>
+
+            <Card title="Recent User Activity">
+              <RecentUserActivityTable items={recentActivity} />
+            </Card>
+          </div>
 
           <div className="flex flex-col gap-4 xl:col-span-4">
             <Card title="User Distribution">
@@ -110,10 +119,6 @@ export default function Users() {
             </Card>
           </div>
         </div>
-
-        <Card title="Recent User Activity">
-          <RecentUserActivityTable items={recentActivity} />
-        </Card>
 
         {loading && <p className="text-center text-[12px] text-slate-400">Loading users…</p>}
       </div>

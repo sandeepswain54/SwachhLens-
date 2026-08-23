@@ -112,16 +112,25 @@ export default function TeamsAssignments() {
         </div>
 
         <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-12">
-          <Card title="All Teams" className="xl:col-span-8">
-            <TeamsTable
-              teams={teams}
-              assignments={assignments}
-              selectedTeamId={selectedTeamId}
-              onSelectTeam={(t) => setSelectedTeamId(t.id)}
-            />
-          </Card>
+          {/* Active Assignments lives inside this stacked left column (not
+              as its own row below) so it starts right after the teams table
+              instead of waiting on the taller team-details column. */}
+          <div className="flex flex-col gap-4 xl:col-span-8">
+            <Card title="All Teams">
+              <TeamsTable
+                teams={teams}
+                assignments={assignments}
+                selectedTeamId={selectedTeamId}
+                onSelectTeam={(t) => setSelectedTeamId(t.id)}
+              />
+            </Card>
 
-          <div className="xl:col-span-4">
+            <Card title="Active Assignments">
+              <ActiveAssignmentsTable reports={reports} assignments={assignments} teams={teams} />
+            </Card>
+          </div>
+
+          <div className="flex flex-col gap-4 xl:col-span-4">
             {selectedTeam ? (
               <TeamDetailsPanel
                 team={selectedTeam}
@@ -143,17 +152,11 @@ export default function TeamsAssignments() {
                 </div>
               </Card>
             )}
+
+            <Card title="Recent Activity">
+              <RecentTeamActivity activity={activity} />
+            </Card>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-          <Card title="Active Assignments" className="xl:col-span-9">
-            <ActiveAssignmentsTable reports={reports} assignments={assignments} teams={teams} />
-          </Card>
-
-          <Card title="Recent Activity" className="xl:col-span-3">
-            <RecentTeamActivity activity={activity} />
-          </Card>
         </div>
 
         {loading && <p className="text-center text-[12px] text-slate-400">Loading teams…</p>}
