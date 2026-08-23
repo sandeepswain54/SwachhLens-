@@ -5,7 +5,6 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -271,13 +270,6 @@ export default function FieldHomeScreen() {
     router.replace('/login');
   }
 
-  function handleMenuPress() {
-    Alert.alert('Menu', undefined, [
-      { text: 'Logout', style: 'destructive', onPress: handleLogout },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  }
-
   if (team === undefined) {
     return (
       <SafeAreaView style={styles.loadingContainer} edges={['top', 'bottom']}>
@@ -305,9 +297,6 @@ export default function FieldHomeScreen() {
         showsVerticalScrollIndicator={false}>
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <View style={styles.headerRow}>
-              <Pressable hitSlop={8} onPress={handleMenuPress}>
-                <Ionicons name="menu" size={26} color="#ffffff" />
-              </Pressable>
               <Pressable hitSlop={8} style={styles.bellButton} onPress={() => setNotifOpen(true)}>
                 <Ionicons name="notifications-outline" size={24} color="#ffffff" />
                 {unreadCount > 0 && (
@@ -609,7 +598,7 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
   bellButton: {
     position: 'relative',
