@@ -27,8 +27,14 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-[#0b100d]">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-200/70 bg-white p-8 shadow-card dark:border-white/10 dark:bg-[#111814]">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 dark:bg-[#0b100d]">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/adminback.png')" }}
+      />
+      <div className="absolute inset-0 bg-white/50 dark:bg-[#0b100d]/75" />
+
+      <div className="relative w-full max-w-sm rounded-2xl border border-slate-200/70 bg-white p-8 shadow-card dark:border-white/10 dark:bg-[#111814]">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500 text-white">
             <Sprout size={22} />
