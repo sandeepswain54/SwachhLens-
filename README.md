@@ -10,6 +10,36 @@
 | 👷 Field Staff | `swainsandeep67@gmail.com` | `12345678` |
 | 🏛️ Admin      | `sandeepbusy54@gmail.com`  | `12345678` |
 
+## 🌐 Live Demo
+
+| App | Link |
+| --- | --- |
+| 🏛️ Admin Panel | **[swachlens.vercel.app](https://swachlens.vercel.app/)** |
+| 📱 Mobile App (Web Preview) | **[swachhlensmobileapp.vercel.app](https://swachhlensmobileapp.vercel.app/)** |
+
+---
+
+## 📸 Preview
+
+<table>
+<tr>
+<td align="center" width="50%">
+<a href="https://swachhlensmobileapp.vercel.app/">
+<img src="docs/screenshots/mobile-app-preview.png" alt="SwachhLens Citizen & Field Staff mobile app" width="100%" />
+</a>
+<br/><b>📱 Mobile App</b> — Citizen &amp; Field Staff<br/>
+<a href="https://swachhlensmobileapp.vercel.app/">swachhlensmobileapp.vercel.app</a>
+</td>
+<td align="center" width="50%">
+<a href="https://swachlens.vercel.app/">
+<img src="docs/screenshots/admin-dashboard-preview.png" alt="SwachhLens Admin Panel dashboard" width="100%" />
+</a>
+<br/><b>💻 Admin Panel</b> — Dashboard<br/>
+<a href="https://swachlens.vercel.app/">swachlens.vercel.app</a>
+</td>
+</tr>
+</table>
+
 ---
 
 ## 1. 🎯 About SwachhLens
@@ -261,13 +291,25 @@ No separate AI service to run — Gemini is called directly over HTTPS from both
 ## 10. 📱 Application Screens
 
 **Citizen Mobile App**
-> _Add screenshots: Home, Report Capture, AI Analysis Result, My Reports, Report Status Tracking, Waste Hotspots Map._
+
+<img src="docs/screenshots/mobile-app-preview.png" alt="SwachhLens Citizen app - Home screen" width="60%" />
+
+Home screen shown above (left phone) — AI-powered "Report a Waste Issue" card, active report tracking, and the citizen bottom-tab bar (Home, Report, My Reports, Profile).
+> _More to add: Report Capture, AI Analysis Result, My Reports list, Report Status Tracking, Waste Hotspots Map._
 
 **Field Staff Mobile App**
-> _Add screenshots: Task List, On-the-Way Live Map, Task Progress, Evidence Submission._
+
+Home screen shown above (right phone) — today's assignment stats, "Today's Overview", and the field bottom-tab bar (Home, Tasks, Map, Reports, Profile).
+> _More to add: Task Detail, On-the-Way Live Map, Task Progress, Evidence Submission._
 
 **Admin Dashboard**
-> _Add screenshots: Dashboard Overview, Complaints Table & AI Analysis Tab, Teams & Assignments, Waste Hotspots, AI Analytics._
+
+<img src="docs/screenshots/admin-dashboard-preview.png" alt="SwachhLens Admin dashboard" width="60%" />
+
+Dashboard overview — live complaint stats, complaints trend, category breakdown, and recent alerts.
+> _More to add: Complaints Table & AI Analysis Tab, Teams & Assignments, Waste Hotspots, AI Analytics._
+
+Live versions of both apps: **[Admin Panel](https://swachlens.vercel.app/)** · **[Mobile App](https://swachhlensmobileapp.vercel.app/)**
 
 ---
 
