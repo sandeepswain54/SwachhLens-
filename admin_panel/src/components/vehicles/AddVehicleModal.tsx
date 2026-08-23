@@ -87,7 +87,7 @@ export function AddVehicleModal({ onClose }: { onClose: () => void }) {
   const labelClass = 'mb-1 block text-[12px] font-medium text-slate-500 dark:text-slate-400';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
         className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-[#141c17]"
         onClick={(e) => e.stopPropagation()}>

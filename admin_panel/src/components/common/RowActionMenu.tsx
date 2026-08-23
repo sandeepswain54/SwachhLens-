@@ -59,7 +59,7 @@ export function RowActionMenu({
           <div
             style={{ position: 'fixed', top: coords.top, left: coords.left, width }}
             onClick={(e) => e.stopPropagation()}
-            className="z-50 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-[#1a231d]">
+            className="z-[1200] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-[#1a231d]">
             {children(close)}
           </div>,
           document.body,

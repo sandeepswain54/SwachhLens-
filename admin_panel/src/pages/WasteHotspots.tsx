@@ -339,7 +339,7 @@ export default function WasteHotspots() {
       </div>
 
       {mapExpanded && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-[#0b100d]">
+        <div className="fixed inset-0 z-[1200] flex flex-col bg-white dark:bg-[#0b100d]">
           <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-white/10">
             <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">Hotspots Map</h2>
             <button

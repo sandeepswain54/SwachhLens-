@@ -48,7 +48,7 @@ export function AssignTeamModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
         className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-[#141c17]"
         onClick={(e) => e.stopPropagation()}>

@@ -73,7 +73,7 @@ export function Select({
           <div
             style={{ position: 'fixed', top: coords.top, left: coords.left, minWidth: coords.width }}
             onClick={(e) => e.stopPropagation()}
-            className="z-50 max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-[#1a231d]">
+            className="z-[1200] max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-[#1a231d]">
             {options.map((opt) => (
               <button
                 key={opt.value}
