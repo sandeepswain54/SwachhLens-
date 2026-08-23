@@ -2,9 +2,10 @@ import { Sprout } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/contexts/NotificationsContext';
 import { MAIN_NAV, SYSTEM_NAV, type NavItem } from '@/lib/nav';
 
-function NavRow({ item }: { item: NavItem }) {
+function NavRow({ item, badge }: { item: NavItem; badge?: number }) {
   const Icon = item.icon;
   return (
     <NavLink
@@ -18,13 +19,19 @@ function NavRow({ item }: { item: NavItem }) {
         }`
       }>
       <Icon size={18} strokeWidth={2} />
-      <span className="truncate">{item.label}</span>
+      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+      {!!badge && (
+        <span className="flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
     </NavLink>
   );
 }
 
 export function Sidebar() {
   const { session } = useAuth();
+  const { unreadCount } = useNotifications();
   const email = session?.user.email ?? 'Admin';
   const initials = email.slice(0, 2).toUpperCase();
 
@@ -55,7 +62,7 @@ export function Sidebar() {
         </p>
         <div className="flex flex-col gap-1">
           {SYSTEM_NAV.map((item) => (
-            <NavRow key={item.path} item={item} />
+            <NavRow key={item.path} item={item} badge={item.path === '/notifications' ? unreadCount : undefined} />
           ))}
         </div>
       </nav>

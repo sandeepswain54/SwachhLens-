@@ -1,14 +1,14 @@
-import { Bell, LogOut, Menu, Moon, Sun } from 'lucide-react';
+import { LogOut, Menu, Moon, Sun } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useReports } from '@/contexts/ReportsContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { computeStatusCounts } from '@/lib/stats';
 
 import { DateRangePicker, lastNDays, type DateRange } from './DateRangePicker';
 import { GlobalSearch } from './GlobalSearch';
+import { NotificationBell } from './NotificationBell';
 
 export function Topbar({
   title,
@@ -35,8 +35,7 @@ export function Topbar({
 }) {
   const { theme, toggleTheme } = useTheme();
   const { signOut } = useAuth();
-  const { reports, connected } = useReports();
-  const criticalCount = computeStatusCounts(reports).critical;
+  const { connected } = useReports();
 
   const [internalSearch, setInternalSearch] = useState('');
   const [internalRange, setInternalRange] = useState<DateRange>(() => lastNDays(7));
@@ -95,17 +94,7 @@ export function Topbar({
         {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
       </button>
 
-      <button
-        type="button"
-        title={`${criticalCount} critical/high priority complaint${criticalCount === 1 ? '' : 's'}`}
-        className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5">
-        <Bell size={18} />
-        {criticalCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-            {criticalCount > 99 ? '99+' : criticalCount}
-          </span>
-        )}
-      </button>
+      <NotificationBell />
 
       <button
         type="button"

@@ -3,6 +3,7 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-d
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { FeedbackProvider } from '@/contexts/FeedbackContext';
+import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { ProfilesProvider } from '@/contexts/ProfilesContext';
 import { ReportsProvider } from '@/contexts/ReportsContext';
 import { TeamsProvider } from '@/contexts/TeamsContext';
@@ -14,6 +15,7 @@ import Complaints from '@/pages/Complaints';
 import Dashboard from '@/pages/Dashboard';
 import Feedback from '@/pages/Feedback';
 import Login from '@/pages/Login';
+import Notifications from '@/pages/Notifications';
 import Placeholder from '@/pages/Placeholder';
 import ReportsInsights from '@/pages/ReportsInsights';
 import TeamsAssignments from '@/pages/TeamsAssignments';
@@ -31,7 +33,8 @@ const OTHER_NAV_ITEMS = [...MAIN_NAV, ...SYSTEM_NAV].filter(
     item.path !== '/ai-analytics' &&
     item.path !== '/reports-insights' &&
     item.path !== '/users' &&
-    item.path !== '/feedback'
+    item.path !== '/feedback' &&
+    item.path !== '/notifications'
 );
 
 function ProtectedArea() {
@@ -51,7 +54,9 @@ function ProtectedArea() {
     <ReportsProvider>
       <TeamsProvider>
         <VehiclesProvider>
-          <AppLayout />
+          <NotificationsProvider>
+            <AppLayout />
+          </NotificationsProvider>
         </VehiclesProvider>
       </TeamsProvider>
     </ReportsProvider>
@@ -89,6 +94,7 @@ export default function App() {
                   </FeedbackProvider>
                 }
               />
+              <Route path="/notifications" element={<Notifications />} />
               {OTHER_NAV_ITEMS.map((item) => (
                 <Route
                   key={item.path}

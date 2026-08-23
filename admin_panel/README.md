@@ -44,6 +44,16 @@ refresh needed.
      their submission is approved or sent back; and a `feedback` table (plus
      its own notify trigger) behind the citizen star-rating flow and the new
      Feedback admin page.
+   - [`supabase/008_citizen_notifications.sql`](supabase/008_citizen_notifications.sql)
+     — adds a `citizen_notifications` table and triggers that write one when
+     a citizen's own report is resolved or a field team is assigned to it,
+     behind the mobile app's Home screen bell icon.
+   - [`supabase/009_admin_notifications.sql`](supabase/009_admin_notifications.sql)
+     — adds an `admin_notifications` table (one shared feed for the whole
+     admin/ops team) and triggers that write one on a new citizen complaint,
+     a field team submitting work for review (`assignments.status` ->
+     `pending_review`), or a citizen leaving feedback, behind the admin
+     panel's own Topbar bell icon and Notifications page.
 2. **Deploy the edge functions** (`create-team-member` is already done for the
    live project; `set-user-blocked` and `list-users-auth-meta` are new — only
    needed again if you're pointing this at a different Supabase project):
