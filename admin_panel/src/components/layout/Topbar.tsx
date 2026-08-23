@@ -17,6 +17,7 @@ export function Topbar({
   searchQuery,
   onSearchChange,
   searchPlaceholder,
+  showSearch = true,
   dateRange,
   onDateRangeChange,
   action,
@@ -28,6 +29,8 @@ export function Topbar({
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
+  /** Set to false to hide the global search bar for pages that don't need it. */
+  showSearch?: boolean;
   /** Controlled date range; pages that don't care about it can leave this unset. */
   dateRange?: DateRange;
   onDateRangeChange?: (range: DateRange) => void;
@@ -82,7 +85,7 @@ export function Topbar({
 
       <DateRangePicker value={range} onChange={setRange} />
 
-      <GlobalSearch value={search} onChange={setSearch} placeholder={searchPlaceholder} />
+      {showSearch && <GlobalSearch value={search} onChange={setSearch} placeholder={searchPlaceholder} />}
 
       {action}
 

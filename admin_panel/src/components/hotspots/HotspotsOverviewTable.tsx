@@ -29,17 +29,17 @@ export function HotspotsOverviewTable({
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[860px] border-collapse text-left text-[13px]">
+        <table className="w-full table-fixed border-collapse text-left text-[12.5px]">
           <thead>
-            <tr className="text-[11px] uppercase tracking-wide text-slate-400">
-              <th className="px-3 py-2.5 font-medium">Hotspot ID</th>
-              <th className="px-3 py-2.5 font-medium">Location</th>
-              <th className="px-3 py-2.5 font-medium">Intensity</th>
-              <th className="px-3 py-2.5 font-medium">Waste Type</th>
-              <th className="px-3 py-2.5 font-medium">Total Complaints</th>
-              <th className="px-3 py-2.5 font-medium">Trend</th>
-              <th className="px-3 py-2.5 font-medium">Last Reported</th>
-              <th className="px-3 py-2.5 font-medium">Action</th>
+            <tr className="text-[10.5px] uppercase tracking-wide text-slate-400">
+              <th className="w-[10%] px-2 py-2.5 font-medium">ID</th>
+              <th className="w-[26%] px-2 py-2.5 font-medium">Location</th>
+              <th className="w-[11%] px-2 py-2.5 font-medium">Intensity</th>
+              <th className="w-[13%] px-2 py-2.5 font-medium">Waste Type</th>
+              <th className="w-[12%] px-2 py-2.5 font-medium">Complaints</th>
+              <th className="w-[9%] px-2 py-2.5 font-medium">Trend</th>
+              <th className="w-[12%] px-2 py-2.5 font-medium">Last Reported</th>
+              <th className="w-[7%] px-2 py-2.5 font-medium">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -50,18 +50,18 @@ export function HotspotsOverviewTable({
                 className={`cursor-pointer border-t border-slate-100 text-slate-700 transition-colors dark:border-white/5 dark:text-slate-200 ${
                   selectedCellKey === c.cellKey ? 'bg-brand-50/60 dark:bg-brand-500/10' : 'hover:bg-slate-50 dark:hover:bg-white/5'
                 }`}>
-                <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-brand-600">{c.id}</td>
-                <td className="max-w-[220px] truncate px-3 py-2.5" title={c.address}>
+                <td className="truncate px-2 py-2.5 font-semibold text-brand-600">{c.id}</td>
+                <td className="truncate px-2 py-2.5" title={c.address}>
                   {c.address}
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="px-2 py-2.5">
                   <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${SEVERITY_BADGE[c.intensity]}`}>
                     {c.intensity}
                   </span>
                 </td>
-                <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">{c.category}</td>
-                <td className="px-3 py-2.5">{c.totalComplaints}</td>
-                <td className="px-3 py-2.5">
+                <td className="truncate px-2 py-2.5 text-slate-500 dark:text-slate-400">{c.category}</td>
+                <td className="truncate px-2 py-2.5">{c.totalComplaints}</td>
+                <td className="truncate px-2 py-2.5">
                   {c.trendPercent === null ? (
                     <span className="text-slate-400">New</span>
                   ) : (
@@ -70,10 +70,10 @@ export function HotspotsOverviewTable({
                     </span>
                   )}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2.5 text-slate-500 dark:text-slate-400">
+                <td className="truncate px-2 py-2.5 text-slate-500 dark:text-slate-400">
                   {formatRelativeTime(c.lastReportedAt)}
                 </td>
-                <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                <td className="px-2 py-2.5" onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
                     onClick={() => onSelect(c)}

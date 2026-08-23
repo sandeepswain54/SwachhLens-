@@ -67,15 +67,15 @@ export function DonutChart({
         </div>
       </div>
 
-      <div className="flex w-full flex-col gap-2.5">
+      <div className="flex w-full min-w-0 flex-col gap-2.5">
         {data.map((slice) => (
-          <div key={slice.name} className="flex items-center gap-2 text-[12.5px]">
+          <div key={slice.name} className="flex min-w-0 items-center gap-2 text-[12.5px]">
             <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: slice.color }} />
-            <span className="flex-1 truncate text-slate-600 dark:text-slate-300">{slice.name}</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-100">
+            <span className="min-w-0 flex-1 truncate text-slate-600 dark:text-slate-300">{slice.name}</span>
+            <span className="shrink-0 font-semibold text-slate-800 dark:text-slate-100">
               {slice.count.toLocaleString()}
             </span>
-            <span className="w-12 text-right text-slate-400">({slice.percent.toFixed(1)}%)</span>
+            <span className="w-12 shrink-0 text-right text-slate-400">({slice.percent.toFixed(1)}%)</span>
           </div>
         ))}
       </div>

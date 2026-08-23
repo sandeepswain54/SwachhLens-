@@ -52,34 +52,34 @@ export function RecentAIResultsTable({ reports }: { reports: ReportRow[] }) {
   return (
     <>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[820px] border-collapse text-left text-[13px]">
+        <table className="w-full table-fixed border-collapse text-left text-[12.5px]">
           <thead>
-            <tr className="text-[11px] uppercase tracking-wide text-slate-400">
-              <th className="px-3 pb-2 font-medium">Report ID</th>
-              <th className="px-3 pb-2 font-medium">Image</th>
-              <th className="px-3 pb-2 font-medium">Predicted Category</th>
-              <th className="px-3 pb-2 font-medium">Confidence</th>
-              <th className="px-3 pb-2 font-medium">Volume (Estimated)</th>
-              <th className="px-3 pb-2 font-medium">Severity</th>
-              <th className="px-3 pb-2 font-medium">Duplicate Check</th>
-              <th className="px-3 pb-2 font-medium">Priority Score</th>
-              <th className="px-3 pb-2 font-medium">Analyzed At</th>
-              <th className="px-3 pb-2 font-medium">Action</th>
+            <tr className="text-[10.5px] uppercase tracking-wide text-slate-400">
+              <th className="w-[9%] px-2 pb-2 font-medium">ID</th>
+              <th className="w-[7%] px-2 pb-2 font-medium">Image</th>
+              <th className="w-[13%] px-2 pb-2 font-medium">Category</th>
+              <th className="w-[9%] px-2 pb-2 font-medium">Confidence</th>
+              <th className="w-[13%] px-2 pb-2 font-medium">Volume</th>
+              <th className="w-[9%] px-2 pb-2 font-medium">Severity</th>
+              <th className="w-[13%] px-2 pb-2 font-medium">Duplicate</th>
+              <th className="w-[10%] px-2 pb-2 font-medium">Priority</th>
+              <th className="w-[10%] px-2 pb-2 font-medium">Analyzed</th>
+              <th className="w-[7%] px-2 pb-2 font-medium">Action</th>
             </tr>
           </thead>
           <tbody>
             {pageRows.map((r) => (
               <tr key={r.id} className="border-t border-slate-100 text-slate-700 dark:border-white/5 dark:text-slate-200">
-                <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-brand-600">{r.report_code}</td>
-                <td className="px-3 py-2.5">
+                <td className="truncate px-2 py-2.5 font-semibold text-brand-600">{r.report_code}</td>
+                <td className="px-2 py-2.5">
                   {r.media_type === 'image' ? (
-                    <img src={r.media_url} alt={r.category} className="h-9 w-9 rounded-lg object-cover" />
+                    <img src={r.media_url} alt={r.category} className="h-8 w-8 rounded-lg object-cover" />
                   ) : (
-                    <video src={r.media_url} className="h-9 w-9 rounded-lg object-cover" />
+                    <video src={r.media_url} className="h-8 w-8 rounded-lg object-cover" />
                   )}
                 </td>
-                <td className="px-3 py-2.5">{r.category}</td>
-                <td className="px-3 py-2.5">
+                <td className="truncate px-2 py-2.5">{r.category}</td>
+                <td className="px-2 py-2.5">
                   {r.category_confidence === null ? (
                     '—'
                   ) : (
@@ -95,26 +95,26 @@ export function RecentAIResultsTable({ reports }: { reports: ReportRow[] }) {
                     </span>
                   )}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2.5 text-slate-500 dark:text-slate-400">
+                <td className="truncate px-2 py-2.5 text-slate-500 dark:text-slate-400">
                   {hasModernAnalysis(r.analysis)
                     ? `${r.analysis.volume.size} (${r.analysis.volume.estimatedVolumeLiters})`
                     : '—'}
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="px-2 py-2.5">
                   <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${SEVERITY_BADGE[r.severity_label]}`}>
                     {r.severity_label}
                   </span>
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="truncate px-2 py-2.5">
                   <DuplicateBadge report={r} />
                 </td>
-                <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-slate-700 dark:text-slate-200">
+                <td className="truncate px-2 py-2.5 font-semibold text-slate-700 dark:text-slate-200">
                   {r.severity_score} / 100
                 </td>
-                <td className="whitespace-nowrap px-3 py-2.5 text-slate-500 dark:text-slate-400">
+                <td className="truncate px-2 py-2.5 text-slate-500 dark:text-slate-400">
                   {formatRelativeTime(r.created_at)}
                 </td>
-                <td className="px-3 py-2.5">
+                <td className="px-2 py-2.5">
                   <button
                     type="button"
                     onClick={() => setSelected(r)}

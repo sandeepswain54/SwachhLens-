@@ -1,6 +1,7 @@
-import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Eye, MoreVertical, UserPlus } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Eye, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { RowActionMenu } from '@/components/common/RowActionMenu';
 import { COMPLAINT_STATUS_BADGE, PRIORITY_BADGE } from '@/lib/badges';
 import {
   buildCategoryOptions,
@@ -50,7 +51,6 @@ export function ComplaintsTable({
   const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
 
   const assignmentByReport = useMemo(() => new Map(assignments.map((a) => [a.report_id, a])), [assignments]);
@@ -340,7 +340,7 @@ export function ComplaintsTable({
                     <td className="whitespace-nowrap px-3 py-2.5 text-slate-500 dark:text-slate-400">
                       {formatRelativeTime(r.created_at)}
                     </td>
-                    <td className="relative px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
@@ -348,47 +348,42 @@ export function ComplaintsTable({
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/5 dark:hover:text-slate-200">
                           <Eye size={15} />
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setMenuOpenId(menuOpenId === r.id ? null : r.id)}
-                          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/5 dark:hover:text-slate-200">
-                          <MoreVertical size={15} />
-                        </button>
+                        <RowActionMenu width={176}>
+                          {(close) => (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onAssign(r);
+                                  close();
+                                }}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5">
+                                <UserPlus size={13} /> {assignment ? 'Reassign Team' : 'Assign Team'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setReportEscalated(r.id, !r.escalated).catch((err: Error) => console.error(err));
+                                  close();
+                                }}
+                                disabled={isResolved}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:text-slate-300 dark:hover:bg-white/5">
+                                <AlertTriangle size={13} /> {r.escalated ? 'Un-escalate' : 'Escalate'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  markReportResolved(r.id).catch((err: Error) => console.error(err));
+                                  close();
+                                }}
+                                disabled={isResolved}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:text-slate-300 dark:hover:bg-white/5">
+                                <CheckCircle2 size={13} /> Mark Resolved
+                              </button>
+                            </>
+                          )}
+                        </RowActionMenu>
                       </div>
-
-                      {menuOpenId === r.id && (
-                        <div className="absolute right-3 top-9 z-10 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-[#1a231d]">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onAssign(r);
-                              setMenuOpenId(null);
-                            }}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5">
-                            <UserPlus size={13} /> {assignment ? 'Reassign Team' : 'Assign Team'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setReportEscalated(r.id, !r.escalated).catch((err: Error) => console.error(err));
-                              setMenuOpenId(null);
-                            }}
-                            disabled={isResolved}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:text-slate-300 dark:hover:bg-white/5">
-                            <AlertTriangle size={13} /> {r.escalated ? 'Un-escalate' : 'Escalate'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              markReportResolved(r.id).catch((err: Error) => console.error(err));
-                              setMenuOpenId(null);
-                            }}
-                            disabled={isResolved}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:text-slate-300 dark:hover:bg-white/5">
-                            <CheckCircle2 size={13} /> Mark Resolved
-                          </button>
-                        </div>
-                      )}
                     </td>
                   </tr>
                 );

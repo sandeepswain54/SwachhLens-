@@ -123,6 +123,7 @@ export default function AIAnalytics() {
       <Topbar
         title="AI Analytics"
         breadcrumb={['Dashboard', 'AI Analytics', 'Overview']}
+        showSearch={false}
         action={
           <div className="hidden items-center gap-2 lg:flex">
             <select value={dateRange} onChange={(e) => setDateRange(e.target.value as DateRangeValue)} className={selectClass}>
