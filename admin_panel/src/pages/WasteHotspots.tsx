@@ -12,6 +12,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { Select } from '@/components/common/Select';
 import { Card } from '@/components/dashboard/Card';
 import { HotspotInsights } from '@/components/hotspots/HotspotInsights';
 import { HotspotsMap } from '@/components/hotspots/HotspotsMap';
@@ -234,36 +235,32 @@ export default function WasteHotspots() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <select
+          <Select
             value={intensityFilter}
-            onChange={(e) => setIntensityFilter(e.target.value as HotspotIntensity | 'all')}
-            className={selectClass}>
-            <option value="all">All Levels</option>
-            <option value="Critical">Critical</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-          </select>
+            onChange={(v) => setIntensityFilter(v as HotspotIntensity | 'all')}
+            className={selectClass}
+            options={[
+              { value: 'all', label: 'All Levels' },
+              { value: 'Critical', label: 'Critical' },
+              { value: 'High', label: 'High' },
+              { value: 'Medium', label: 'Medium' },
+              { value: 'Low', label: 'Low' },
+            ]}
+          />
 
-          <select value={wasteTypeFilter} onChange={(e) => setWasteTypeFilter(e.target.value)} className={selectClass}>
-            <option value="all">All Types</option>
-            {categoryOptions.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+          <Select
+            value={wasteTypeFilter}
+            onChange={setWasteTypeFilter}
+            className={selectClass}
+            options={[{ value: 'all', label: 'All Types' }, ...categoryOptions.map((c) => ({ value: c, label: c }))]}
+          />
 
-          <select
+          <Select
             value={dateRange}
-            onChange={(e) => setDateRange(e.target.value as DateRangeValue)}
-            className={selectClass}>
-            {DATE_RANGE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setDateRange(v as DateRangeValue)}
+            className={selectClass}
+            options={DATE_RANGE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+          />
 
           <div className="relative">
             <button
@@ -276,31 +273,24 @@ export default function WasteHotspots() {
               <div className="absolute left-0 top-full z-20 mt-1 w-56 space-y-3 rounded-xl border border-slate-200 bg-white p-3 shadow-lg dark:border-white/10 dark:bg-[#1a231d]">
                 <div>
                   <label className="mb-1 block text-[11px] text-slate-400">Location</label>
-                  <select
+                  <Select
                     value={localityFilter}
-                    onChange={(e) => setLocalityFilter(e.target.value)}
-                    className={`${selectClass} w-full`}>
-                    <option value="all">All Locations</option>
-                    {localityOptions.map((l) => (
-                      <option key={l} value={l}>
-                        {l}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setLocalityFilter}
+                    className={`${selectClass} w-full`}
+                    options={[{ value: 'all', label: 'All Locations' }, ...localityOptions.map((l) => ({ value: l, label: l }))]}
+                  />
                 </div>
                 <div>
                   <label className="mb-1 block text-[11px] text-slate-400">Status</label>
-                  <select
+                  <Select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as ReportStatus | 'all')}
-                    className={`${selectClass} w-full`}>
-                    <option value="all">All Status</option>
-                    {(Object.keys(STATUS_LABEL) as ReportStatus[]).map((s) => (
-                      <option key={s} value={s}>
-                        {STATUS_LABEL[s]}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => setStatusFilter(v as ReportStatus | 'all')}
+                    className={`${selectClass} w-full`}
+                    options={[
+                      { value: 'all', label: 'All Status' },
+                      ...(Object.keys(STATUS_LABEL) as ReportStatus[]).map((s) => ({ value: s, label: STATUS_LABEL[s] })),
+                    ]}
+                  />
                 </div>
                 <button
                   type="button"

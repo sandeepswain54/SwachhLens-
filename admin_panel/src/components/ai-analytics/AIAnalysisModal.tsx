@@ -7,7 +7,7 @@ import type { ReportRow } from '@/lib/reports';
 export function AIAnalysisModal({ report, onClose }: { report: ReportRow; onClose: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onClick={onClose}>
       <div
         className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-[#141c17]"

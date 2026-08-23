@@ -25,7 +25,7 @@ export function UserDetailModal({
   onBlockToggle: (user: AppUser) => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
         className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl dark:bg-[#141c17]"
         onClick={(e) => e.stopPropagation()}>

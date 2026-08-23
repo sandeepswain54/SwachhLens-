@@ -1,6 +1,7 @@
 import { CheckCircle2, Copy, Eye, EyeOff, RefreshCw, X } from 'lucide-react';
 import { useState } from 'react';
 
+import { Select } from '@/components/common/Select';
 import { sendTeamCredentialsEmail } from '@/lib/emailjs';
 import { createTeam, ZONES, type CreateTeamResult } from '@/lib/teams';
 
@@ -77,7 +78,7 @@ export function AddTeamModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
         className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-[#141c17]"
         onClick={(e) => e.stopPropagation()}>
@@ -163,16 +164,12 @@ export function AddTeamModal({ onClose }: { onClose: () => void }) {
                 <label className="mb-1 block text-[12px] font-medium text-slate-500 dark:text-slate-400">
                   Zone
                 </label>
-                <select
+                <Select
                   value={zone}
-                  onChange={(e) => setZone(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-100">
-                  {ZONES.map((z) => (
-                    <option key={z} value={z}>
-                      {z}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setZone}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
+                  options={ZONES.map((z) => ({ value: z, label: z }))}
+                />
               </div>
             </div>
 

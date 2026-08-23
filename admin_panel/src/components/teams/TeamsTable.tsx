@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Eye, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { Select } from '@/components/common/Select';
 import { TEAM_STATUS_BADGE } from '@/lib/badges';
 import { computeTeamWorkload } from '@/lib/team-stats';
 import { TEAM_STATUS_LABEL, ZONES, type AssignmentRow, type TeamRow, type TeamStatus } from '@/lib/teams';
@@ -13,6 +14,9 @@ const TABS: Array<{ label: string; value: TeamStatus | 'all' }> = [
 ];
 
 const PAGE_SIZE = 8;
+
+const selectClass =
+  'rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300';
 
 function workloadBarColor(percent: number): string {
   if (percent >= 80) return '#d03b3b';
@@ -84,28 +88,21 @@ export function TeamsTable({
               className="w-44 bg-transparent outline-none placeholder:text-slate-400 dark:text-slate-200"
             />
           </label>
-          <select
+          <Select
             value={zoneFilter}
-            onChange={(e) => changeFilter(() => setZoneFilter(e.target.value))}
-            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-            <option value="all">All Zones</option>
-            {ZONES.map((z) => (
-              <option key={z} value={z}>
-                {z}
-              </option>
-            ))}
-          </select>
-          <select
+            onChange={(v) => changeFilter(() => setZoneFilter(v))}
+            className={selectClass}
+            options={[{ value: 'all', label: 'All Zones' }, ...ZONES.map((z) => ({ value: z, label: z }))]}
+          />
+          <Select
             value={tab}
-            onChange={(e) => changeFilter(() => setTab(e.target.value as TeamStatus | 'all'))}
-            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-            <option value="all">All Status</option>
-            {(Object.keys(TEAM_STATUS_LABEL) as TeamStatus[]).map((s) => (
-              <option key={s} value={s}>
-                {TEAM_STATUS_LABEL[s]}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => changeFilter(() => setTab(v as TeamStatus | 'all'))}
+            className={selectClass}
+            options={[
+              { value: 'all', label: 'All Status' },
+              ...(Object.keys(TEAM_STATUS_LABEL) as TeamStatus[]).map((s) => ({ value: s, label: TEAM_STATUS_LABEL[s] })),
+            ]}
+          />
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Eye, RotateCcw, Search, Truck } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { Select } from '@/components/common/Select';
 import { VEHICLE_STATUS_BADGE } from '@/lib/badges';
 import { fuelLevelColor } from '@/lib/vehicle-stats';
 import {
@@ -77,38 +78,33 @@ export function VehiclesTable({
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-3 dark:border-white/10">
-        <select value={status} onChange={(e) => changeFilter(() => setStatus(e.target.value as VehicleStatus | 'all'))} className={selectClass}>
-          <option value="all">All Status</option>
-          {(Object.keys(VEHICLE_STATUS_LABEL) as VehicleStatus[]).map((s) => (
-            <option key={s} value={s}>
-              {VEHICLE_STATUS_LABEL[s]}
-            </option>
-          ))}
-        </select>
-        <select value={vehicleType} onChange={(e) => changeFilter(() => setVehicleType(e.target.value))} className={selectClass}>
-          <option value="all">All Types</option>
-          {VEHICLE_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        <select value={location} onChange={(e) => changeFilter(() => setLocation(e.target.value))} className={selectClass}>
-          <option value="all">All Locations</option>
-          {locationOptions.map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
-        <select value={fuelType} onChange={(e) => changeFilter(() => setFuelType(e.target.value))} className={selectClass}>
-          <option value="all">All Fuel Types</option>
-          {FUEL_TYPES.map((f) => (
-            <option key={f} value={f}>
-              {f}
-            </option>
-          ))}
-        </select>
+        <Select
+          value={status}
+          onChange={(v) => changeFilter(() => setStatus(v as VehicleStatus | 'all'))}
+          className={selectClass}
+          options={[
+            { value: 'all', label: 'All Status' },
+            ...(Object.keys(VEHICLE_STATUS_LABEL) as VehicleStatus[]).map((s) => ({ value: s, label: VEHICLE_STATUS_LABEL[s] })),
+          ]}
+        />
+        <Select
+          value={vehicleType}
+          onChange={(v) => changeFilter(() => setVehicleType(v))}
+          className={selectClass}
+          options={[{ value: 'all', label: 'All Types' }, ...VEHICLE_TYPES.map((t) => ({ value: t, label: t }))]}
+        />
+        <Select
+          value={location}
+          onChange={(v) => changeFilter(() => setLocation(v))}
+          className={selectClass}
+          options={[{ value: 'all', label: 'All Locations' }, ...locationOptions.map((l) => ({ value: l, label: l }))]}
+        />
+        <Select
+          value={fuelType}
+          onChange={(v) => changeFilter(() => setFuelType(v))}
+          className={selectClass}
+          options={[{ value: 'all', label: 'All Fuel Types' }, ...FUEL_TYPES.map((f) => ({ value: f, label: f }))]}
+        />
 
         <label className="ml-auto flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[13px] text-slate-500 focus-within:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
           <Search size={14} />

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { Select } from '@/components/common/Select';
 import { Card } from '@/components/dashboard/Card';
 import { DonutChart, type DonutSlice } from '@/components/dashboard/DonutChart';
 import { HotspotMap } from '@/components/dashboard/HotspotMap';
@@ -209,16 +210,12 @@ export default function Dashboard() {
             className="xl:col-span-5"
             action={
               <div className="flex items-center gap-2">
-                <select
+                <Select
                   value={severityFilter}
-                  onChange={(e) => setSeverityFilter(e.target.value as SeverityLabel | 'all')}
-                  className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[12px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-                  {SEVERITY_FILTERS.map((f) => (
-                    <option key={f.value} value={f.value}>
-                      {f.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setSeverityFilter(v as SeverityLabel | 'all')}
+                  className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[12px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
+                  options={SEVERITY_FILTERS.map((f) => ({ value: f.value, label: f.label }))}
+                />
                 <button
                   type="button"
                   onClick={() => setMapExpanded(true)}

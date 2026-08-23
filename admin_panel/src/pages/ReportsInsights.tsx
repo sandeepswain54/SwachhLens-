@@ -2,6 +2,7 @@ import { CheckCircle2, ClipboardList, Clock3, Recycle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { AIStatCard } from '@/components/ai-analytics/AIStatCard';
+import { Select } from '@/components/common/Select';
 import { Card } from '@/components/dashboard/Card';
 import { Topbar } from '@/components/layout/Topbar';
 import { AIAssistantChat } from '@/components/reports-insights/AIAssistantChat';
@@ -59,21 +60,18 @@ export default function ReportsInsights() {
         breadcrumb={['Dashboard', 'Reports & Insights', 'AI Assistant']}
         action={
           <div className="hidden items-center gap-2 lg:flex">
-            <select value={dateRange} onChange={(e) => setDateRange(e.target.value as DateRangeValue)} className={selectClass}>
-              {DATE_RANGE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-            <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className={selectClass}>
-              <option value="all">All Locations</option>
-              {localityOptions.map((l) => (
-                <option key={l} value={l}>
-                  {l}
-                </option>
-              ))}
-            </select>
+            <Select
+              value={dateRange}
+              onChange={(v) => setDateRange(v as DateRangeValue)}
+              className={selectClass}
+              options={DATE_RANGE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+            />
+            <Select
+              value={locationFilter}
+              onChange={setLocationFilter}
+              className={selectClass}
+              options={[{ value: 'all', label: 'All Locations' }, ...localityOptions.map((l) => ({ value: l, label: l }))]}
+            />
           </div>
         }
       />
@@ -86,21 +84,18 @@ export default function ReportsInsights() {
         )}
 
         <div className="flex flex-wrap items-center gap-2 lg:hidden">
-          <select value={dateRange} onChange={(e) => setDateRange(e.target.value as DateRangeValue)} className={selectClass}>
-            {DATE_RANGE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className={selectClass}>
-            <option value="all">All Locations</option>
-            {localityOptions.map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
-            ))}
-          </select>
+          <Select
+            value={dateRange}
+            onChange={(v) => setDateRange(v as DateRangeValue)}
+            className={selectClass}
+            options={DATE_RANGE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+          />
+          <Select
+            value={locationFilter}
+            onChange={setLocationFilter}
+            className={selectClass}
+            options={[{ value: 'all', label: 'All Locations' }, ...localityOptions.map((l) => ({ value: l, label: l }))]}
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">

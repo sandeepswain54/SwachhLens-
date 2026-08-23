@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { Select } from '@/components/common/Select';
 import { ASSIGNMENT_STATUS_BADGE } from '@/lib/badges';
 import type { ReportRow } from '@/lib/reports';
 import {
@@ -74,17 +75,18 @@ export function AssignmentTab({
               No teams yet.
             </p>
           ) : (
-            <select
+            <Select
               value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-100">
-              <option value="">Unassigned</option>
-              {teams.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.team_code} &middot; {t.team_name} ({TEAM_STATUS_LABEL[t.status]})
-                </option>
-              ))}
-            </select>
+              onChange={setTeamId}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
+              options={[
+                { value: '', label: 'Unassigned' },
+                ...teams.map((t) => ({
+                  value: t.id,
+                  label: `${t.team_code} · ${t.team_name} (${TEAM_STATUS_LABEL[t.status]})`,
+                })),
+              ]}
+            />
           )}
         </div>
         <div>
@@ -96,17 +98,18 @@ export function AssignmentTab({
               No available vehicles.
             </p>
           ) : (
-            <select
+            <Select
               value={vehicleId}
-              onChange={(e) => setVehicleId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-100">
-              <option value="">No vehicle</option>
-              {availableVehicles.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.vehicle_no} · {v.vehicle_type} ({VEHICLE_STATUS_LABEL[v.status]})
-                </option>
-              ))}
-            </select>
+              onChange={setVehicleId}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
+              options={[
+                { value: '', label: 'No vehicle' },
+                ...availableVehicles.map((v) => ({
+                  value: v.id,
+                  label: `${v.vehicle_no} · ${v.vehicle_type} (${VEHICLE_STATUS_LABEL[v.status]})`,
+                })),
+              ]}
+            />
           )}
         </div>
       </div>

@@ -2,6 +2,7 @@ import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Eye, UserPlus }
 import { useMemo, useState } from 'react';
 
 import { RowActionMenu } from '@/components/common/RowActionMenu';
+import { Select } from '@/components/common/Select';
 import { COMPLAINT_STATUS_BADGE, PRIORITY_BADGE } from '@/lib/badges';
 import {
   buildCategoryOptions,
@@ -17,6 +18,9 @@ import { priorityForSeverity, type Priority } from '@/lib/team-stats';
 import type { AssignmentRow } from '@/lib/teams';
 
 const PAGE_SIZE = 10;
+
+const selectClass =
+  'rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300';
 
 const TABS: Array<{ label: string; value: ComplaintTab }> = [
   { label: 'All Complaints', value: 'all' },
@@ -163,60 +167,53 @@ export function ComplaintsTable({
       <div className="flex flex-wrap items-end gap-2 border-b border-slate-100 py-3 dark:border-white/10">
         <div>
           <label className="mb-1 block text-[11px] text-slate-400">Status</label>
-          <select
+          <Select
             value={tab === 'duplicates' ? 'all' : tab}
-            onChange={(e) => changeFilter(() => setTab(e.target.value as ComplaintTab))}
-            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-            <option value="all">All Status</option>
-            {(Object.keys(COMPLAINT_STATUS_LABEL) as (keyof typeof COMPLAINT_STATUS_LABEL)[]).map((s) => (
-              <option key={s} value={s}>
-                {COMPLAINT_STATUS_LABEL[s]}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => changeFilter(() => setTab(v as ComplaintTab))}
+            className={selectClass}
+            options={[
+              { value: 'all', label: 'All Status' },
+              ...(Object.keys(COMPLAINT_STATUS_LABEL) as (keyof typeof COMPLAINT_STATUS_LABEL)[]).map((s) => ({
+                value: s,
+                label: COMPLAINT_STATUS_LABEL[s],
+              })),
+            ]}
+          />
         </div>
 
         <div>
           <label className="mb-1 block text-[11px] text-slate-400">Priority</label>
-          <select
+          <Select
             value={priorityFilter}
-            onChange={(e) => changeFilter(() => setPriorityFilter(e.target.value as Priority | 'all'))}
-            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-            <option value="all">All Priority</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-          </select>
+            onChange={(v) => changeFilter(() => setPriorityFilter(v as Priority | 'all'))}
+            className={selectClass}
+            options={[
+              { value: 'all', label: 'All Priority' },
+              { value: 'High', label: 'High' },
+              { value: 'Medium', label: 'Medium' },
+              { value: 'Low', label: 'Low' },
+            ]}
+          />
         </div>
 
         <div>
           <label className="mb-1 block text-[11px] text-slate-400">Category</label>
-          <select
+          <Select
             value={categoryFilter}
-            onChange={(e) => changeFilter(() => setCategoryFilter(e.target.value))}
-            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-            <option value="all">All Categories</option>
-            {categoryOptions.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => changeFilter(() => setCategoryFilter(v))}
+            className={selectClass}
+            options={[{ value: 'all', label: 'All Categories' }, ...categoryOptions.map((c) => ({ value: c, label: c }))]}
+          />
         </div>
 
         <div>
           <label className="mb-1 block text-[11px] text-slate-400">Location</label>
-          <select
+          <Select
             value={localityFilter}
-            onChange={(e) => changeFilter(() => setLocalityFilter(e.target.value))}
-            className="max-w-[140px] rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-            <option value="all">All Locations</option>
-            {localityOptions.map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => changeFilter(() => setLocalityFilter(v))}
+            className={`max-w-[140px] ${selectClass}`}
+            options={[{ value: 'all', label: 'All Locations' }, ...localityOptions.map((l) => ({ value: l, label: l }))]}
+          />
         </div>
 
         <div>

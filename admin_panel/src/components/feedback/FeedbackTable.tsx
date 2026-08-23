@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { Select } from '@/components/common/Select';
 import { formatRelativeTime } from '@/lib/reports';
 import type { FeedbackView } from '@/lib/feedback-stats';
 
@@ -48,20 +49,18 @@ export function FeedbackTable({ views, search }: { views: FeedbackView[]; search
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <select
-          value={ratingFilter}
-          onChange={(e) => {
-            setRatingFilter(e.target.value === 'all' ? 'all' : Number(e.target.value));
+        <Select
+          value={ratingFilter === 'all' ? 'all' : String(ratingFilter)}
+          onChange={(v) => {
+            setRatingFilter(v === 'all' ? 'all' : Number(v));
             setPage(0);
           }}
-          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-          <option value="all">All Ratings</option>
-          {[5, 4, 3, 2, 1].map((n) => (
-            <option key={n} value={n}>
-              {n} Star{n > 1 ? 's' : ''}
-            </option>
-          ))}
-        </select>
+          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-600 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
+          options={[
+            { value: 'all', label: 'All Ratings' },
+            ...[5, 4, 3, 2, 1].map((n) => ({ value: String(n), label: `${n} Star${n > 1 ? 's' : ''}` })),
+          ]}
+        />
       </div>
 
       <div className="overflow-x-auto">

@@ -1,6 +1,7 @@
 import { ImagePlus, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 
+import { Select } from '@/components/common/Select';
 import {
   createVehicle,
   FUEL_TYPES,
@@ -86,7 +87,7 @@ export function AddVehicleModal({ onClose }: { onClose: () => void }) {
   const labelClass = 'mb-1 block text-[12px] font-medium text-slate-500 dark:text-slate-400';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
         className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-[#141c17]"
         onClick={(e) => e.stopPropagation()}>
@@ -138,13 +139,12 @@ export function AddVehicleModal({ onClose }: { onClose: () => void }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>Vehicle Type</label>
-              <select value={vehicleType} onChange={(e) => setVehicleType(e.target.value)} className={inputClass}>
-                {VEHICLE_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
+              <Select
+                value={vehicleType}
+                onChange={setVehicleType}
+                className={inputClass}
+                options={VEHICLE_TYPES.map((t) => ({ value: t, label: t }))}
+              />
             </div>
             <div>
               <label className={labelClass}>
@@ -192,13 +192,12 @@ export function AddVehicleModal({ onClose }: { onClose: () => void }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>Fuel Type</label>
-              <select value={fuelType} onChange={(e) => setFuelType(e.target.value as FuelType)} className={inputClass}>
-                {FUEL_TYPES.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
+              <Select
+                value={fuelType}
+                onChange={(v) => setFuelType(v as FuelType)}
+                className={inputClass}
+                options={FUEL_TYPES.map((f) => ({ value: f, label: f }))}
+              />
             </div>
             <div>
               <label className={labelClass}>Fuel Level (%)</label>
@@ -216,26 +215,26 @@ export function AddVehicleModal({ onClose }: { onClose: () => void }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>Status</label>
-              <select value={status} onChange={(e) => setStatus(e.target.value as VehicleStatus)} className={inputClass}>
-                {(Object.keys(VEHICLE_STATUS_LABEL) as VehicleStatus[]).map((s) => (
-                  <option key={s} value={s}>
-                    {VEHICLE_STATUS_LABEL[s]}
-                  </option>
-                ))}
-              </select>
+              <Select
+                value={status}
+                onChange={(v) => setStatus(v as VehicleStatus)}
+                className={inputClass}
+                options={(Object.keys(VEHICLE_STATUS_LABEL) as VehicleStatus[]).map((s) => ({
+                  value: s,
+                  label: VEHICLE_STATUS_LABEL[s],
+                }))}
+              />
             </div>
             <div>
               <label className={labelClass}>
                 Location <span className="text-slate-300">(optional)</span>
               </label>
-              <select value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass}>
-                <option value="">Unassigned</option>
-                {Object.keys(VEHICLE_LOCATIONS).map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-              </select>
+              <Select
+                value={location}
+                onChange={setLocation}
+                className={inputClass}
+                options={[{ value: '', label: 'Unassigned' }, ...Object.keys(VEHICLE_LOCATIONS).map((l) => ({ value: l, label: l }))]}
+              />
             </div>
           </div>
 

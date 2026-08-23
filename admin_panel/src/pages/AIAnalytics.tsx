@@ -8,6 +8,7 @@ import { DuplicateClustersCard } from '@/components/ai-analytics/DuplicateCluste
 import { GenerateReportButton } from '@/components/ai-analytics/GenerateReportButton';
 import { RecentAIResultsTable } from '@/components/ai-analytics/RecentAIResultsTable';
 import { VolumeBarChart } from '@/components/ai-analytics/VolumeBarChart';
+import { Select } from '@/components/common/Select';
 import { Card } from '@/components/dashboard/Card';
 import { DonutChart, type DonutSlice } from '@/components/dashboard/DonutChart';
 import { Topbar } from '@/components/layout/Topbar';
@@ -126,21 +127,18 @@ export default function AIAnalytics() {
         showSearch={false}
         action={
           <div className="hidden items-center gap-2 lg:flex">
-            <select value={dateRange} onChange={(e) => setDateRange(e.target.value as DateRangeValue)} className={selectClass}>
-              {DATE_RANGE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-            <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className={selectClass}>
-              <option value="all">All Locations</option>
-              {localityOptions.map((l) => (
-                <option key={l} value={l}>
-                  {l}
-                </option>
-              ))}
-            </select>
+            <Select
+              value={dateRange}
+              onChange={(v) => setDateRange(v as DateRangeValue)}
+              className={selectClass}
+              options={DATE_RANGE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+            />
+            <Select
+              value={locationFilter}
+              onChange={setLocationFilter}
+              className={selectClass}
+              options={[{ value: 'all', label: 'All Locations' }, ...localityOptions.map((l) => ({ value: l, label: l }))]}
+            />
             <GenerateReportButton buildInput={buildReportInput} />
           </div>
         }
@@ -155,21 +153,18 @@ export default function AIAnalytics() {
 
         {/* Filter row shown when the header action slot is collapsed on smaller screens. */}
         <div className="flex flex-wrap items-center gap-2 lg:hidden">
-          <select value={dateRange} onChange={(e) => setDateRange(e.target.value as DateRangeValue)} className={selectClass}>
-            {DATE_RANGE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className={selectClass}>
-            <option value="all">All Locations</option>
-            {localityOptions.map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
-            ))}
-          </select>
+          <Select
+            value={dateRange}
+            onChange={(v) => setDateRange(v as DateRangeValue)}
+            className={selectClass}
+            options={DATE_RANGE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+          />
+          <Select
+            value={locationFilter}
+            onChange={setLocationFilter}
+            className={selectClass}
+            options={[{ value: 'all', label: 'All Locations' }, ...localityOptions.map((l) => ({ value: l, label: l }))]}
+          />
           <GenerateReportButton buildInput={buildReportInput} />
         </div>
 

@@ -2,6 +2,7 @@ import { Ban, CheckCircle2, ChevronLeft, ChevronRight, Eye, RotateCcw } from 'lu
 import { useMemo, useState } from 'react';
 
 import { RowActionMenu } from '@/components/common/RowActionMenu';
+import { Select } from '@/components/common/Select';
 import { formatAbsoluteDateTime } from '@/lib/reports';
 import type { AppUser, UserType } from '@/lib/users-stats';
 
@@ -117,42 +118,41 @@ export function UsersTable({ users, search }: { users: AppUser[]; search: string
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <select
+        <Select
           value={typeFilter}
-          onChange={(e) => {
-            setTypeFilter(e.target.value as 'all' | UserType);
+          onChange={(v) => {
+            setTypeFilter(v as 'all' | UserType);
             setPage(0);
           }}
-          className={selectClass}>
-          <option value="all">All Types</option>
-          <option value="citizen">Citizen Users</option>
-          <option value="field_team">Field Team Users</option>
-        </select>
-        <select
+          className={selectClass}
+          options={[
+            { value: 'all', label: 'All Types' },
+            { value: 'citizen', label: 'Citizen Users' },
+            { value: 'field_team', label: 'Field Team Users' },
+          ]}
+        />
+        <Select
           value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value as 'all' | AppUser['status']);
+          onChange={(v) => {
+            setStatusFilter(v as 'all' | AppUser['status']);
             setPage(0);
           }}
-          className={selectClass}>
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="blocked">Blocked</option>
-        </select>
-        <select
+          className={selectClass}
+          options={[
+            { value: 'all', label: 'All Status' },
+            { value: 'active', label: 'Active' },
+            { value: 'blocked', label: 'Blocked' },
+          ]}
+        />
+        <Select
           value={zoneFilter}
-          onChange={(e) => {
-            setZoneFilter(e.target.value);
+          onChange={(v) => {
+            setZoneFilter(v);
             setPage(0);
           }}
-          className={selectClass}>
-          <option value="all">All Zones</option>
-          {zoneOptions.map((z) => (
-            <option key={z} value={z}>
-              {z}
-            </option>
-          ))}
-        </select>
+          className={selectClass}
+          options={[{ value: 'all', label: 'All Zones' }, ...zoneOptions.map((z) => ({ value: z, label: z }))]}
+        />
         <button
           type="button"
           onClick={resetFilters}

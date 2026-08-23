@@ -6,7 +6,7 @@ import { formatRelativeTime, STATUS_LABEL, type ReportRow } from '@/lib/reports'
 export function ReportDetailModal({ report, onClose }: { report: ReportRow; onClose: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onClick={onClose}>
       <div
         className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-[#141c17]"

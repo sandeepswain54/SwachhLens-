@@ -27,15 +27,21 @@ body {
   color: #1a2e22;
 }
 
-/* Native <select> popups (and other form controls) otherwise always
-   render with the OS light-mode chrome, even while the app is in dark
-   mode — color-scheme is what tells the browser to paint that native
-   popup with dark colors instead. */
-select {
+/* Native date/time inputs still use the OS/browser's own popup calendar —
+   color-scheme is what tells the browser to paint that popup with dark
+   colors instead of always defaulting to light. (Dropdowns used to rely
+   on this same trick, but color-scheme's effect on a <select> popup proved
+   unreliable in practice, so those were replaced with the fully custom
+   Select component in components/common/Select.tsx instead.) */
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'] {
   color-scheme: light;
 }
 
-html.dark select {
+html.dark input[type='date'],
+html.dark input[type='time'],
+html.dark input[type='datetime-local'] {
   color-scheme: dark;
 }
 
