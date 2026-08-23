@@ -278,20 +278,20 @@ export function ComplaintsTable({
         <p className="py-10 text-center text-[13px] text-slate-400">No complaints match your filters yet.</p>
       ) : (
         <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[860px] border-collapse text-left text-[13px]">
+          <table className="w-full table-fixed border-collapse text-left text-[13px]">
             <thead>
               <tr className="text-[11px] uppercase tracking-wide text-slate-400">
-                <th className="w-8 px-3 py-2.5">
+                <th className="w-[4%] px-3 py-2.5">
                   <input type="checkbox" checked={allPageSelected} onChange={togglePage} className="accent-brand-500" />
                 </th>
-                <th className="px-3 py-2.5 font-medium">ID</th>
-                <th className="px-3 py-2.5 font-medium">Image</th>
-                <th className="px-3 py-2.5 font-medium">Type</th>
-                <th className="px-3 py-2.5 font-medium">Location</th>
-                <th className="px-3 py-2.5 font-medium">Priority</th>
-                <th className="px-3 py-2.5 font-medium">Status</th>
-                <th className="px-3 py-2.5 font-medium">Reported At</th>
-                <th className="px-3 py-2.5 font-medium">Action</th>
+                <th className="w-[9%] px-3 py-2.5 font-medium">ID</th>
+                <th className="w-[8%] px-3 py-2.5 font-medium">Image</th>
+                <th className="w-[12%] px-3 py-2.5 font-medium">Type</th>
+                <th className="w-[20%] px-3 py-2.5 font-medium">Location</th>
+                <th className="w-[9%] px-3 py-2.5 font-medium">Priority</th>
+                <th className="w-[10%] px-3 py-2.5 font-medium">Status</th>
+                <th className="w-[11%] px-3 py-2.5 font-medium">Reported At</th>
+                <th className="w-[17%] px-3 py-2.5 font-medium">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -316,12 +316,12 @@ export function ComplaintsTable({
                         className="accent-brand-500"
                       />
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-brand-600">#{r.report_code}</td>
+                    <td className="truncate px-3 py-2.5 font-semibold text-brand-600">#{r.report_code}</td>
                     <td className="px-3 py-2.5">
                       <img src={r.media_url} alt="" className="h-9 w-9 rounded-lg object-cover" />
                     </td>
-                    <td className="px-3 py-2.5">{r.category}</td>
-                    <td className="max-w-[140px] truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">
+                    <td className="truncate px-3 py-2.5">{r.category}</td>
+                    <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">
                       {r.address}
                     </td>
                     <td className="px-3 py-2.5">
@@ -334,7 +334,7 @@ export function ComplaintsTable({
                         {COMPLAINT_STATUS_LABEL[status]}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-slate-500 dark:text-slate-400">
+                    <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">
                       {formatRelativeTime(r.created_at)}
                     </td>
                     <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
