@@ -1,9 +1,51 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getMyTeam } from '@/lib/field-team';
+import { supabase } from '@/lib/supabase';
+
 export default function WelcomeScreen() {
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  // If the device already has a signed-in session (persisted across app
+  // restarts/reloads by lib/supabase.ts's AsyncStorage config), skip
+  // straight to that user's home screen instead of showing Welcome/Login
+  // again — a restart should never look like being logged out.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        if (!cancelled) setCheckingSession(false);
+        return;
+      }
+
+      const team = await getMyTeam().catch(() => null);
+      if (cancelled) return;
+      router.replace(team ? '/(field)' : '/(tabs)');
+    }
+
+    checkSession();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (checkingSession) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator color="#1B6B3A" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Image
@@ -46,6 +88,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#eaf4ee',
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#eaf4ee',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   overlay: {
     flex: 1,

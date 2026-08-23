@@ -41,6 +41,9 @@ export default function RootLayout() {
           <Stack.Screen name="report-status" options={{ headerShown: false }} />
           <Stack.Screen name="report-feedback" options={{ headerShown: false }} />
           <Stack.Screen name="waste-hotspots" options={{ headerShown: false }} />
+          <Stack.Screen name="personal-information" options={{ headerShown: false }} />
+          <Stack.Screen name="saved-locations" options={{ headerShown: false }} />
+          <Stack.Screen name="notifications" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
       </ReportFlowProvider>

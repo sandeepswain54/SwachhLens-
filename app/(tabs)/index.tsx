@@ -3,9 +3,24 @@ import { Image } from 'expo-image';
 import * as Location from 'expo-location';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  type CitizenNotification,
+  getMyNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  subscribeToMyNotifications,
+} from '@/lib/citizen-notifications';
 import { reverseGeocode } from '@/lib/geocoding';
 import { getCurrentProfile, updateProfileLocation, type UserProfile } from '@/lib/profile';
 import {
@@ -17,6 +32,7 @@ import {
   type ImpactStats,
   type ReportRow,
 } from '@/lib/reports';
+import { supabase } from '@/lib/supabase';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -73,10 +89,16 @@ export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [locationLabel, setLocationLabel] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
+  const [notifications, setNotifications] = useState<CitizenNotification[]>([]);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
+      let unsubscribe: (() => void) | null = null;
 
       async function autoDetectLocation() {
         setLocating(true);
@@ -115,10 +137,11 @@ export default function HomeScreen() {
       }
 
       async function load() {
-        const [reports, stats, currentProfile] = await Promise.all([
+        const [reports, stats, currentProfile, { data: userData }] = await Promise.all([
           getMyReports().catch(() => []),
           getMyImpactStats().catch(() => ({ submitted: 0, resolved: 0, wasteRemovedKg: 0 })),
           getCurrentProfile().catch(() => null),
+          supabase.auth.getUser(),
         ]);
         if (cancelled) return;
         setLatestReport(reports[0] ?? null);
@@ -130,13 +153,39 @@ export default function HomeScreen() {
         } else {
           autoDetectLocation();
         }
+
+        const uid = userData.user?.id ?? null;
+        setUserId(uid);
+        if (uid) {
+          getMyNotifications(uid)
+            .then((rows) => {
+              if (!cancelled) setNotifications(rows);
+            })
+            .catch(() => null);
+          unsubscribe = subscribeToMyNotifications(uid, (row) => {
+            setNotifications((prev) => [row, ...prev]);
+          });
+        }
       }
       load();
       return () => {
         cancelled = true;
+        unsubscribe?.();
       };
     }, [])
   );
+
+  function handleNotificationPress(n: CitizenNotification) {
+    if (n.is_read) return;
+    setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
+    markNotificationRead(n.id).catch(() => null);
+  }
+
+  function handleMarkAllRead() {
+    if (!userId) return;
+    setNotifications((prev) => prev.map((x) => ({ ...x, is_read: true })));
+    markAllNotificationsRead(userId).catch(() => null);
+  }
 
   return (
     <View style={styles.container}>
@@ -150,9 +199,13 @@ export default function HomeScreen() {
             />
 
             <View style={styles.headerRow}>
-              <Pressable hitSlop={8} style={styles.bellButton}>
+              <Pressable hitSlop={8} style={styles.bellButton} onPress={() => setNotifOpen(true)}>
                 <Ionicons name="notifications-outline" size={24} color="#1A2E22" />
-                <View style={styles.bellDot} />
+                {unreadCount > 0 && (
+                  <View style={styles.bellBadge}>
+                    <Text style={styles.bellBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                  </View>
+                )}
               </Pressable>
             </View>
 
@@ -408,6 +461,48 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
+
+      <Modal visible={notifOpen} animationType="slide" transparent onRequestClose={() => setNotifOpen(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setNotifOpen(false)}>
+          <Pressable style={styles.notifPanel} onPress={(e) => e.stopPropagation()}>
+            <SafeAreaView edges={['top']}>
+              <View style={styles.notifHeader}>
+                <Text style={styles.notifHeaderTitle}>Notifications</Text>
+                <View style={styles.notifHeaderActions}>
+                  {unreadCount > 0 && (
+                    <Pressable onPress={handleMarkAllRead}>
+                      <Text style={styles.notifMarkAllText}>Mark all read</Text>
+                    </Pressable>
+                  )}
+                  <Pressable hitSlop={8} onPress={() => setNotifOpen(false)}>
+                    <Ionicons name="close" size={22} color="#1A2E22" />
+                  </Pressable>
+                </View>
+              </View>
+
+              <ScrollView style={styles.notifList} showsVerticalScrollIndicator={false}>
+                {notifications.length === 0 ? (
+                  <Text style={styles.notifEmptyText}>No notifications yet.</Text>
+                ) : (
+                  notifications.map((n) => (
+                    <Pressable
+                      key={n.id}
+                      style={[styles.notifRow, !n.is_read && styles.notifRowUnread]}
+                      onPress={() => handleNotificationPress(n)}>
+                      {!n.is_read && <View style={styles.notifDot} />}
+                      <View style={styles.notifRowBody}>
+                        <Text style={styles.notifTitle}>{n.title}</Text>
+                        <Text style={styles.notifBody}>{n.body}</Text>
+                        <Text style={styles.notifTime}>{formatRelativeTime(n.created_at)}</Text>
+                      </View>
+                    </Pressable>
+                  ))
+                )}
+              </ScrollView>
+            </SafeAreaView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -439,16 +534,24 @@ const styles = StyleSheet.create({
   bellButton: {
     position: 'relative',
   },
-  bellDot: {
+  bellBadge: {
     position: 'absolute',
-    top: -1,
-    right: -1,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    top: -5,
+    right: -7,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3,
     backgroundColor: '#e0432b',
-    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
     borderColor: '#eaf3ef',
+  },
+  bellBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#ffffff',
   },
   greetingBlock: {
     paddingHorizontal: 20,
@@ -775,5 +878,87 @@ const styles = StyleSheet.create({
     color: '#6b7770',
     textAlign: 'center',
     lineHeight: 13,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(10,20,15,0.4)',
+  },
+  notifPanel: {
+    backgroundColor: '#ffffff',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    maxHeight: '70%',
+  },
+  notifHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f3f2',
+  },
+  notifHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1A2E22',
+  },
+  notifHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  notifMarkAllText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#1B6B3A',
+  },
+  notifList: {
+    paddingHorizontal: 12,
+  },
+  notifEmptyText: {
+    textAlign: 'center',
+    color: '#8a9590',
+    fontSize: 13,
+    paddingVertical: 28,
+  },
+  notifRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f6f7f6',
+  },
+  notifRowUnread: {
+    backgroundColor: '#f3faf6',
+    borderRadius: 12,
+  },
+  notifDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#1B6B3A',
+    marginTop: 6,
+  },
+  notifRowBody: {
+    flex: 1,
+    gap: 2,
+  },
+  notifTitle: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#1A2E22',
+  },
+  notifBody: {
+    fontSize: 12,
+    color: '#4a5750',
+    lineHeight: 16,
+  },
+  notifTime: {
+    fontSize: 10.5,
+    color: '#9aa5a0',
+    marginTop: 2,
   },
 });

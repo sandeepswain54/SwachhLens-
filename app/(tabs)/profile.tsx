@@ -20,12 +20,9 @@ import { getCurrentProfile, updateFullName, uploadAvatar, type UserProfile } fro
 import { supabase } from '@/lib/supabase';
 
 const MENU_ITEMS = [
-  { icon: 'person-outline', label: 'Personal Information' },
-  { icon: 'location-outline', label: 'Saved Locations' },
-  { icon: 'notifications-outline', label: 'Notifications' },
-  { icon: 'help-circle-outline', label: 'Help & Support' },
-  { icon: 'shield-checkmark-outline', label: 'Privacy Policy' },
-  { icon: 'document-text-outline', label: 'Terms & Conditions' },
+  { icon: 'person-outline', label: 'Personal Information', route: '/personal-information' },
+  { icon: 'location-outline', label: 'Saved Locations', route: '/saved-locations' },
+  { icon: 'notifications-outline', label: 'Notifications', route: '/notifications' },
 ] as const;
 
 export default function ProfileScreen() {
@@ -117,9 +114,16 @@ export default function ProfileScreen() {
     ]);
   }
 
-  async function handleLogout() {
+  async function performLogout() {
     await supabase.auth.signOut();
     router.replace('/login');
+  }
+
+  function handleLogout() {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Logout', style: 'destructive', onPress: performLogout },
+    ]);
   }
 
   if (profile === undefined) {
@@ -209,7 +213,8 @@ export default function ProfileScreen() {
           {MENU_ITEMS.map((item, index) => (
             <Pressable
               key={item.label}
-              style={[styles.menuRow, index === MENU_ITEMS.length - 1 && styles.menuRowLast]}>
+              style={[styles.menuRow, index === MENU_ITEMS.length - 1 && styles.menuRowLast]}
+              onPress={() => router.push(item.route)}>
               <Ionicons name={item.icon} size={19} color="#1B6B3A" />
               <Text style={styles.menuLabel}>{item.label}</Text>
               <Ionicons name="chevron-forward" size={16} color="#c3cac6" />

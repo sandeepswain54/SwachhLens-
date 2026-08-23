@@ -2,9 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +22,8 @@ import { useCooldown } from '@/hooks/use-cooldown';
 import { parseAuthError } from '@/lib/auth-errors';
 import { supabase } from '@/lib/supabase';
 
+const AVATAR_HEIGHT = 204;
+
 export default function SignUpScreen() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -29,6 +35,37 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useCooldown();
+
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmPasswordRef = useRef<TextInput>(null);
+
+  const avatarHeight = useRef(new Animated.Value(AVATAR_HEIGHT)).current;
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      Animated.timing(avatarHeight, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      Animated.timing(avatarHeight, {
+        toValue: AVATAR_HEIGHT,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [avatarHeight]);
 
   async function handleSignUp() {
     if (cooldown > 0) return;
@@ -51,12 +88,12 @@ export default function SignUpScreen() {
 
     setError(null);
     setLoading(true);
-    const { data, error: signUpError } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
         data: { full_name: fullName.trim(), role: 'user' },
-        emailRedirectTo: Linking.createURL('verify-email', { scheme: 'swachhlens' }),
+        // emailRedirectTo: Linking.createURL('verify-email', { scheme: 'swachhlens' }),
       },
     });
     setLoading(false);
@@ -68,126 +105,152 @@ export default function SignUpScreen() {
       return;
     }
 
-    if (data.session) {
-      // Email confirmation is disabled on this project, so the account is
-      // already active — skip straight to the app.
-      router.replace('/(tabs)');
-      return;
-    }
-
-    router.replace({ pathname: '/check-email', params: { email: email.trim() } });
+    router.replace('/(tabs)');
   }
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Join as a Citizen</Text>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive">
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Join as a Citizen</Text>
 
-        <Image
-          source={require('@/assets/images/girl.png')}
-          style={styles.avatar}
-          contentFit="contain"
-        />
-
-        <View style={styles.form}>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="person-outline" size={20} color="#8a9590" />
-            <TextInput
-              style={styles.input}
-              placeholder="Full Name"
-              placeholderTextColor="#9aa5a0"
-              value={fullName}
-              onChangeText={setFullName}
+          <Animated.View style={[styles.avatarContainer, { height: avatarHeight }]}>
+            <Image
+              source={require('@/assets/images/girl.png')}
+              style={styles.avatar}
+              contentFit="contain"
             />
-          </View>
+          </Animated.View>
 
-          <View style={styles.inputWrapper}>
-            <Ionicons name="mail-outline" size={20} color="#8a9590" />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#9aa5a0"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </View>
-
-          <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed-outline" size={20} color="#8a9590" />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#9aa5a0"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <Pressable onPress={() => setShowPassword((prev) => !prev)}>
-              <Ionicons
-                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={20}
-                color="#8a9590"
+          <View style={styles.form}>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person-outline" size={20} color="#8a9590" />
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor="#9aa5a0"
+                autoCorrect={false}
+                textContentType="name"
+                returnKeyType="next"
+                onSubmitEditing={() => emailRef.current?.focus()}
+                blurOnSubmit={false}
+                value={fullName}
+                onChangeText={setFullName}
               />
-            </Pressable>
-          </View>
+            </View>
 
-          <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed-outline" size={20} color="#8a9590" />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              placeholderTextColor="#9aa5a0"
-              secureTextEntry={!showConfirmPassword}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-            />
-            <Pressable onPress={() => setShowConfirmPassword((prev) => !prev)}>
-              <Ionicons
-                name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={20}
-                color="#8a9590"
+            <View style={styles.inputWrapper}>
+              <Ionicons name="mail-outline" size={20} color="#8a9590" />
+              <TextInput
+                ref={emailRef}
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="#9aa5a0"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                blurOnSubmit={false}
+                value={email}
+                onChangeText={setEmail}
               />
-            </Pressable>
-          </View>
+            </View>
 
-          <Pressable style={styles.agreeRow} onPress={() => setAgreed((prev) => !prev)}>
-            <Ionicons
-              name={agreed ? 'checkbox' : 'square-outline'}
-              size={20}
-              color={agreed ? '#1B6B3A' : '#9aa5a0'}
-            />
-            <Text style={styles.agreeText}>
-              I agree to the <Text style={styles.agreeLink}>Terms & Conditions</Text> and{' '}
-              <Text style={styles.agreeLink}>Privacy Policy</Text>
-            </Text>
-          </Pressable>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="lock-closed-outline" size={20} color="#8a9590" />
+              <TextInput
+                ref={passwordRef}
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#9aa5a0"
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="newPassword"
+                returnKeyType="next"
+                onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                blurOnSubmit={false}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <Pressable onPress={() => setShowPassword((prev) => !prev)}>
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color="#8a9590"
+                />
+              </Pressable>
+            </View>
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+            <View style={styles.inputWrapper}>
+              <Ionicons name="lock-closed-outline" size={20} color="#8a9590" />
+              <TextInput
+                ref={confirmPasswordRef}
+                style={styles.input}
+                placeholder="Confirm Password"
+                placeholderTextColor="#9aa5a0"
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="newPassword"
+                returnKeyType="done"
+                onSubmitEditing={handleSignUp}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+              />
+              <Pressable onPress={() => setShowConfirmPassword((prev) => !prev)}>
+                <Ionicons
+                  name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color="#8a9590"
+                />
+              </Pressable>
+            </View>
 
-          <Pressable
-            style={[styles.signUpButton, (loading || cooldown > 0) && styles.buttonDisabled]}
-            onPress={handleSignUp}
-            disabled={loading || cooldown > 0}>
-            {loading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.signUpButtonText}>
-                {cooldown > 0 ? `Try again in ${cooldown}s` : 'Sign Up'}
+            <Pressable style={styles.agreeRow} onPress={() => setAgreed((prev) => !prev)}>
+              <Ionicons
+                name={agreed ? 'checkbox' : 'square-outline'}
+                size={20}
+                color={agreed ? '#1B6B3A' : '#9aa5a0'}
+              />
+              <Text style={styles.agreeText}>
+                I agree to the <Text style={styles.agreeLink}>Terms & Conditions</Text> and{' '}
+                <Text style={styles.agreeLink}>Privacy Policy</Text>
               </Text>
-            )}
-          </Pressable>
-
-          <View style={styles.loginRow}>
-            <Text style={styles.loginText}>Already have an account? </Text>
-            <Pressable onPress={() => router.replace('/login')}>
-              <Text style={styles.loginLink}>Login</Text>
             </Pressable>
+
+            {error && <Text style={styles.errorText}>{error}</Text>}
+
+            <Pressable
+              style={[styles.signUpButton, (loading || cooldown > 0) && styles.buttonDisabled]}
+              onPress={handleSignUp}
+              disabled={loading || cooldown > 0}>
+              {loading ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.signUpButtonText}>
+                  {cooldown > 0 ? `Try again in ${cooldown}s` : 'Sign Up'}
+                </Text>
+              )}
+            </Pressable>
+
+            <View style={styles.loginRow}>
+              <Text style={styles.loginText}>Already have an account? </Text>
+              <Pressable onPress={() => router.replace('/login')}>
+                <Text style={styles.loginLink}>Login</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -213,12 +276,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7770',
   },
+  avatarContainer: {
+    marginTop: 16,
+    marginBottom: 8,
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
   avatar: {
     width: 180,
     height: 180,
     borderRadius: 90,
-    marginTop: 16,
-    marginBottom: 8,
   },
   form: {
     width: '100%',

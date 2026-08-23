@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import { getCommunityReportPins, subscribeToNewReportPins, type ReportPin } from '@/lib/reports';
 
@@ -32,6 +32,18 @@ function buildHotspotMapHtml(pins: ReportPin[], center: { latitude: number; long
   <div id="map"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    function post(type, payload) {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: type, payload: payload }));
+      }
+    }
+    // Catches anything that slips past the try/catch blocks below so a
+    // single bad row can never silently kill every marker on the map.
+    window.onerror = function (message) {
+      post('error', String(message));
+      return false;
+    };
+
     var map = L.map('map', { zoomControl: false }).setView([${center.latitude}, ${center.longitude}], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
@@ -50,31 +62,63 @@ function buildHotspotMapHtml(pins: ReportPin[], center: { latitude: number; long
     function makeIcon(color) {
       return L.divIcon({
         className: '',
-        html: '<div class="pin-marker" style="background:' + color + ';width:30px;height:30px;"><span>\u{1F343}</span></div>',
+        html: '<div class="pin-marker" style="background:' + color + ';width:30px;height:30px;"><span>\u{1F5D1}\u{FE0F}</span></div>',
         iconSize: [30, 30],
         iconAnchor: [15, 30],
       });
     }
 
     function addPin(pin) {
-      if (markers[pin.id]) return;
-      var marker = L.marker([pin.latitude, pin.longitude], { icon: makeIcon(colorFor(pin.severity_label)) });
-      marker.bindPopup('<b>' + pin.category + '</b><br/>' + pin.severity_label + ' severity &middot; ' + pin.report_code);
-      marker.addTo(markerLayer);
-      markers[pin.id] = marker;
+      try {
+        if (!pin || markers[pin.id]) return;
+        var lat = Number(pin.latitude);
+        var lng = Number(pin.longitude);
+        if (!isFinite(lat) || !isFinite(lng)) {
+          post('error', 'Skipped pin ' + pin.id + ' — invalid coordinates (' + pin.latitude + ', ' + pin.longitude + ')');
+          return;
+        }
+        var marker = L.marker([lat, lng], { icon: makeIcon(colorFor(pin.severity_label)) });
+        marker.bindPopup('<b>' + pin.category + '</b><br/>' + pin.severity_label + ' severity &middot; ' + pin.report_code);
+        marker.addTo(markerLayer);
+        markers[pin.id] = marker;
+      } catch (err) {
+        post('error', 'addPin failed: ' + (err && err.message ? err.message : err));
+      }
     }
 
     window.addPin = function (json) {
-      addPin(JSON.parse(json));
+      try {
+        // Accept either a JSON string (the normal injectJavaScript bridge
+        // call) or an already-parsed object, so a stray call shape never
+        // throws an uncaught SyntaxError that JSON.parse(object) would
+        // otherwise produce.
+        var pin = typeof json === 'string' ? JSON.parse(json) : json;
+        addPin(pin);
+      } catch (err) {
+        post('error', 'window.addPin failed: ' + (err && err.message ? err.message : err));
+      }
     };
 
     window.fitAll = function () {
       var layers = markerLayer.getLayers();
       if (layers.length === 0) return;
+      if (layers.length === 1) {
+        map.setView(layers[0].getLatLng(), 15);
+        return;
+      }
       map.fitBounds(L.featureGroup(layers).getBounds().pad(0.2));
     };
 
-    (${pinsJson}).forEach(addPin);
+    // Fit the map to every hotspot right away, instead of leaving it
+    // centered/zoomed on just the most recent report — otherwise reports
+    // elsewhere in the city stay off-screen until the user manually taps
+    // "View All on Map".
+    var initialPins = ${pinsJson};
+    initialPins.forEach(addPin);
+    post('pinsAdded', markerLayer.getLayers().length);
+    if (initialPins.length > 0) {
+      window.fitAll();
+    }
   </script>
 </body>
 </html>`;
@@ -84,6 +128,10 @@ export default function WasteHotspotsScreen() {
   const webviewRef = useRef<WebView>(null);
   const [pins, setPins] = useState<ReportPin[] | null>(null);
   const [html, setHtml] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [mapScriptError, setMapScriptError] = useState<string | null>(null);
+  const [pinsRenderedCount, setPinsRenderedCount] = useState<number | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const mapReadyRef = useRef(false);
   const pendingPinsRef = useRef<ReportPin[]>([]);
 
@@ -103,9 +151,26 @@ export default function WasteHotspotsScreen() {
       setHtml(buildHotspotMapHtml(result, center));
     }
 
+    setHtml(null);
+    setLoadError(null);
+    setMapScriptError(null);
+    setPinsRenderedCount(null);
+
     getCommunityReportPins()
-      .then(initializeMap)
-      .catch(() => initializeMap([]));
+      .then((result) => {
+        if (cancelled) return;
+        setLoadError(null);
+        initializeMap(result);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        // Reports fail to load here if the "Authenticated users can view
+        // all reports" RLS policy (001_admin_dashboard.sql) isn't applied
+        // on this Supabase project — surface that instead of silently
+        // showing an empty map with no explanation.
+        setLoadError(err instanceof Error ? err.message : 'Could not load hotspots.');
+        initializeMap([]);
+      });
 
     const unsubscribe = subscribeToNewReportPins((pin) => {
       setPins((prev) => (prev ? [pin, ...prev] : [pin]));
@@ -120,7 +185,7 @@ export default function WasteHotspotsScreen() {
       cancelled = true;
       unsubscribe();
     };
-  }, []);
+  }, [reloadKey]);
 
   const counts = useMemo(() => {
     const result = { high: 0, medium: 0, low: 0 };
@@ -137,6 +202,24 @@ export default function WasteHotspotsScreen() {
         webviewRef.current?.injectJavaScript(`window.addPin(${JSON.stringify(JSON.stringify(pin))}); true;`);
       });
       pendingPinsRef.current = [];
+    }
+  }
+
+  // The map's own script reports how many markers it actually managed to
+  // place (and any per-marker failure) via postMessage — this is what
+  // catches e.g. a report with bad/missing coordinates that would
+  // otherwise silently render zero markers with no error anywhere.
+  function handleWebViewMessage(event: WebViewMessageEvent) {
+    try {
+      const message = JSON.parse(event.nativeEvent.data) as { type: string; payload: unknown };
+      if (message.type === 'error') {
+        console.warn('[waste-hotspots map]', message.payload);
+        setMapScriptError(String(message.payload));
+      } else if (message.type === 'pinsAdded') {
+        setPinsRenderedCount(Number(message.payload) || 0);
+      }
+    } catch {
+      // Ignore malformed bridge messages.
     }
   }
 
@@ -157,11 +240,53 @@ export default function WasteHotspotsScreen() {
             source={{ html }}
             style={styles.map}
             javaScriptEnabled
+            domStorageEnabled
+            originWhitelist={['*']}
+            mixedContentMode="always"
             onLoadEnd={handleMapLoaded}
+            onMessage={handleWebViewMessage}
           />
         ) : (
           <View style={styles.loadingWrap}>
             <ActivityIndicator color="#1B6B3A" size="large" />
+          </View>
+        )}
+
+        {html && pins?.length === 0 && (
+          <View style={styles.overlayCard} pointerEvents="box-none">
+            <View style={styles.overlayInner}>
+              <Ionicons
+                name={loadError ? 'alert-circle-outline' : 'location-outline'}
+                size={20}
+                color={loadError ? '#c0392b' : '#6b7770'}
+              />
+              <Text style={styles.overlayText}>
+                {loadError
+                  ? `Couldn't load hotspots: ${loadError}`
+                  : 'No waste hotspots reported yet. Be the first to report one!'}
+              </Text>
+              {loadError && (
+                <Pressable onPress={() => setReloadKey((k) => k + 1)}>
+                  <Text style={styles.overlayRetry}>Retry</Text>
+                </Pressable>
+              )}
+            </View>
+          </View>
+        )}
+
+        {html && pins && pins.length > 0 && pinsRenderedCount === 0 && (
+          <View style={styles.overlayCard} pointerEvents="box-none">
+            <View style={styles.overlayInner}>
+              <Ionicons name="alert-circle-outline" size={20} color="#c0392b" />
+              <Text style={styles.overlayText}>
+                {mapScriptError
+                  ? `Markers failed to draw: ${mapScriptError}`
+                  : `Found ${pins.length} report${pins.length === 1 ? '' : 's'} but couldn't place any markers.`}
+              </Text>
+              <Pressable onPress={() => setReloadKey((k) => k + 1)}>
+                <Text style={styles.overlayRetry}>Retry</Text>
+              </Pressable>
+            </View>
           </View>
         )}
       </View>
@@ -218,6 +343,36 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  overlayCard: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    right: 16,
+    alignItems: 'center',
+  },
+  overlayInner: {
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+    gap: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  overlayText: {
+    fontSize: 12.5,
+    color: '#4a5750',
+    textAlign: 'center',
+  },
+  overlayRetry: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#1B6B3A',
   },
   loadingWrap: {
     flex: 1,
