@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 
+import { useAuth } from '@/contexts/AuthContext';
 import { formatRelativeTime, type ReportRow } from '@/lib/reports';
 import { approveAssignment, requestAssignmentChanges, type AssignmentRow, type TeamRow } from '@/lib/teams';
 
@@ -23,6 +24,7 @@ export function ReviewAssignmentModal({
   team: TeamRow | null;
   onClose: () => void;
 }) {
+  const { session } = useAuth();
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState<'approve' | 'reject' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export function ReviewAssignmentModal({
     setSubmitting('approve');
     setError(null);
     try {
-      await approveAssignment(assignment.id);
+      await approveAssignment(assignment.id, session?.user.id ?? null);
       onClose();
     } catch (err) {
       setError((err as Error).message);
@@ -43,7 +45,7 @@ export function ReviewAssignmentModal({
     setSubmitting('reject');
     setError(null);
     try {
-      await requestAssignmentChanges(assignment.id, note);
+      await requestAssignmentChanges(assignment.id, note, session?.user.id ?? null);
       onClose();
     } catch (err) {
       setError((err as Error).message);

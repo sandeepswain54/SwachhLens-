@@ -180,22 +180,25 @@ export function subscribeToAssignmentChanges(handlers: {
 // moves the linked report to "Team Assigned" automatically, and (if a
 // vehicle was picked) 004_vehicles.sql's triggers mark that vehicle Assigned
 // and mirror its plate number into vehicle_label automatically.
+//
+// `assignedBy` is passed in (from AuthContext's session) rather than fetched
+// here via supabase.auth.getUser() — that call hits the Auth server to
+// re-validate the JWT, and on a stale-but-still-signed-in session it can
+// throw an AuthSessionMissingError that makes the SDK wipe the session and
+// force-redirect to /login mid-assign. We already have the id locally.
 export async function assignTeamToReport(params: {
   reportId: string;
   teamId: string;
   vehicleId?: string | null;
+  assignedBy?: string | null;
 }): Promise<void> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const { error } = await supabase.from('assignments').upsert(
     {
       report_id: params.reportId,
       team_id: params.teamId,
       vehicle_id: params.vehicleId || null,
       status: 'pending',
-      assigned_by: user?.id ?? null,
+      assigned_by: params.assignedBy ?? null,
     },
     { onConflict: 'report_id' }
   );
@@ -215,30 +218,24 @@ export async function updateAssignmentStatus(id: string, status: AssignmentStatu
 // trg_sync_assignment_update / trg_notify_team_on_review
 // (007_task_review_feedback.sql) do the rest: mirroring the report's status
 // to "resolved" and notifying the team, respectively.
-export async function approveAssignment(id: string): Promise<void> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function approveAssignment(id: string, reviewedBy?: string | null): Promise<void> {
   const { error } = await supabase
     .from('assignments')
-    .update({ status: 'completed', reviewed_at: new Date().toISOString(), reviewed_by: user?.id ?? null })
+    .update({ status: 'completed', reviewed_at: new Date().toISOString(), reviewed_by: reviewedBy ?? null })
     .eq('id', id);
   if (error) throw new Error(error.message);
 }
 
 // Sends a pending_review submission back to the team as 'in_progress' so
 // they can fix and resubmit — the trigger notifies them with `note`.
-export async function requestAssignmentChanges(id: string, note: string): Promise<void> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function requestAssignmentChanges(id: string, note: string, reviewedBy?: string | null): Promise<void> {
   const { error } = await supabase
     .from('assignments')
     .update({
       status: 'in_progress',
       review_note: note.trim() || null,
       reviewed_at: new Date().toISOString(),
-      reviewed_by: user?.id ?? null,
+      reviewed_by: reviewedBy ?? null,
     })
     .eq('id', id);
   if (error) throw new Error(error.message);

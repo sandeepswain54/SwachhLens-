@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 
 import { Select } from '@/components/common/Select';
+import { useAuth } from '@/contexts/AuthContext';
 import { TEAM_STATUS_BADGE } from '@/lib/badges';
 import type { ReportRow } from '@/lib/reports';
 import { assignTeamToReport, TEAM_STATUS_LABEL, type AssignmentRow, type TeamRow } from '@/lib/teams';
@@ -20,6 +21,7 @@ export function AssignTeamModal({
   existingAssignment: AssignmentRow | null;
   onClose: () => void;
 }) {
+  const { session } = useAuth();
   const [teamId, setTeamId] = useState(existingAssignment?.team_id ?? '');
   const [vehicleId, setVehicleId] = useState(existingAssignment?.vehicle_id ?? '');
   const [submitting, setSubmitting] = useState(false);
@@ -38,7 +40,12 @@ export function AssignTeamModal({
     setSubmitting(true);
     setError(null);
     try {
-      await assignTeamToReport({ reportId: report.id, teamId, vehicleId: vehicleId || null });
+      await assignTeamToReport({
+        reportId: report.id,
+        teamId,
+        vehicleId: vehicleId || null,
+        assignedBy: session?.user.id ?? null,
+      });
       onClose();
     } catch (err) {
       setError((err as Error).message);

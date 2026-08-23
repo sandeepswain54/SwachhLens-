@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { Select } from '@/components/common/Select';
+import { useAuth } from '@/contexts/AuthContext';
 import { ASSIGNMENT_STATUS_BADGE } from '@/lib/badges';
 import type { ReportRow } from '@/lib/reports';
 import {
@@ -25,6 +26,7 @@ export function AssignmentTab({
   teams: TeamRow[];
   vehicles: VehicleRow[];
 }) {
+  const { session } = useAuth();
   const [teamId, setTeamId] = useState(assignment?.team_id ?? '');
   const [vehicleId, setVehicleId] = useState(assignment?.vehicle_id ?? '');
   const [submitting, setSubmitting] = useState(false);
@@ -45,7 +47,12 @@ export function AssignmentTab({
     setSubmitting(true);
     setError(null);
     try {
-      await assignTeamToReport({ reportId: report.id, teamId, vehicleId: vehicleId || null });
+      await assignTeamToReport({
+        reportId: report.id,
+        teamId,
+        vehicleId: vehicleId || null,
+        assignedBy: session?.user.id ?? null,
+      });
     } catch (err) {
       setError((err as Error).message);
     } finally {
