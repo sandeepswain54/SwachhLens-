@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>Swachhlens App Download</title>
+<meta name="description" content="Download the Swachhlens app APK — report waste, track cleanup and keep your city clean." />
+<style>
+  :root {
+    --green-dark: #0f3d24;
+    --green: #1b6b3c;
+    --green-light: #2e8b57;
+    --green-bg: #e8f5ec;
+    --text-dark: #10241a;
+    --text-muted: #5b6b62;
+    --white: #ffffff;
+    --shadow: 0 10px 30px rgba(15, 61, 36, 0.15);
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(180deg, var(--green-bg) 0%, #ffffff 55%);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 480px;
+    padding: 32px 20px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+    box-shadow: var(--shadow);
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: 28px;
+    line-height: 1.2;
+    margin: 0 0 6px;
+    color: var(--green-dark);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .tagline {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin: 0 0 28px;
+    max-width: 340px;
+  }
+
+  .preview-wrap {
+    width: 100%;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-bottom: 32px;
+    background: var(--white);
+  }
+
+  .preview-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .download-section {
+    width: 100%;
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px 20px;
+    margin-bottom: 20px;
+  }
+
+  .download-section h2 {
+    font-size: 18px;
+    margin: 0 0 4px;
+    color: var(--text-dark);
+  }
+
+  .download-section p {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    margin: 0 0 20px;
+  }
+
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 18px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+    color: var(--white);
+    box-shadow: 0 8px 20px rgba(27, 107, 60, 0.35);
+  }
+
+  .btn-secondary {
+    background: var(--white);
+    color: var(--green-dark);
+    border: 2px solid var(--green);
+    box-shadow: 0 4px 12px rgba(15, 61, 36, 0.08);
+  }
+
+  .btn .icon {
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  .btn .sub {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+
+  .btn-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: var(--green-bg);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 12.5px;
+    color: var(--green-dark);
+    text-align: left;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+
+  footer {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  footer a {
+    color: var(--green);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  @media (max-width: 360px) {
+    h1 { font-size: 24px; }
+    .container { padding: 24px 16px 36px; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-badge">🌿</div>
+    <h1>Swachhlens App</h1>
+    <p class="tagline">Report waste, track cleanup and help make your city cleaner — powered by AI.</p>
+
+    <div class="preview-wrap">
+      <img src="app-preview.png" alt="Swachhlens Citizen App and Field Staff App preview screens" />
+    </div>
+
+    <div class="download-section">
+      <h2>Download the APK</h2>
+      <p>Choose any one option below to install Swachhlens on your Android device.</p>
+
+      <div class="btn-group">
+        <!-- OPTION 1: Expo link -->
+        <a class="btn btn-primary" href="https://expo.dev/accounts/sandeep54/projects/swachhlens/builds/e544208e-b661-4a79-989d-9ff74232e4d3" id="expo-link" target="_blank" rel="noopener">
+          <span class="icon">📱</span>
+          <span class="btn-text">
+            Download via Expo
+            <span class="sub">Fast install link</span>
+          </span>
+        </a>
+
+        <!-- OPTION 2: Google Drive link -->
+        <a class="btn btn-secondary" href="https://drive.google.com/file/d/1AtfdveXzREWJEa5b8kZzesU0zfiXZ52u/view?usp=sharing" id="drive-link" target="_blank" rel="noopener">
+          <span class="icon">📁</span>
+          <span class="btn-text">
+            Download via Google Drive
+            <span class="sub">Direct APK file</span>
+          </span>
+        </a>
+      </div>
+
+      <div class="note">
+        ⚠️ You may need to allow "Install unknown apps" in your phone settings to install this APK.
+      </div>
+    </div>
+
+    <footer>
+      Swachhlens &copy; 2026 &middot; Made for a cleaner city 🌍
+    </footer>
+  </div>
+</body>
+</html>
