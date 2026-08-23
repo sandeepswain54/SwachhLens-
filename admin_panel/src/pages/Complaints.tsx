@@ -1,5 +1,6 @@
 import { ClipboardList } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { Card } from '@/components/dashboard/Card';
 import { ComplaintDetailsPanel, type PanelTab } from '@/components/complaints/ComplaintDetailsPanel';
@@ -14,11 +15,32 @@ export default function Complaints() {
   const { reports, profiles, loading, error } = useReports();
   const { teams, assignments } = useTeams();
   const { vehicles } = useVehicles();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelTab, setPanelTab] = useState<PanelTab>('details');
   const [panelNonce, setPanelNonce] = useState(0);
+
+  // Deep-link support: the global search (and any other link) can jump
+  // straight to a complaint via /complaints?id=<report_id>.
+  useEffect(() => {
+    const linkedId = searchParams.get('id');
+    if (!linkedId || loading) return;
+    const report = reports.find((r) => r.id === linkedId);
+    if (report) {
+      setSelectedId(report.id);
+      setPanelTab('details');
+      setPanelNonce((n) => n + 1);
+    }
+    setSearchParams(
+      (params) => {
+        params.delete('id');
+        return params;
+      },
+      { replace: true }
+    );
+  }, [searchParams, reports, loading, setSearchParams]);
 
   const profileById = useMemo(() => new Map(profiles.map((p) => [p.id, p] as [string, ProfileRow])), [profiles]);
 

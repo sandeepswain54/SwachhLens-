@@ -1,5 +1,6 @@
 import { ClipboardCheck, Fuel, Plus, Route, Truck, Wrench } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { Card } from '@/components/dashboard/Card';
 import { DonutChart } from '@/components/dashboard/DonutChart';
@@ -26,6 +27,22 @@ export default function Vehicles() {
   const { teams } = useTeams();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Deep-link support: the global search (and any other link) can jump
+  // straight to a vehicle via /vehicles?id=<vehicle_id>.
+  useEffect(() => {
+    const linkedId = searchParams.get('id');
+    if (!linkedId || loading) return;
+    if (vehicles.some((v) => v.id === linkedId)) setSelectedId(linkedId);
+    setSearchParams(
+      (params) => {
+        params.delete('id');
+        return params;
+      },
+      { replace: true }
+    );
+  }, [searchParams, vehicles, loading, setSearchParams]);
 
   const counts = useMemo(() => computeVehicleStatCounts(vehicles), [vehicles]);
   const weekDelta = useMemo(() => computeVehicleWeekOverWeek(vehicles, activity), [vehicles, activity]);

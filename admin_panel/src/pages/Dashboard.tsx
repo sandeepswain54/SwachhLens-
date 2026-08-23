@@ -18,6 +18,7 @@ import { RecentAlerts } from '@/components/dashboard/RecentAlerts';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { TeamStatusPlaceholder } from '@/components/dashboard/TeamStatusPlaceholder';
 import { TrendChart } from '@/components/dashboard/TrendChart';
+import { lastNDays, type DateRange } from '@/components/layout/DateRangePicker';
 import { Topbar } from '@/components/layout/Topbar';
 import { useReports } from '@/contexts/ReportsContext';
 import { CATEGORY_COLOR, SEVERITY_COLOR } from '@/lib/palette';
@@ -25,11 +26,11 @@ import type { SeverityLabel } from '@/lib/reports';
 import {
   computeAvgResolutionDays,
   computeCategoryBreakdown,
+  computeRangeDelta,
   computeRecentAlerts,
   computeSeverityBreakdown,
   computeStatusCounts,
-  computeTrend,
-  computeWeekOverWeek,
+  computeTrendRange,
 } from '@/lib/stats';
 
 const SEVERITY_FILTERS: Array<{ label: string; value: SeverityLabel | 'all' }> = [
@@ -45,38 +46,54 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [severityFilter, setSeverityFilter] = useState<SeverityLabel | 'all'>('all');
   const [mapExpanded, setMapExpanded] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange>(() => lastNDays(7));
 
-  const statusCounts = useMemo(() => computeStatusCounts(reports), [reports]);
-  const weekDelta = useMemo(() => computeWeekOverWeek(reports), [reports]);
-  const trend = useMemo(() => computeTrend(reports, 7), [reports]);
-  const avgResolutionDays = useMemo(() => computeAvgResolutionDays(reports), [reports]);
-  const alerts = useMemo(() => computeRecentAlerts(reports, 5), [reports]);
+  const rangeReports = useMemo(() => {
+    const start = dateRange.start.getTime();
+    const end = dateRange.end.getTime();
+    return reports.filter((r) => {
+      const t = new Date(r.created_at).getTime();
+      return t >= start && t <= end;
+    });
+  }, [reports, dateRange]);
+
+  const statusCounts = useMemo(() => computeStatusCounts(rangeReports), [rangeReports]);
+  const weekDelta = useMemo(
+    () => computeRangeDelta(reports, dateRange.start, dateRange.end),
+    [reports, dateRange]
+  );
+  const trend = useMemo(
+    () => computeTrendRange(reports, dateRange.start, dateRange.end),
+    [reports, dateRange]
+  );
+  const avgResolutionDays = useMemo(() => computeAvgResolutionDays(rangeReports), [rangeReports]);
+  const alerts = useMemo(() => computeRecentAlerts(rangeReports, 5), [rangeReports]);
 
   const categorySlices: DonutSlice[] = useMemo(
     () =>
-      computeCategoryBreakdown(reports).map((c) => ({
+      computeCategoryBreakdown(rangeReports).map((c) => ({
         name: c.name,
         count: c.count,
         percent: c.percent,
         color: CATEGORY_COLOR[c.name] ?? CATEGORY_COLOR.Others,
       })),
-    [reports]
+    [rangeReports]
   );
 
   const severitySlices: DonutSlice[] = useMemo(
     () =>
-      computeSeverityBreakdown(reports).map((s) => ({
+      computeSeverityBreakdown(rangeReports).map((s) => ({
         name: s.label,
         count: s.count,
         percent: s.percent,
         color: SEVERITY_COLOR[s.label],
       })),
-    [reports]
+    [rangeReports]
   );
 
   const mapReports = useMemo(
-    () => (severityFilter === 'all' ? reports : reports.filter((r) => r.severity_label === severityFilter)),
-    [reports, severityFilter]
+    () => (severityFilter === 'all' ? rangeReports : rangeReports.filter((r) => r.severity_label === severityFilter)),
+    [rangeReports, severityFilter]
   );
 
   const hotspotCounts = useMemo(() => {
@@ -90,15 +107,15 @@ export default function Dashboard() {
   const filteredComplaints = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const list = q
-      ? reports.filter((r) =>
+      ? rangeReports.filter((r) =>
           [r.report_code, r.category, r.address, r.severity_label]
             .join(' ')
             .toLowerCase()
             .includes(q)
         )
-      : reports;
+      : rangeReports;
     return list.slice(0, 8);
-  }, [reports, searchQuery]);
+  }, [rangeReports, searchQuery]);
 
   return (
     <div className="flex min-h-full flex-col">
@@ -107,6 +124,8 @@ export default function Dashboard() {
         subtitle="Overview of city cleanliness operations"
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
       />
 
       <div className="flex-1 space-y-5 p-6">
@@ -125,6 +144,7 @@ export default function Dashboard() {
             iconBg="#eaf6ef"
             iconColor="#1B6B3A"
             deltaPercent={weekDelta.total.deltaPercent}
+            deltaCaption="from previous period"
           />
           <StatCard
             label="Active Complaints"
@@ -133,6 +153,7 @@ export default function Dashboard() {
             iconBg="#e8f0fe"
             iconColor="#2563eb"
             deltaPercent={weekDelta.active.deltaPercent}
+            deltaCaption="from previous period"
           />
           <StatCard
             label="Resolved Complaints"
@@ -141,6 +162,7 @@ export default function Dashboard() {
             iconBg="#fef3e2"
             iconColor="#d97706"
             deltaPercent={weekDelta.resolved.deltaPercent}
+            deltaCaption="from previous period"
           />
           <StatCard
             label="In Progress"
@@ -157,11 +179,15 @@ export default function Dashboard() {
             iconBg="#fde8e8"
             iconColor="#dc2626"
             deltaPercent={weekDelta.critical.deltaPercent}
+            deltaCaption="from previous period"
           />
         </div>
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-          <Card title="Complaints Trend" className="xl:col-span-5" action={<span className="text-[12px] text-slate-400">Weekly</span>}>
+          <Card
+            title="Complaints Trend"
+            className="xl:col-span-5"
+            action={<span className="text-[12px] text-slate-400">{trend.length} Day{trend.length === 1 ? '' : 's'}</span>}>
             <TrendChart data={trend} />
           </Card>
 

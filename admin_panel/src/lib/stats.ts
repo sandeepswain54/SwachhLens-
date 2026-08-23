@@ -98,6 +98,49 @@ export function computeTrend(reports: ReportRow[], days = 7): TrendPoint[] {
   return points;
 }
 
+// Same cumulative-total logic as computeTrend, but walks an explicit
+// [start, end] window instead of "the last N days from now" so it can back
+// the Dashboard's date-range picker. Capped at 60 points so a multi-year
+// custom range doesn't render an unreadable chart.
+export function computeTrendRange(reports: ReportRow[], start: Date, end: Date): TrendPoint[] {
+  const rangeStart = new Date(start);
+  rangeStart.setHours(0, 0, 0, 0);
+  const rangeEnd = new Date(end);
+  rangeEnd.setHours(23, 59, 59, 999);
+
+  const totalDays = Math.round((rangeEnd.getTime() - rangeStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const days = Math.min(Math.max(totalDays, 1), 60);
+
+  const points: TrendPoint[] = [];
+  for (let i = 0; i < days; i += 1) {
+    const dayEnd = new Date(rangeStart);
+    dayEnd.setDate(dayEnd.getDate() + i);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    let total = 0;
+    let resolved = 0;
+    for (const r of reports) {
+      if (new Date(r.created_at).getTime() > dayEnd.getTime()) continue;
+      total += 1;
+      if (r.resolved_at && new Date(r.resolved_at).getTime() <= dayEnd.getTime()) resolved += 1;
+      else if (!r.resolved_at && r.status === 'resolved') resolved += 1;
+    }
+
+    const dayStart = new Date(dayEnd);
+    dayStart.setHours(0, 0, 0, 0);
+
+    points.push({
+      date: dayStart.toISOString(),
+      label: dayStart.toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
+      total,
+      resolved,
+      active: total - resolved,
+    });
+  }
+
+  return points;
+}
+
 export function computeAvgResolutionDays(reports: ReportRow[]): number | null {
   const durations = reports
     .filter((r) => r.resolved_at)
@@ -147,6 +190,35 @@ export function computeWeekOverWeek(reports: ReportRow[]): Record<
 
   const current = snapshotAt(reports, now);
   const previous = snapshotAt(reports, weekAgo);
+
+  return {
+    total: { value: current.total, deltaPercent: delta(current.total, previous.total) },
+    active: { value: current.active, deltaPercent: delta(current.active, previous.active) },
+    resolved: { value: current.resolved, deltaPercent: delta(current.resolved, previous.resolved) },
+    critical: { value: current.critical, deltaPercent: delta(current.critical, previous.critical) },
+  };
+}
+
+// Generalizes computeWeekOverWeek to an arbitrary [start, end] window,
+// comparing it against the immediately preceding window of the same length —
+// this is what lets the Dashboard's stat card deltas track whatever range the
+// date picker has selected, not just a fixed trailing week.
+export function computeRangeDelta(
+  reports: ReportRow[],
+  start: Date,
+  end: Date
+): Record<'total' | 'active' | 'resolved' | 'critical', WeekDelta> {
+  const spanMs = end.getTime() - start.getTime();
+  const prevEnd = new Date(start.getTime() - 1);
+  const prevStart = new Date(prevEnd.getTime() - spanMs);
+
+  const inRange = (r: ReportRow, from: Date, to: Date) => {
+    const t = new Date(r.created_at).getTime();
+    return t >= from.getTime() && t <= to.getTime();
+  };
+
+  const current = computeStatusCounts(reports.filter((r) => inRange(r, start, end)));
+  const previous = computeStatusCounts(reports.filter((r) => inRange(r, prevStart, prevEnd)));
 
   return {
     total: { value: current.total, deltaPercent: delta(current.total, previous.total) },

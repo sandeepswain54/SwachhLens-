@@ -1,5 +1,6 @@
 import { CheckCircle2, ClipboardList, Plus, Timer, UserCheck, Users } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { Card } from '@/components/dashboard/Card';
 import { StatCard } from '@/components/dashboard/StatCard';
@@ -19,6 +20,22 @@ export default function TeamsAssignments() {
   const { teams, assignments, loading, error, activity } = useTeams();
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [addingTeam, setAddingTeam] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Deep-link support: the global search (and any other link) can jump
+  // straight to a team via /teams?id=<team_id>.
+  useEffect(() => {
+    const linkedId = searchParams.get('id');
+    if (!linkedId || loading) return;
+    if (teams.some((t) => t.id === linkedId)) setSelectedTeamId(linkedId);
+    setSearchParams(
+      (params) => {
+        params.delete('id');
+        return params;
+      },
+      { replace: true }
+    );
+  }, [searchParams, teams, loading, setSearchParams]);
 
   const counts = useMemo(() => computeTeamStatCounts(teams, assignments), [teams, assignments]);
   const weekDelta = useMemo(() => computeTeamWeekOverWeek(teams, assignments), [teams, assignments]);

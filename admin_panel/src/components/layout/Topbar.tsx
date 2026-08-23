@@ -1,18 +1,14 @@
-import { Bell, LogOut, Menu, Moon, Search, Sun } from 'lucide-react';
+import { Bell, LogOut, Menu, Moon, Sun } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useReports } from '@/contexts/ReportsContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { computeStatusCounts } from '@/lib/stats';
 
-function formatDateRange(days: number): string {
-  const end = new Date();
-  const start = new Date();
-  start.setDate(end.getDate() - (days - 1));
-  const fmt = (d: Date) => d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
-  return `${fmt(start)} - ${fmt(end)}`;
-}
+import { DateRangePicker, lastNDays, type DateRange } from './DateRangePicker';
+import { GlobalSearch } from './GlobalSearch';
 
 export function Topbar({
   title,
@@ -21,6 +17,8 @@ export function Topbar({
   searchQuery,
   onSearchChange,
   searchPlaceholder,
+  dateRange,
+  onDateRangeChange,
   action,
 }: {
   title: string;
@@ -30,12 +28,22 @@ export function Topbar({
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
+  /** Controlled date range; pages that don't care about it can leave this unset. */
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange) => void;
   action?: ReactNode;
 }) {
   const { theme, toggleTheme } = useTheme();
   const { signOut } = useAuth();
   const { reports, connected } = useReports();
   const criticalCount = computeStatusCounts(reports).critical;
+
+  const [internalSearch, setInternalSearch] = useState('');
+  const [internalRange, setInternalRange] = useState<DateRange>(() => lastNDays(7));
+  const search = searchQuery ?? internalSearch;
+  const setSearch = onSearchChange ?? setInternalSearch;
+  const range = dateRange ?? internalRange;
+  const setRange = onDateRangeChange ?? setInternalRange;
 
   return (
     <header className="flex items-center gap-4 border-b border-black/5 bg-white px-6 py-4 dark:border-white/10 dark:bg-[#111814]">
@@ -73,20 +81,9 @@ export function Topbar({
         )}
       </div>
 
-      <div className="hidden items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-600 dark:border-white/10 dark:text-slate-300 md:flex">
-        <span>📅</span>
-        {formatDateRange(7)}
-      </div>
+      <DateRangePicker value={range} onChange={setRange} />
 
-      <label className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] text-slate-500 focus-within:border-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-400 sm:flex">
-        <Search size={15} />
-        <input
-          value={searchQuery ?? ''}
-          onChange={(e) => onSearchChange?.(e.target.value)}
-          placeholder={searchPlaceholder ?? 'Search anything...'}
-          className="w-40 bg-transparent text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200 lg:w-56"
-        />
-      </label>
+      <GlobalSearch value={search} onChange={setSearch} placeholder={searchPlaceholder} />
 
       {action}
 
