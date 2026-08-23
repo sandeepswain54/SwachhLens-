@@ -1,4 +1,3 @@
-import { Sprout } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 
@@ -36,9 +35,7 @@ export default function Login() {
 
       <div className="relative w-full max-w-sm rounded-2xl border border-slate-200/70 bg-white p-8 shadow-card dark:border-white/10 dark:bg-[#111814]">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500 text-white">
-            <Sprout size={22} />
-          </span>
+          <img src="/applogo.png" alt="SwachhLens" className="h-14 w-14 object-contain" />
           <h1 className="text-lg font-bold text-slate-900 dark:text-white">SwachhLens Admin</h1>
           <p className="text-[13px] text-slate-500 dark:text-slate-400">
             Sign in with your SwachhLens account to manage city cleanliness operations.
@@ -84,7 +81,7 @@ export default function Login() {
         </form>
 
         <p className="mt-5 text-center text-[12px] text-slate-400">
-          Use the same email &amp; password as your SwachhLens mobile app account.
+          Credentials: sandeepbusy54@gmail.com password: 12345678
         </p>
       </div>
     </div>
