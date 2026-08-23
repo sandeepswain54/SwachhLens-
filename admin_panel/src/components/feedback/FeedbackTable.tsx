@@ -65,14 +65,14 @@ export function FeedbackTable({ views, search }: { views: FeedbackView[]; search
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[820px] border-collapse text-left text-[13px]">
+        <table className="w-full table-fixed border-collapse text-left text-[13px]">
           <thead>
             <tr className="text-[11px] uppercase tracking-wide text-slate-400">
-              <th className="px-3 pb-2 font-medium">Report</th>
-              <th className="px-3 pb-2 font-medium">Team</th>
-              <th className="px-3 pb-2 font-medium">Rating</th>
-              <th className="px-3 pb-2 font-medium">Comment</th>
-              <th className="px-3 pb-2 font-medium">Date</th>
+              <th className="w-[16%] px-3 pb-2 font-medium">Report</th>
+              <th className="w-[16%] px-3 pb-2 font-medium">Team</th>
+              <th className="w-[12%] px-3 pb-2 font-medium">Rating</th>
+              <th className="w-[42%] px-3 pb-2 font-medium">Comment</th>
+              <th className="w-[14%] px-3 pb-2 font-medium">Date</th>
             </tr>
           </thead>
           <tbody>
@@ -80,18 +80,18 @@ export function FeedbackTable({ views, search }: { views: FeedbackView[]; search
               <tr
                 key={v.feedback.id}
                 className="border-t border-slate-100 align-top text-slate-700 dark:border-white/5 dark:text-slate-200">
-                <td className="whitespace-nowrap px-3 py-2.5">
-                  <p className="font-semibold text-brand-600">#{v.report?.report_code ?? '—'}</p>
-                  <p className="text-[11.5px] text-slate-400">{v.report?.category ?? 'Unknown report'}</p>
+                <td className="truncate px-3 py-2.5">
+                  <p className="truncate font-semibold text-brand-600">#{v.report?.report_code ?? '—'}</p>
+                  <p className="truncate text-[11.5px] text-slate-400">{v.report?.category ?? 'Unknown report'}</p>
                 </td>
-                <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">{v.team?.team_name ?? '—'}</td>
+                <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">{v.team?.team_name ?? '—'}</td>
                 <td className="px-3 py-2.5">
                   <StarRow rating={v.feedback.rating} />
                 </td>
-                <td className="max-w-[280px] px-3 py-2.5 text-slate-600 dark:text-slate-300">
+                <td className="break-words px-3 py-2.5 text-slate-600 dark:text-slate-300">
                   {v.feedback.comment || <span className="text-slate-400">No comment</span>}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2.5 text-slate-500 dark:text-slate-400">
+                <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">
                   {formatRelativeTime(v.feedback.created_at)}
                 </td>
               </tr>

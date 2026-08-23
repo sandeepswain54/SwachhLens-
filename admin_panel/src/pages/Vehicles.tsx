@@ -122,7 +122,7 @@ export default function Vehicles() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-12">
           <Card className="xl:col-span-8">
             <VehiclesTable vehicles={vehicles} teams={teams} selectedId={selectedId} onSelect={(v) => setSelectedId(v.id)} />
           </Card>

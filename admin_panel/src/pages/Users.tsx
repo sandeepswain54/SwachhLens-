@@ -91,7 +91,7 @@ export default function Users() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-12">
           <Card title="All Users" className="xl:col-span-8">
             <UsersTable users={users} search={searchQuery} />
           </Card>

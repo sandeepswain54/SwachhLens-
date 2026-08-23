@@ -131,18 +131,18 @@ export function VehiclesTable({
         <p className="py-10 text-center text-[13px] text-slate-400">No vehicles match your filters yet.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[920px] border-collapse text-left text-[13px]">
+          <table className="w-full table-fixed border-collapse text-left text-[13px]">
             <thead>
               <tr className="text-[11px] uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-2.5 font-medium">Vehicle No.</th>
-                <th className="px-3 py-2.5 font-medium">Vehicle Type</th>
-                <th className="px-3 py-2.5 font-medium">Capacity</th>
-                <th className="px-3 py-2.5 font-medium">Driver</th>
-                <th className="px-3 py-2.5 font-medium">Status</th>
-                <th className="px-3 py-2.5 font-medium">Location</th>
-                <th className="px-3 py-2.5 font-medium">Fuel Level</th>
-                <th className="px-3 py-2.5 font-medium">Assigned To</th>
-                <th className="px-3 py-2.5 font-medium">Actions</th>
+                <th className="w-[14%] px-3 py-2.5 font-medium">Vehicle No.</th>
+                <th className="w-[11%] px-3 py-2.5 font-medium">Vehicle Type</th>
+                <th className="w-[9%] px-3 py-2.5 font-medium">Capacity</th>
+                <th className="w-[11%] px-3 py-2.5 font-medium">Driver</th>
+                <th className="w-[10%] px-3 py-2.5 font-medium">Status</th>
+                <th className="w-[14%] px-3 py-2.5 font-medium">Location</th>
+                <th className="w-[14%] px-3 py-2.5 font-medium">Fuel Level</th>
+                <th className="w-[9%] px-3 py-2.5 font-medium">Assigned To</th>
+                <th className="w-[8%] px-3 py-2.5 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -156,7 +156,7 @@ export function VehiclesTable({
                       selectedId === v.id ? 'bg-brand-50/60 dark:bg-brand-500/10' : 'hover:bg-slate-50 dark:hover:bg-white/5'
                     }`}>
                     <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
                         {v.image_url ? (
                           <img src={v.image_url} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover" />
                         ) : (
@@ -164,34 +164,34 @@ export function VehiclesTable({
                             <Truck size={13} />
                           </span>
                         )}
-                        <span className="font-semibold text-brand-600">{v.vehicle_no}</span>
+                        <span className="truncate font-semibold text-brand-600">{v.vehicle_no}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5">{v.vehicle_type}</td>
-                    <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">
+                    <td className="truncate px-3 py-2.5">{v.vehicle_type}</td>
+                    <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">
                       {v.capacity_tons ? `${v.capacity_tons} Ton` : '—'}
                     </td>
-                    <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">{v.driver_name || '—'}</td>
+                    <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">{v.driver_name || '—'}</td>
                     <td className="px-3 py-2.5">
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${VEHICLE_STATUS_BADGE[v.status]}`}>
                         {VEHICLE_STATUS_LABEL[v.status]}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">{v.location_label || '—'}</td>
+                    <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">{v.location_label || '—'}</td>
                     <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
                           <div
                             className="h-full rounded-full"
                             style={{ width: `${v.fuel_level}%`, backgroundColor: fuelLevelColor(v.fuel_level) }}
                           />
                         </div>
-                        <span className="w-8 text-right text-[12px] font-semibold text-slate-600 dark:text-slate-300">
+                        <span className="w-8 shrink-0 text-right text-[12px] font-semibold text-slate-600 dark:text-slate-300">
                           {v.fuel_level}%
                         </span>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">{team?.team_code ?? '—'}</td>
+                    <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">{team?.team_code ?? '—'}</td>
                     <td className="px-3 py-2.5">
                       <button
                         type="button"

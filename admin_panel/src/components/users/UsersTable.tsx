@@ -162,42 +162,42 @@ export function UsersTable({ users, search }: { users: AppUser[]; search: string
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[860px] border-collapse text-left text-[13px]">
+        <table className="w-full table-fixed border-collapse text-left text-[13px]">
           <thead>
             <tr className="text-[11px] uppercase tracking-wide text-slate-400">
-              <th className="px-3 pb-2 font-medium">User ID</th>
-              <th className="px-3 pb-2 font-medium">Name</th>
-              <th className="px-3 pb-2 font-medium">User Type</th>
-              <th className="px-3 pb-2 font-medium">Role</th>
-              <th className="px-3 pb-2 font-medium">Email</th>
-              <th className="px-3 pb-2 font-medium">Zone / Area</th>
-              <th className="px-3 pb-2 font-medium">Status</th>
-              <th className="px-3 pb-2 font-medium">Joined On</th>
-              <th className="px-3 pb-2 font-medium">Action</th>
+              <th className="w-[8%] px-3 pb-2 font-medium">User ID</th>
+              <th className="w-[14%] px-3 pb-2 font-medium">Name</th>
+              <th className="w-[9%] px-3 pb-2 font-medium">User Type</th>
+              <th className="w-[10%] px-3 pb-2 font-medium">Role</th>
+              <th className="w-[15%] px-3 pb-2 font-medium">Email</th>
+              <th className="w-[9%] px-3 pb-2 font-medium">Zone / Area</th>
+              <th className="w-[8%] px-3 pb-2 font-medium">Status</th>
+              <th className="w-[17%] px-3 pb-2 font-medium">Joined On</th>
+              <th className="w-[10%] px-3 pb-2 font-medium">Action</th>
             </tr>
           </thead>
           <tbody>
             {pageRows.map((u) => (
               <tr key={u.id} className="border-t border-slate-100 text-slate-700 dark:border-white/5 dark:text-slate-200">
-                <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-brand-600">{u.displayId}</td>
+                <td className="truncate px-3 py-2.5 font-semibold text-brand-600">{u.displayId}</td>
                 <td className="px-3 py-2.5">
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-500 dark:bg-white/10 dark:text-slate-300">
                       {u.fullName.slice(0, 1).toUpperCase()}
                     </span>
-                    {u.fullName}
+                    <span className="truncate">{u.fullName}</span>
                   </div>
                 </td>
                 <td className="px-3 py-2.5">
                   <TypeBadge userType={u.userType} />
                 </td>
-                <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">{u.role}</td>
-                <td className="max-w-[160px] truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">{u.email ?? '—'}</td>
-                <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">{u.zone ?? '—'}</td>
+                <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">{u.role}</td>
+                <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">{u.email ?? '—'}</td>
+                <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">{u.zone ?? '—'}</td>
                 <td className="px-3 py-2.5">
                   <StatusBadge status={u.status} />
                 </td>
-                <td className="whitespace-nowrap px-3 py-2.5 text-slate-500 dark:text-slate-400">
+                <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400" title={formatAbsoluteDateTime(u.joinedAt)}>
                   {formatAbsoluteDateTime(u.joinedAt)}
                 </td>
                 <td className="px-3 py-2.5">

@@ -1,9 +1,11 @@
-import { Sprout } from 'lucide-react';
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationsContext';
 import { MAIN_NAV, SYSTEM_NAV, type NavItem } from '@/lib/nav';
+
+import { LogoutConfirmDialog } from './LogoutConfirmDialog';
 
 function NavRow({ item, badge }: { item: NavItem; badge?: number }) {
   const Icon = item.icon;
@@ -30,16 +32,17 @@ function NavRow({ item, badge }: { item: NavItem; badge?: number }) {
 }
 
 export function Sidebar() {
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
   const { unreadCount } = useNotifications();
   const email = session?.user.email ?? 'Admin';
   const initials = email.slice(0, 2).toUpperCase();
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
 
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col bg-[#0b1712] text-white">
       <div className="flex items-center gap-2 px-5 pb-5 pt-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500">
-          <Sprout size={20} strokeWidth={2.4} />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500">
+          <img src="/applogo.png" alt="" className="h-7 w-7 object-contain" />
         </div>
         <div className="min-w-0">
           <p className="truncate text-[15px] font-bold leading-tight">SwachhLens</p>
@@ -67,7 +70,11 @@ export function Sidebar() {
         </div>
       </nav>
 
-      <div className="flex items-center gap-2.5 border-t border-white/10 px-4 py-4">
+      <button
+        type="button"
+        onClick={() => setConfirmingLogout(true)}
+        title="Log out"
+        className="flex w-full items-center gap-2.5 border-t border-white/10 px-4 py-4 text-left transition-colors hover:bg-white/5">
         <div className="relative shrink-0">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-400 text-xs font-bold">
             {initials}
@@ -77,10 +84,14 @@ export function Sidebar() {
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-semibold">Admin User</p>
           <p className="truncate text-[11px] text-brand-100/50" title={email}>
-            Super Admin
+            Admin
           </p>
         </div>
-      </div>
+      </button>
+
+      {confirmingLogout && (
+        <LogoutConfirmDialog onClose={() => setConfirmingLogout(false)} onConfirm={signOut} />
+      )}
     </aside>
   );
 }

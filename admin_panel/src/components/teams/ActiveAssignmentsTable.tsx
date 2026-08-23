@@ -134,19 +134,19 @@ export function ActiveAssignmentsTable({
         <p className="py-10 text-center text-[13px] text-slate-400">No assignments match your filters yet.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[920px] border-collapse text-left text-[13px]">
+          <table className="w-full table-fixed border-collapse text-left text-[13px]">
             <thead>
               <tr className="text-[11px] uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-2.5 font-medium">Assignment ID</th>
-                <th className="px-3 py-2.5 font-medium">Complaint ID</th>
-                <th className="px-3 py-2.5 font-medium">Type</th>
-                <th className="px-3 py-2.5 font-medium">Location</th>
-                <th className="px-3 py-2.5 font-medium">Priority</th>
-                <th className="px-3 py-2.5 font-medium">Assigned To</th>
-                <th className="px-3 py-2.5 font-medium">Vehicle</th>
-                <th className="px-3 py-2.5 font-medium">Status</th>
-                <th className="px-3 py-2.5 font-medium">Assigned At</th>
-                <th className="px-3 py-2.5 font-medium">Actions</th>
+                <th className="w-[10%] px-3 py-2.5 font-medium">Assignment ID</th>
+                <th className="w-[9%] px-3 py-2.5 font-medium">Complaint ID</th>
+                <th className="w-[9%] px-3 py-2.5 font-medium">Type</th>
+                <th className="w-[15%] px-3 py-2.5 font-medium">Location</th>
+                <th className="w-[8%] px-3 py-2.5 font-medium">Priority</th>
+                <th className="w-[9%] px-3 py-2.5 font-medium">Assigned To</th>
+                <th className="w-[10%] px-3 py-2.5 font-medium">Vehicle</th>
+                <th className="w-[10%] px-3 py-2.5 font-medium">Status</th>
+                <th className="w-[10%] px-3 py-2.5 font-medium">Assigned At</th>
+                <th className="w-[10%] px-3 py-2.5 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -154,12 +154,12 @@ export function ActiveAssignmentsTable({
                 <tr
                   key={v.report.id}
                   className="border-t border-slate-100 text-slate-700 dark:border-white/5 dark:text-slate-200">
-                  <td className="px-3 py-2.5 font-semibold text-brand-600">
+                  <td className="truncate px-3 py-2.5 font-semibold text-brand-600">
                     {v.assignment?.assignment_code ?? '—'}
                   </td>
-                  <td className="px-3 py-2.5">#{v.report.report_code}</td>
-                  <td className="px-3 py-2.5">{v.report.category}</td>
-                  <td className="max-w-[140px] truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">
+                  <td className="truncate px-3 py-2.5">#{v.report.report_code}</td>
+                  <td className="truncate px-3 py-2.5">{v.report.category}</td>
+                  <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">
                     {v.report.address}
                   </td>
                   <td className="px-3 py-2.5">
@@ -167,7 +167,7 @@ export function ActiveAssignmentsTable({
                       {v.priority}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td className="truncate px-3 py-2.5">
                     {v.team ? (
                       <button
                         type="button"
@@ -180,7 +180,7 @@ export function ActiveAssignmentsTable({
                       <span className="text-slate-400">Unassigned</span>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">
+                  <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">
                     {v.assignment?.vehicle_label || '—'}
                   </td>
                   <td className="px-3 py-2.5">

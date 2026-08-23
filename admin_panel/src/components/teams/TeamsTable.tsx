@@ -113,17 +113,17 @@ export function TeamsTable({
         <p className="py-10 text-center text-[13px] text-slate-400">No teams match your filters yet.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] border-collapse text-left text-[13px]">
+          <table className="w-full table-fixed border-collapse text-left text-[13px]">
             <thead>
               <tr className="text-[11px] uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-2.5 font-medium">Team ID</th>
-                <th className="px-3 py-2.5 font-medium">Team Name</th>
-                <th className="px-3 py-2.5 font-medium">Team Leader</th>
-                <th className="px-3 py-2.5 font-medium">Zone</th>
-                <th className="px-3 py-2.5 font-medium">Members</th>
-                <th className="px-3 py-2.5 font-medium">Status</th>
-                <th className="px-3 py-2.5 font-medium">Current Workload</th>
-                <th className="px-3 py-2.5 font-medium">Actions</th>
+                <th className="w-[9%] px-3 py-2.5 font-medium">Team ID</th>
+                <th className="w-[16%] px-3 py-2.5 font-medium">Team Name</th>
+                <th className="w-[14%] px-3 py-2.5 font-medium">Team Leader</th>
+                <th className="w-[10%] px-3 py-2.5 font-medium">Zone</th>
+                <th className="w-[9%] px-3 py-2.5 font-medium">Members</th>
+                <th className="w-[10%] px-3 py-2.5 font-medium">Status</th>
+                <th className="w-[22%] px-3 py-2.5 font-medium">Current Workload</th>
+                <th className="w-[10%] px-3 py-2.5 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -138,11 +138,11 @@ export function TeamsTable({
                         ? 'bg-brand-50/60 dark:bg-brand-500/10'
                         : 'hover:bg-slate-50 dark:hover:bg-white/5'
                     }`}>
-                    <td className="px-3 py-2.5 font-semibold text-brand-600">{team.team_code}</td>
-                    <td className="px-3 py-2.5">{team.team_name}</td>
-                    <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">{team.leader_name}</td>
-                    <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">{team.zone}</td>
-                    <td className="px-3 py-2.5 whitespace-nowrap text-slate-500 dark:text-slate-400">
+                    <td className="truncate px-3 py-2.5 font-semibold text-brand-600">{team.team_code}</td>
+                    <td className="truncate px-3 py-2.5">{team.team_name}</td>
+                    <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">{team.leader_name}</td>
+                    <td className="truncate px-3 py-2.5 text-slate-500 dark:text-slate-400">{team.zone}</td>
+                    <td className="whitespace-nowrap px-3 py-2.5 text-slate-500 dark:text-slate-400">
                       {team.member_count} / {team.member_capacity}
                     </td>
                     <td className="px-3 py-2.5">
@@ -151,14 +151,14 @@ export function TeamsTable({
                       </span>
                     </td>
                     <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
                           <div
                             className="h-full rounded-full"
                             style={{ width: `${workload.percent}%`, backgroundColor: workloadBarColor(workload.percent) }}
                           />
                         </div>
-                        <span className="w-9 text-right text-[12px] font-semibold text-slate-600 dark:text-slate-300">
+                        <span className="w-9 shrink-0 text-right text-[12px] font-semibold text-slate-600 dark:text-slate-300">
                           {workload.percent}%
                         </span>
                       </div>

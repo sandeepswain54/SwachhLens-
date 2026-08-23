@@ -77,7 +77,7 @@ export default function Complaints() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-12">
           <Card className="xl:col-span-8">
             <ComplaintsTable
               reports={reports}
