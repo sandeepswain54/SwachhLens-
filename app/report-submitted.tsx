@@ -17,7 +17,7 @@ const DOTS = [
 
 export default function ReportSubmittedScreen() {
   const { t } = useLanguage();
-  const { reportId, submittedAt, reset } = useReportFlow();
+  const { reportId, submittedAt, merged, alreadyReported, reset } = useReportFlow();
 
   useEffect(() => {
     if (!reportId) router.replace('/report');
@@ -29,6 +29,21 @@ export default function ReportSubmittedScreen() {
     reset();
     router.replace('/(tabs)/my-reports');
   }
+
+  // Geo-deduplication + anti-spam: a submission within 20m of an existing
+  // active report links to it instead of creating a new ticket (`merged`),
+  // and if this same user had already reported/confirmed that exact ticket
+  // before, their confirmation isn't counted again (`alreadyReported`).
+  const title = alreadyReported
+    ? t('reportSubmitted.alreadyReportedTitle')
+    : merged
+      ? t('reportSubmitted.mergedTitle')
+      : t('reportSubmitted.title');
+  const subtitle = alreadyReported
+    ? t('reportSubmitted.alreadyReportedSubtitle')
+    : merged
+      ? t('reportSubmitted.mergedSubtitle')
+      : t('reportSubmitted.subtitle');
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -53,11 +68,13 @@ export default function ReportSubmittedScreen() {
           <Ionicons name="checkmark-circle" size={88} color="#1B6B3A" />
         </View>
 
-        <Text style={styles.title}>{t('reportSubmitted.title')}</Text>
-        <Text style={styles.subtitle}>{t('reportSubmitted.subtitle')}</Text>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
 
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>{t('reportSubmitted.reportId')}</Text>
+          <Text style={styles.cardLabel}>
+            {merged ? t('reportSubmitted.linkedReportId') : t('reportSubmitted.reportId')}
+          </Text>
           <Text style={styles.cardValue}>{reportId}</Text>
 
           <View style={styles.cardDivider} />

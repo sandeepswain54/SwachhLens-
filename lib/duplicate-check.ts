@@ -95,3 +95,67 @@ export async function checkForDuplicate(params: {
       confidence >= 80 ? 'Link to existing complaint' : 'Review before creating a new complaint',
   };
 }
+
+// ---- 20-meter active-report merge check (geo-deduplication) ----
+//
+// Distinct from checkForDuplicate() above, which only powers the
+// informational "possible duplicate" hint shown to the user before they
+// submit (up to 300m / 72h, any confidence — unchanged). This is the strict
+// rule submitReport() (lib/reports.ts) uses to actually decide whether a
+// submission gets its own new ticket or gets merged into an existing one as
+// a community confirmation: same waste category, status not yet resolved,
+// and within 20 meters (Haversine distance — see the Example in the task
+// spec). See confirm_existing_report() in
+// admin_panel/supabase/010_privacy_geo_dedup.sql for the anti-spam /
+// unique-reporter enforcement that happens once a match is found here.
+export const MERGE_RADIUS_METERS = 20;
+
+export type ActiveDuplicateMatch = {
+  id: string;
+  reportCode: string;
+  status: string;
+  distanceMeters: number;
+} | null;
+
+export async function findActiveDuplicateWithin20m(params: {
+  category: string;
+  latitude: number;
+  longitude: number;
+}): Promise<ActiveDuplicateMatch> {
+  const { data, error } = await supabase
+    .from('reports')
+    .select('id, report_code, latitude, longitude, status')
+    .eq('category', params.category)
+    .neq('status', 'resolved')
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  // Fail safe: if we can't reliably check, don't merge — create a normal
+  // new report rather than risking an incorrect confirmation-count bump.
+  // ("If duplicate detection fails technically... log the error safely.")
+  if (error || !data) {
+    if (error) console.warn('findActiveDuplicateWithin20m: lookup failed —', error.message);
+    return null;
+  }
+
+  let best: { report: (typeof data)[number]; distance: number } | null = null;
+  for (const report of data) {
+    const distance = haversineMeters(
+      params.latitude,
+      params.longitude,
+      report.latitude,
+      report.longitude
+    );
+    if (distance <= MERGE_RADIUS_METERS && (!best || distance < best.distance)) {
+      best = { report, distance };
+    }
+  }
+
+  if (!best) return null;
+  return {
+    id: best.report.id,
+    reportCode: best.report.report_code,
+    status: best.report.status,
+    distanceMeters: Math.round(best.distance),
+  };
+}

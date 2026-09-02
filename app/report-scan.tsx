@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,9 +10,23 @@ import { useLanguage } from '@/contexts/language-context';
 import { useReportFlow, type ReportLocation } from '@/contexts/report-flow-context';
 import { checkForDuplicate } from '@/lib/duplicate-check';
 import { reverseGeocode } from '@/lib/geocoding';
-import { analyzeWasteMedia } from '@/lib/gemini';
+import { analyzeWasteMedia, validateWasteImage } from '@/lib/gemini';
+import { protectImagePrivacy } from '@/lib/privacy';
 
-const STEP_KEYS = [
+// Waste image validation + OpenCV privacy protection only apply to photos —
+// video reports keep the original, shorter step list and go straight to
+// analysis; this feature set doesn't cover video redaction.
+const IMAGE_STEP_KEYS = [
+  'reportScan.stepValidate',
+  'reportScan.stepPrivacy',
+  'reportScan.step1',
+  'reportScan.step2',
+  'reportScan.step3',
+  'reportScan.step4',
+  'reportScan.step5',
+] as const;
+
+const VIDEO_STEP_KEYS = [
   'reportScan.step1',
   'reportScan.step2',
   'reportScan.step3',
@@ -36,10 +50,16 @@ async function fetchLocation(): Promise<ReportLocation | null> {
 
 export default function ReportScanScreen() {
   const { t, language } = useLanguage();
-  const { media, setAnalysis, setDuplicate, setLocation } = useReportFlow();
+  const { media, setMedia, setAnalysis, setDuplicate, setLocation } = useReportFlow();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [invalidImage, setInvalidImage] = useState(false);
   const [spin] = useState(() => new Animated.Value(0));
+
+  const STEP_KEYS = useMemo(
+    () => (media?.kind === 'video' ? VIDEO_STEP_KEYS : IMAGE_STEP_KEYS),
+    [media?.kind]
+  );
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -68,17 +88,63 @@ export default function ReportScanScreen() {
     async function run() {
       try {
         const locationPromise = fetchLocation().catch(() => null);
-        const base64 = await FileSystem.readAsStringAsync(media!.uri, {
+        const originalBase64 = await FileSystem.readAsStringAsync(media!.uri, {
           encoding: FileSystem.EncodingType.Base64,
         });
+
+        let analysisBase64 = originalBase64;
+        let analysisMimeType = media!.mimeType;
+
+        if (media!.kind === 'image') {
+          // 1. Waste image validation — reject anything that isn't a
+          // genuine waste/sanitation issue before any further processing,
+          // so nothing invalid is ever privacy-processed, analyzed, or
+          // stored.
+          const validation = await validateWasteImage({
+            base64: originalBase64,
+            mimeType: media!.mimeType,
+          });
+          if (cancelled) return;
+          if (!validation.isValid) {
+            setInvalidImage(true);
+            setError(t('reportScan.invalidImageMessage'));
+            return;
+          }
+
+          // 2. OpenCV privacy protection — blur faces/plates before this
+          // image ever reaches Gemini or gets stored. A failure here must
+          // stop the report safely rather than fall back to the original,
+          // unprotected photo.
+          const protectedImage = await protectImagePrivacy({
+            base64: originalBase64,
+            mimeType: media!.mimeType,
+          });
+          if (cancelled) return;
+
+          const cacheDir = FileSystem.cacheDirectory ?? FileSystem.documentDirectory;
+          if (!cacheDir) {
+            throw new Error('Could not access local storage to save the protected photo.');
+          }
+          const protectedUri = `${cacheDir}swachhlens-protected-${Date.now()}.jpg`;
+          await FileSystem.writeAsStringAsync(protectedUri, protectedImage.base64, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          // Every screen downstream (preview, Gemini analysis, upload) now
+          // only ever sees this privacy-protected file — the original never
+          // gets read again.
+          setMedia({ uri: protectedUri, mimeType: protectedImage.mimeType, kind: 'image' });
+
+          analysisBase64 = protectedImage.base64;
+          analysisMimeType = protectedImage.mimeType;
+        }
 
         const location = await locationPromise;
         if (cancelled) return;
         if (location) setLocation(location);
 
         const analysis = await analyzeWasteMedia({
-          base64,
-          mimeType: media!.mimeType,
+          base64: analysisBase64,
+          mimeType: analysisMimeType,
           address: location?.address,
           language,
         });
@@ -109,8 +175,14 @@ export default function ReportScanScreen() {
       cancelled = true;
       clearInterval(stepTimer);
     };
+    // Deliberately empty: this must run exactly once against the media this
+    // screen was navigated to with. It intentionally does NOT depend on
+    // `media` — the privacy-protection step below calls setMedia() partway
+    // through this same run() to swap in the protected file for downstream
+    // screens, and re-running this effect off that change would re-validate
+    // and re-protect the already-protected image.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [media]);
+  }, []);
 
   const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
@@ -119,7 +191,9 @@ export default function ReportScanScreen() {
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.errorContent}>
           <Ionicons name="alert-circle-outline" size={48} color="#c0392b" />
-          <Text style={styles.errorTitle}>{t('reportScan.analysisFailed')}</Text>
+          <Text style={styles.errorTitle}>
+            {invalidImage ? t('reportScan.invalidImageTitle') : t('reportScan.analysisFailed')}
+          </Text>
           <Text style={styles.errorSubtitle}>{error}</Text>
           <Pressable
             style={styles.retryButton}

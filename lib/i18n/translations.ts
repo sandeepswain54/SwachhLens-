@@ -508,6 +508,16 @@ const reportScan = ns('reportScan', {
     hi: 'कृपया प्रतीक्षा करें जब तक हम कचरे का विश्लेषण करते हैं',
     or: 'ଦୟାକରି ଅପେକ୍ଷା କରନ୍ତୁ ଯେତେବେଳେ ଆମେ ଆବର୍ଜନା ବିଶ୍ଳେଷଣ କରୁଛୁ',
   },
+  stepValidate: {
+    en: 'Validating photo...',
+    hi: 'फोटो सत्यापित की जा रही है...',
+    or: 'ଫଟୋ ବୈଧ କରାଯାଉଛି...',
+  },
+  stepPrivacy: {
+    en: 'Blurring faces & plates...',
+    hi: 'चेहरे और नंबर प्लेट धुंधली की जा रही है...',
+    or: 'ମୁହଁ ଏବଂ ନମ୍ବର ପ୍ଲେଟ୍ ଅସ୍ପଷ୍ଟ କରାଯାଉଛି...',
+  },
   step1: { en: 'Detecting waste type...', hi: 'कचरे का प्रकार पहचाना जा रहा है...', or: 'ଆବର୍ଜନା ପ୍ରକାର ଚିହ୍ନଟ ହେଉଛି...' },
   step2: { en: 'Estimating volume...', hi: 'मात्रा का अनुमान लगाया जा रहा है...', or: 'ପରିମାଣ ଆକଳନ ହେଉଛି...' },
   step3: { en: 'Checking severity...', hi: 'गंभीरता जांची जा रही है...', or: 'ଗମ୍ଭୀରତା ଯାଞ୍ଚ ହେଉଛି...' },
@@ -524,6 +534,15 @@ const reportScan = ns('reportScan', {
     en: 'Something went wrong. Please try again.',
     hi: 'कुछ गलत हो गया। कृपया पुनः प्रयास करें।',
     or: 'କିଛି ଭୁଲ ହୋଇଗଲା। ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।',
+  },
+  // Waste image validation (gatekeeper): shown when the photo doesn't
+  // clearly show a genuine waste/sanitation issue. Wording matches the
+  // feature spec exactly for English.
+  invalidImageTitle: { en: 'Invalid Image', hi: 'अमान्य छवि', or: 'ଅବୈଧ ପ୍ରତିଛବି' },
+  invalidImageMessage: {
+    en: 'Invalid image. Please upload a clear photo showing a waste or sanitation issue. Selfies, random photos, screenshots, and unrelated images cannot be submitted as reports.',
+    hi: 'अमान्य छवि। कृपया कचरे या स्वच्छता संबंधी समस्या दिखाने वाली स्पष्ट फोटो अपलोड करें। सेल्फी, अनावश्यक फोटो, स्क्रीनशॉट और असंबंधित छवियां रिपोर्ट के रूप में सबमिट नहीं की जा सकतीं।',
+    or: 'ଅବୈଧ ପ୍ରତିଛବି। ଦୟାକରି ଆବର୍ଜନା କିମ୍ବା ସ୍ୱଚ୍ଛତା ସମସ୍ୟା ଦେଖାଉଥିବା ଏକ ସ୍ପଷ୍ଟ ଫଟୋ ଅପଲୋଡ୍ କରନ୍ତୁ। ସେଲ୍ଫି, ଅନାବଶ୍ୟକ ଫଟୋ, ସ୍କ୍ରିନସଟ୍ ଏବଂ ଅସମ୍ପର୍କିତ ପ୍ରତିଛବି ରିପୋର୍ଟ ଭାବରେ ଦାଖଲ କରାଯାଇପାରିବ ନାହିଁ।',
   },
 });
 
@@ -647,6 +666,23 @@ const reportSubmitted = ns('reportSubmitted', {
   reportId: { en: 'Report ID', hi: 'रिपोर्ट आईडी', or: 'ରିପୋର୍ଟ ଆଇଡି' },
   submittedOn: { en: 'Submitted on', hi: 'जमा करने की तिथि', or: 'ଦାଖଲ ତାରିଖ' },
   goToMyReports: { en: 'Go to My Reports', hi: 'मेरी रिपोर्ट पर जाएं', or: 'ମୋର ରିପୋର୍ଟକୁ ଯାଆନ୍ତୁ' },
+  // Geo-deduplication (20m merge): this submission was linked to an
+  // existing active report instead of creating a new ticket.
+  linkedReportId: { en: 'Linked Report ID', hi: 'लिंक की गई रिपोर्ट आईडी', or: 'ଲିଙ୍କ ହୋଇଥିବା ରିପୋର୍ଟ ଆଇଡି' },
+  mergedTitle: { en: 'Confirmation Added!', hi: 'पुष्टि जोड़ी गई!', or: 'ନିଶ୍ଚିତକରଣ ଯୋଡ଼ାଗଲା!' },
+  mergedSubtitle: {
+    en: 'This issue was already reported nearby. Your report has been linked to the existing ticket as a community confirmation.',
+    hi: 'यह समस्या पहले से ही पास में रिपोर्ट की जा चुकी है। आपकी रिपोर्ट को मौजूदा टिकट से एक सामुदायिक पुष्टि के रूप में जोड़ दिया गया है।',
+    or: 'ଏହି ସମସ୍ୟା ପୂର୍ବରୁ ନିକଟରେ ରିପୋର୍ଟ ହୋଇସାରିଛି। ଆପଣଙ୍କ ରିପୋର୍ଟକୁ ଏକ ସାମୁଦାୟିକ ନିଶ୍ଚିତକରଣ ଭାବରେ ବର୍ତ୍ତମାନର ଟିକେଟ୍ ସହିତ ଲିଙ୍କ କରାଯାଇଛି।',
+  },
+  // Anti-spam: this same user had already reported/confirmed this exact
+  // ticket before — required wording from the feature spec.
+  alreadyReportedTitle: { en: 'Already Reported', hi: 'पहले से रिपोर्ट किया गया', or: 'ପୂର୍ବରୁ ରିପୋର୍ଟ ହୋଇଛି' },
+  alreadyReportedSubtitle: {
+    en: 'You have already reported or confirmed this issue. Your previous report has already been recorded.',
+    hi: 'आपने पहले ही इस समस्या की रिपोर्ट या पुष्टि कर दी है। आपकी पिछली रिपोर्ट पहले से दर्ज है।',
+    or: 'ଆପଣ ପୂର୍ବରୁ ଏହି ସମସ୍ୟାକୁ ରିପୋର୍ଟ କିମ୍ବା ନିଶ୍ଚିତ କରିସାରିଛନ୍ତି। ଆପଣଙ୍କ ପୂର୍ବ ରିପୋର୍ଟ ପୂର୍ବରୁ ଦାଖଲ ହୋଇସାରିଛି।',
+  },
 });
 
 const reportStatusPage = ns('reportStatusPage', {

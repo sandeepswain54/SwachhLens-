@@ -2,7 +2,7 @@ import { decode as decodeBase64 } from 'base64-arraybuffer';
 import * as FileSystem from 'expo-file-system/legacy';
 
 import type { ReportLocation, ReportMedia } from '@/contexts/report-flow-context';
-import type { DuplicateCheck } from '@/lib/duplicate-check';
+import { findActiveDuplicateWithin20m, type DuplicateCheck } from '@/lib/duplicate-check';
 import type { WasteAnalysis } from '@/lib/gemini';
 import { supabase, uniqueChannel } from '@/lib/supabase';
 
@@ -49,6 +49,9 @@ export type ReportRow = {
   analysis: (WasteAnalysis & { duplicate: DuplicateCheck | null }) | null;
   created_at: string;
   resolved_at: string | null;
+  // Unique-reporter confirmation count (anti-spam + geo-deduplication
+  // feature) — see admin_panel/supabase/010_privacy_geo_dedup.sql.
+  confirmation_count: number;
 };
 
 export type ReportPin = {
@@ -79,6 +82,15 @@ export type SubmitReportParams = {
 export type SubmittedReport = {
   reportCode: string;
   createdAt: string;
+  // true when this submission landed within 20m of an existing active
+  // report and was linked to it as a community confirmation instead of
+  // creating a new ticket — see findActiveDuplicateWithin20m
+  // (lib/duplicate-check.ts).
+  merged: boolean;
+  // true when `merged` is true AND this same user had already
+  // reported/confirmed that exact ticket before — the anti-spam guard: this
+  // submission did NOT increase the confirmation count or urgency again.
+  alreadyReported: boolean;
 };
 
 // Rough kg estimate per AI-detected size tier, used only to give the "Waste
@@ -140,6 +152,42 @@ export async function submitReport(params: SubmitReportParams): Promise<Submitte
     throw new Error('You need to be signed in to submit a report.');
   }
 
+  // GPS-based 20-meter duplicate detection: if there's already an active
+  // report for the same waste category within 20 meters, this submission
+  // becomes a community confirmation on that ticket instead of a new one —
+  // no new photo is uploaded/stored and no new ticket is created. See
+  // findActiveDuplicateWithin20m for the distance rule and
+  // confirm_existing_report() (010_privacy_geo_dedup.sql) for the
+  // unique-reporter / anti-spam enforcement.
+  const activeDuplicate = await findActiveDuplicateWithin20m({
+    category: params.analysis.wasteType.primaryType,
+    latitude: params.location.latitude,
+    longitude: params.location.longitude,
+  }).catch((err) => {
+    console.warn('20m duplicate check failed, creating a new report instead:', err);
+    return null;
+  });
+
+  if (activeDuplicate) {
+    const { data: confirmRows, error: confirmError } = await supabase.rpc(
+      'confirm_existing_report',
+      { p_report_id: activeDuplicate.id }
+    );
+    if (confirmError) {
+      throw new Error(`Could not confirm this report: ${confirmError.message}`);
+    }
+    const confirmResult = confirmRows?.[0] as
+      | { confirmation_count: number; urgency_label: string; already_confirmed: boolean }
+      | undefined;
+
+    return {
+      reportCode: `#${activeDuplicate.reportCode}`,
+      createdAt: new Date().toISOString(),
+      merged: true,
+      alreadyReported: confirmResult?.already_confirmed ?? false,
+    };
+  }
+
   const base64 = await FileSystem.readAsStringAsync(params.media.uri, {
     encoding: FileSystem.EncodingType.Base64,
   });
@@ -174,14 +222,31 @@ export async function submitReport(params: SubmitReportParams): Promise<Submitte
       urgency_label: params.analysis.severity.priority,
       analysis: { ...params.analysis, duplicate: params.duplicate },
     })
-    .select('report_code, created_at')
+    .select('id, report_code, created_at')
     .single();
 
   if (insertError) {
     throw new Error(`Could not save report: ${insertError.message}`);
   }
 
-  return { reportCode: `#${data.report_code}`, createdAt: data.created_at };
+  // Records the creator as this report's first unique confirmer, so a later
+  // resubmission of the same issue by the same person is recognized as
+  // "already reported" instead of double-counting — see
+  // confirm_existing_report() (010_privacy_geo_dedup.sql). Non-fatal: the
+  // report itself is already saved even if this bookkeeping call fails.
+  const { error: confirmError } = await supabase.rpc('confirm_existing_report', {
+    p_report_id: data.id,
+  });
+  if (confirmError) {
+    console.warn('Could not record initial confirmation for new report:', confirmError.message);
+  }
+
+  return {
+    reportCode: `#${data.report_code}`,
+    createdAt: data.created_at,
+    merged: false,
+    alreadyReported: false,
+  };
 }
 
 export async function getMyReports(): Promise<ReportRow[]> {

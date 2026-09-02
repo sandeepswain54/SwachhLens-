@@ -261,3 +261,99 @@ export async function analyzeWasteMedia(params: {
     throw new Error('Could not parse the AI analysis result. Please try again.');
   }
 }
+
+// ---- Waste image validation (gatekeeper) ----
+//
+// Runs BEFORE any OpenCV privacy processing or the detailed analysis above
+// — rejects photos with no genuine waste/sanitation issue (selfies,
+// screenshots, scenery, random objects, ...) so nothing invalid ever gets a
+// report created or a photo stored. Deliberately a separate, smaller Gemini
+// call/schema so the existing analyzeWasteMedia prompt above is untouched.
+
+const VALIDATION_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    isWasteIssue: { type: 'BOOLEAN' },
+    confidencePercent: { type: 'NUMBER' },
+    reason: { type: 'STRING' },
+  },
+  required: ['isWasteIssue', 'confidencePercent', 'reason'],
+} as const;
+
+const VALIDATION_PROMPT = `You are the image gatekeeper for SwachhLens, a civic app citizens use to report waste and sanitation issues to their city. Look at the attached photo and decide ONLY whether it clearly shows a genuine, meaningful waste or sanitation problem worth reporting to a municipal cleanup crew.
+
+Accept photos showing things like: garbage piles, plastic waste, organic/food waste, overflowing dustbins, construction debris, e-waste, hazardous waste, illegal dumping, uncollected garbage, garbage on roads, or garbage blocking/near drains.
+
+Reject photos such as: selfies or portraits, photos focused only on people, random animals, nature/scenery with no waste issue, random buildings, clean roads with no waste, random vehicles with no visible waste problem, screenshots, documents, memes/graphics, blank or completely dark images, or anything else unrelated to waste/sanitation.
+
+Be strict: do not accept an image just because some object could loosely be mistaken for waste — there must be a genuine, clearly visible waste or sanitation problem in the photo.
+
+Respond with:
+- isWasteIssue: true only if the image clearly shows a genuine waste/sanitation problem, false otherwise.
+- confidencePercent: 0-100, your confidence in that judgment.
+- reason: one short sentence explaining what you saw and why you accepted or rejected it.`;
+
+// Below this confidence, treat an "accepted" result as a reject too — keeps
+// borderline/uncertain guesses from letting through an unrelated photo.
+const VALIDATION_ACCEPT_THRESHOLD = 55;
+
+export type WasteImageValidation = {
+  isValid: boolean;
+  confidencePercent: number;
+  reason: string;
+};
+
+export async function validateWasteImage(params: {
+  base64: string;
+  mimeType: string;
+}): Promise<WasteImageValidation> {
+  if (!GEMINI_API_KEY) {
+    throw new Error('Missing EXPO_PUBLIC_GEMINI_API_KEY. Check your .env file.');
+  }
+
+  const response = await fetch(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            { text: VALIDATION_PROMPT },
+            { inlineData: { mimeType: params.mimeType, data: params.base64 } },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.1,
+        responseMimeType: 'application/json',
+        responseSchema: VALIDATION_SCHEMA,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => '');
+    throw new Error(
+      `Image validation failed (${response.status}). ${errorBody || 'Please try again.'}`
+    );
+  }
+
+  const json = await response.json();
+  const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    throw new Error('Image validation returned no result. Please try again.');
+  }
+
+  let parsed: { isWasteIssue: boolean; confidencePercent: number; reason: string };
+  try {
+    parsed = JSON.parse(stripCodeFence(text));
+  } catch {
+    throw new Error('Could not parse the image validation result. Please try again.');
+  }
+
+  return {
+    isValid: parsed.isWasteIssue === true && parsed.confidencePercent >= VALIDATION_ACCEPT_THRESHOLD,
+    confidencePercent: parsed.confidencePercent,
+    reason: parsed.reason,
+  };
+}

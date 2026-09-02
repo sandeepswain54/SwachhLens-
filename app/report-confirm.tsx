@@ -51,6 +51,8 @@ export default function ReportConfirmScreen() {
       applySubmission({
         reportId: result.reportCode,
         submittedAt: formatSubmittedAt(result.createdAt),
+        merged: result.merged,
+        alreadyReported: result.alreadyReported,
       });
       router.replace('/report-submitted');
     } catch (err) {
