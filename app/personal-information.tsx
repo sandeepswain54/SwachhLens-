@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import { getCurrentProfile, type UserProfile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 
@@ -18,6 +19,7 @@ function formatJoinDate(iso: string | undefined): string {
 }
 
 export default function PersonalInformationScreen() {
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<UserProfile | null | undefined>(undefined);
   const [joinedAt, setJoinedAt] = useState<string | undefined>(undefined);
 
@@ -43,7 +45,7 @@ export default function PersonalInformationScreen() {
         <Pressable hitSlop={8} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#1A2E22" />
         </Pressable>
-        <Text style={styles.headerTitle}>Personal Information</Text>
+        <Text style={styles.headerTitle}>{t('personalInfo.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
 
@@ -65,14 +67,14 @@ export default function PersonalInformationScreen() {
           </View>
 
           <View style={styles.card}>
-            <InfoRow icon="person-outline" label="Full Name" value={profile?.fullName ?? '—'} />
-            <InfoRow icon="mail-outline" label="Email" value={profile?.email ?? '—'} />
+            <InfoRow icon="person-outline" label={t('personalInfo.fullName')} value={profile?.fullName ?? '—'} />
+            <InfoRow icon="mail-outline" label={t('personalInfo.email')} value={profile?.email ?? '—'} />
             <InfoRow
               icon="location-outline"
-              label="Saved Location"
-              value={profile?.location?.address ?? 'Not set'}
+              label={t('personalInfo.savedLocation')}
+              value={profile?.location?.address ?? t('personalInfo.notSet')}
             />
-            <InfoRow icon="calendar-outline" label="Member Since" value={formatJoinDate(joinedAt)} last />
+            <InfoRow icon="calendar-outline" label={t('personalInfo.memberSince')} value={formatJoinDate(joinedAt)} last />
           </View>
         </ScrollView>
       )}

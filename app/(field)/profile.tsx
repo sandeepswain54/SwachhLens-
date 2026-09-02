@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
+import { LANGUAGES } from '@/lib/i18n/translations';
 import { getTeamRatingStats, subscribeToTeamFeedback, type TeamRatingStats } from '@/lib/feedback';
 import { type FieldTask, getMyTasks, subscribeToMyTasks } from '@/lib/field-tasks';
 import { getMyTeam, subscribeToMyTeam, type MyTeam } from '@/lib/field-team';
@@ -17,6 +19,8 @@ function formatDateOnly(iso: string): string {
 }
 
 export default function FieldProfileScreen() {
+  const { t, language } = useLanguage();
+  const currentLanguageName = LANGUAGES.find((l) => l.code === language)?.nativeName ?? 'English';
   const [profile, setProfile] = useState<UserProfile | null | undefined>(undefined);
   const [team, setTeam] = useState<MyTeam | null | undefined>(undefined);
   const [tasks, setTasks] = useState<FieldTask[]>([]);
@@ -100,7 +104,7 @@ export default function FieldProfileScreen() {
       setProfile((prev) => (prev ? { ...prev, fullName: nameDraft.trim() } : prev));
       setEditingName(false);
     } catch (err) {
-      Alert.alert('Could not save name', err instanceof Error ? err.message : 'Please try again.');
+      Alert.alert(t('common.couldNotSaveName'), err instanceof Error ? err.message : t('common.pleaseTryAgain'));
     } finally {
       setSavingName(false);
     }
@@ -111,7 +115,7 @@ export default function FieldProfileScreen() {
       ? await ImagePicker.requestCameraPermissionsAsync()
       : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Permission needed', 'Allow access to update your profile photo.');
+      Alert.alert(t('common.permissionNeeded'), t('common.allowPhotoAccess'));
       return;
     }
 
@@ -132,17 +136,17 @@ export default function FieldProfileScreen() {
       const avatarUrl = await uploadAvatar(asset.uri, asset.mimeType ?? 'image/jpeg');
       setProfile((prev) => (prev ? { ...prev, avatarUrl } : prev));
     } catch (err) {
-      Alert.alert('Could not update photo', err instanceof Error ? err.message : 'Please try again.');
+      Alert.alert(t('common.couldNotUpdatePhoto'), err instanceof Error ? err.message : t('common.pleaseTryAgain'));
     } finally {
       setUploadingAvatar(false);
     }
   }
 
   function handleChangePhoto() {
-    Alert.alert('Change Profile Photo', undefined, [
-      { text: 'Take Photo', onPress: () => pickAndUploadAvatar(true) },
-      { text: 'Choose from Gallery', onPress: () => pickAndUploadAvatar(false) },
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('common.changeProfilePhoto'), undefined, [
+      { text: t('common.takePhoto'), onPress: () => pickAndUploadAvatar(true) },
+      { text: t('common.chooseFromGallery'), onPress: () => pickAndUploadAvatar(false) },
+      { text: t('common.cancel'), style: 'cancel' },
     ]);
   }
 
@@ -152,19 +156,20 @@ export default function FieldProfileScreen() {
   }
 
   function handleSettingsPress() {
-    Alert.alert('Settings', undefined, [
-      { text: 'Edit Full Name', onPress: startEditingName },
-      { text: 'Change Photo', onPress: handleChangePhoto },
-      { text: 'Logout', style: 'destructive', onPress: handleLogout },
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('fieldProfile.settings'), undefined, [
+      { text: t('fieldProfile.editFullName'), onPress: startEditingName },
+      { text: t('fieldProfile.changePhoto'), onPress: handleChangePhoto },
+      { text: t('common.logout'), style: 'destructive', onPress: handleLogout },
+      { text: t('common.cancel'), style: 'cancel' },
     ]);
   }
 
   function handleAbout() {
-    Alert.alert(
-      'About SwachhLens',
-      'SwachhLens helps field cleanup teams track, start, and submit waste-management tasks in real time, and lets citizens report waste issues and follow their cleanup status.'
-    );
+    Alert.alert(t('fieldProfile.aboutApp'), t('fieldProfile.aboutAppBody'));
+  }
+
+  function handleChangeLanguage() {
+    router.push('/language-select');
   }
 
   if (profile === undefined || team === undefined) {
@@ -179,9 +184,9 @@ export default function FieldProfileScreen() {
     return (
       <SafeAreaView style={styles.loadingContainer} edges={['top', 'bottom']}>
         <Ionicons name="alert-circle-outline" size={32} color="#c0392b" />
-        <Text style={styles.errorText}>This login isn&apos;t a field team account.</Text>
+        <Text style={styles.errorText}>{t('common.notFieldTeamAccount')}</Text>
         <Pressable style={styles.errorLogoutButton} onPress={handleLogout}>
-          <Text style={styles.errorLogoutText}>Back to Login</Text>
+          <Text style={styles.errorLogoutText}>{t('common.backToLogin')}</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -191,7 +196,7 @@ export default function FieldProfileScreen() {
     <View style={styles.container}>
       <SafeAreaView style={styles.headerSafeArea} edges={['top']}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
+          <Text style={styles.headerTitle}>{t('fieldProfile.headerTitle')}</Text>
           <Pressable hitSlop={8} onPress={handleSettingsPress}>
             <Ionicons name="settings-outline" size={22} color="#ffffff" />
           </Pressable>
@@ -224,7 +229,7 @@ export default function FieldProfileScreen() {
               </Text>
               <View style={styles.rolePill}>
                 <Ionicons name="person-outline" size={12} color="#1B6B3A" />
-                <Text style={styles.rolePillText}>Field Team Member</Text>
+                <Text style={styles.rolePillText}>{t('fieldProfile.fieldTeamMember')}</Text>
               </View>
               <View style={styles.emailRow}>
                 <Ionicons name="mail-outline" size={12} color="#6b7770" />
@@ -236,26 +241,26 @@ export default function FieldProfileScreen() {
           </View>
 
           <View style={styles.statsRow}>
-            <ProfileStat icon="checkmark-done-outline" value={String(completedCount)} label="Tasks Completed" />
+            <ProfileStat icon="checkmark-done-outline" value={String(completedCount)} label={t('fieldProfile.tasksCompleted')} />
             <ProfileStat
               icon="stats-chart-outline"
               value={completionRate === null ? '—' : `${completionRate}%`}
-              label="Completion Rate"
+              label={t('fieldProfile.completionRate')}
             />
             <ProfileStat
               icon="star"
               iconColor="#f5a623"
               value={ratingStats.average === null ? '—' : ratingStats.average.toFixed(1)}
-              label="Rating"
+              label={t('fieldProfile.rating')}
             />
-            <ProfileStat icon="calendar-outline" value={String(daysActive)} label="Days Active" />
+            <ProfileStat icon="calendar-outline" value={String(daysActive)} label={t('fieldProfile.daysActive')} />
           </View>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardHeading}>Basic Information</Text>
+          <Text style={styles.cardHeading}>{t('fieldProfile.basicInformation')}</Text>
 
-          <InfoRow icon="person-outline" label="Full Name">
+          <InfoRow icon="person-outline" label={t('fieldProfile.fullName')}>
             {editingName ? (
               <View style={styles.editRow}>
                 <TextInput
@@ -281,31 +286,37 @@ export default function FieldProfileScreen() {
             )}
           </InfoRow>
 
-          <InfoRow icon="mail-outline" label="Email Address">
+          <InfoRow icon="mail-outline" label={t('fieldProfile.emailAddress')}>
             <Text style={styles.infoValue}>{profile?.email}</Text>
           </InfoRow>
 
-          <InfoRow icon="people-outline" label="Team">
+          <InfoRow icon="people-outline" label={t('fieldProfile.team')}>
             <Text style={styles.infoValue}>
               {team.team_name} ({team.zone})
             </Text>
           </InfoRow>
 
-          <InfoRow icon="calendar-outline" label="Joined On" isLast>
+          <InfoRow icon="calendar-outline" label={t('fieldProfile.joinedOn')} isLast>
             <Text style={styles.infoValue}>{formatDateOnly(team.work_since)}</Text>
           </InfoRow>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardHeading}>More Options</Text>
+          <Text style={styles.cardHeading}>{t('fieldProfile.moreOptions')}</Text>
           <Pressable style={styles.optionRow} onPress={handleAbout}>
             <Ionicons name="information-circle-outline" size={19} color="#1B6B3A" />
-            <Text style={styles.optionLabel}>About SwachhLens</Text>
+            <Text style={styles.optionLabel}>{t('fieldProfile.aboutApp')}</Text>
+            <Ionicons name="chevron-forward" size={16} color="#c3cac6" />
+          </Pressable>
+          <Pressable style={styles.optionRow} onPress={handleChangeLanguage}>
+            <Ionicons name="language-outline" size={19} color="#1B6B3A" />
+            <Text style={styles.optionLabel}>{t('common.language')}</Text>
+            <Text style={styles.optionValue}>{currentLanguageName}</Text>
             <Ionicons name="chevron-forward" size={16} color="#c3cac6" />
           </Pressable>
           <Pressable style={[styles.optionRow, styles.optionRowLast]} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={19} color="#c0392b" />
-            <Text style={[styles.optionLabel, styles.logoutLabel]}>Logout</Text>
+            <Text style={[styles.optionLabel, styles.logoutLabel]}>{t('common.logout')}</Text>
             <Ionicons name="chevron-forward" size={16} color="#e8b4ac" />
           </Pressable>
         </View>
@@ -569,6 +580,11 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontWeight: '600',
     color: '#1A2E22',
+  },
+  optionValue: {
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: '#6b7770',
   },
   logoutLabel: {
     color: '#c0392b',

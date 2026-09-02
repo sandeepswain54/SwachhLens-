@@ -15,17 +15,21 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
+import { LANGUAGES } from '@/lib/i18n/translations';
 import { getMyImpactStats, type ImpactStats } from '@/lib/reports';
 import { getCurrentProfile, updateFullName, uploadAvatar, type UserProfile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 
 const MENU_ITEMS = [
-  { icon: 'person-outline', label: 'Personal Information', route: '/personal-information' },
-  { icon: 'location-outline', label: 'Saved Locations', route: '/saved-locations' },
-  { icon: 'notifications-outline', label: 'Notifications', route: '/notifications' },
+  { icon: 'person-outline', labelKey: 'citizenProfile.personalInformation', route: '/personal-information' },
+  { icon: 'location-outline', labelKey: 'citizenProfile.savedLocations', route: '/saved-locations' },
+  { icon: 'notifications-outline', labelKey: 'citizenProfile.notificationsMenu', route: '/notifications' },
 ] as const;
 
 export default function ProfileScreen() {
+  const { t, language } = useLanguage();
+  const currentLanguageName = LANGUAGES.find((l) => l.code === language)?.nativeName ?? 'English';
   const [profile, setProfile] = useState<UserProfile | null | undefined>(undefined);
   const [impact, setImpact] = useState<ImpactStats>({ submitted: 0, resolved: 0, wasteRemovedKg: 0 });
   const [editingName, setEditingName] = useState(false);
@@ -63,7 +67,7 @@ export default function ProfileScreen() {
       setProfile((prev) => (prev ? { ...prev, fullName: nameDraft.trim() } : prev));
       setEditingName(false);
     } catch (err) {
-      Alert.alert('Could not save name', err instanceof Error ? err.message : 'Please try again.');
+      Alert.alert(t('common.couldNotSaveName'), err instanceof Error ? err.message : t('common.pleaseTryAgain'));
     } finally {
       setSavingName(false);
     }
@@ -74,7 +78,7 @@ export default function ProfileScreen() {
       ? await ImagePicker.requestCameraPermissionsAsync()
       : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Permission needed', 'Allow access to update your profile photo.');
+      Alert.alert(t('common.permissionNeeded'), t('common.allowPhotoAccess'));
       return;
     }
 
@@ -100,17 +104,17 @@ export default function ProfileScreen() {
       const avatarUrl = await uploadAvatar(asset.uri, asset.mimeType ?? 'image/jpeg');
       setProfile((prev) => (prev ? { ...prev, avatarUrl } : prev));
     } catch (err) {
-      Alert.alert('Could not update photo', err instanceof Error ? err.message : 'Please try again.');
+      Alert.alert(t('common.couldNotUpdatePhoto'), err instanceof Error ? err.message : t('common.pleaseTryAgain'));
     } finally {
       setUploadingAvatar(false);
     }
   }
 
   function handleChangePhoto() {
-    Alert.alert('Change Profile Photo', undefined, [
-      { text: 'Take Photo', onPress: () => pickAndUploadAvatar(true) },
-      { text: 'Choose from Gallery', onPress: () => pickAndUploadAvatar(false) },
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('common.changeProfilePhoto'), undefined, [
+      { text: t('common.takePhoto'), onPress: () => pickAndUploadAvatar(true) },
+      { text: t('common.chooseFromGallery'), onPress: () => pickAndUploadAvatar(false) },
+      { text: t('common.cancel'), style: 'cancel' },
     ]);
   }
 
@@ -120,10 +124,14 @@ export default function ProfileScreen() {
   }
 
   function handleLogout() {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: performLogout },
+    Alert.alert(t('common.logout'), t('common.logoutConfirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.logout'), style: 'destructive', onPress: performLogout },
     ]);
+  }
+
+  function handleChangeLanguage() {
+    router.push('/language-select');
   }
 
   if (profile === undefined) {
@@ -186,7 +194,7 @@ export default function ProfileScreen() {
             onPress={() => router.push('/profile-location-picker')}>
             <Ionicons name="location-outline" size={14} color="#ffffff" />
             <Text style={styles.locationText} numberOfLines={1}>
-              {profile?.location?.address ?? 'Set your location'}
+              {profile?.location?.address ?? t('common.setYourLocation')}
             </Text>
             <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.8)" />
           </Pressable>
@@ -195,35 +203,44 @@ export default function ProfileScreen() {
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{impact.submitted}</Text>
-            <Text style={styles.statLabel}>Reports</Text>
+            <Text style={styles.statLabel}>{t('citizenProfile.reports')}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{impact.resolved}</Text>
-            <Text style={styles.statLabel}>Resolved</Text>
+            <Text style={styles.statLabel}>{t('citizenProfile.resolved')}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{impact.wasteRemovedKg} kg</Text>
-            <Text style={styles.statLabel}>Waste Removed</Text>
+            <Text style={styles.statValue}>{impact.wasteRemovedKg} {t('common.kg')}</Text>
+            <Text style={styles.statLabel}>{t('citizenProfile.wasteRemoved')}</Text>
           </View>
         </View>
 
         <View style={styles.menuList}>
           {MENU_ITEMS.map((item, index) => (
             <Pressable
-              key={item.label}
+              key={item.labelKey}
               style={[styles.menuRow, index === MENU_ITEMS.length - 1 && styles.menuRowLast]}
               onPress={() => router.push(item.route)}>
               <Ionicons name={item.icon} size={19} color="#1B6B3A" />
-              <Text style={styles.menuLabel}>{item.label}</Text>
+              <Text style={styles.menuLabel}>{t(item.labelKey)}</Text>
               <Ionicons name="chevron-forward" size={16} color="#c3cac6" />
             </Pressable>
           ))}
         </View>
 
+        <View style={styles.menuList}>
+          <Pressable style={[styles.menuRow, styles.menuRowLast]} onPress={handleChangeLanguage}>
+            <Ionicons name="language-outline" size={19} color="#1B6B3A" />
+            <Text style={styles.menuLabel}>{t('common.language')}</Text>
+            <Text style={styles.menuValue}>{currentLanguageName}</Text>
+            <Ionicons name="chevron-forward" size={16} color="#c3cac6" />
+          </Pressable>
+        </View>
+
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>{t('common.logout')}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -375,6 +392,11 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontWeight: '600',
     color: '#1A2E22',
+  },
+  menuValue: {
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: '#6b7770',
   },
   logoutButton: {
     marginHorizontal: 20,

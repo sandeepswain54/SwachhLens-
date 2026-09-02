@@ -24,7 +24,7 @@ export default function ProfileLocationPickerRoute() {
 
   return (
     <LocationPickerScreen
-      title="Set Your Location"
+      titleKey="locationPicker.setYourLocationTitle"
       initialLocation={initialLocation}
       onConfirm={async (picked) => {
         await updateProfileLocation(picked).catch(() => null);

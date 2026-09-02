@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
+import { useLanguage } from '@/contexts/language-context';
 import { getCommunityReportPins, subscribeToNewReportPins, type ReportPin } from '@/lib/reports';
 
 const DEFAULT_CENTER = { latitude: 20.2961, longitude: 85.8245 };
@@ -125,6 +126,7 @@ function buildHotspotMapHtml(pins: ReportPin[], center: { latitude: number; long
 }
 
 export default function WasteHotspotsScreen() {
+  const { t } = useLanguage();
   const webviewRef = useRef<WebView>(null);
   const [pins, setPins] = useState<ReportPin[] | null>(null);
   const [html, setHtml] = useState<string | null>(null);
@@ -168,7 +170,7 @@ export default function WasteHotspotsScreen() {
         // all reports" RLS policy (001_admin_dashboard.sql) isn't applied
         // on this Supabase project — surface that instead of silently
         // showing an empty map with no explanation.
-        setLoadError(err instanceof Error ? err.message : 'Could not load hotspots.');
+        setLoadError(err instanceof Error ? err.message : t('common.pleaseTryAgain'));
         initializeMap([]);
       });
 
@@ -185,7 +187,7 @@ export default function WasteHotspotsScreen() {
       cancelled = true;
       unsubscribe();
     };
-  }, [reloadKey]);
+  }, [reloadKey, t]);
 
   const counts = useMemo(() => {
     const result = { high: 0, medium: 0, low: 0 };
@@ -229,7 +231,7 @@ export default function WasteHotspotsScreen() {
         <Pressable hitSlop={8} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#1A2E22" />
         </Pressable>
-        <Text style={styles.headerTitle}>Waste Hotspots</Text>
+        <Text style={styles.headerTitle}>{t('wasteHotspotsPage.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
 
@@ -262,12 +264,12 @@ export default function WasteHotspotsScreen() {
               />
               <Text style={styles.overlayText}>
                 {loadError
-                  ? `Couldn't load hotspots: ${loadError}`
-                  : 'No waste hotspots reported yet. Be the first to report one!'}
+                  ? t('wasteHotspotsPage.couldNotLoad', { error: loadError })
+                  : t('wasteHotspotsPage.noHotspotsYet')}
               </Text>
               {loadError && (
                 <Pressable onPress={() => setReloadKey((k) => k + 1)}>
-                  <Text style={styles.overlayRetry}>Retry</Text>
+                  <Text style={styles.overlayRetry}>{t('wasteHotspotsPage.retry')}</Text>
                 </Pressable>
               )}
             </View>
@@ -280,11 +282,11 @@ export default function WasteHotspotsScreen() {
               <Ionicons name="alert-circle-outline" size={20} color="#c0392b" />
               <Text style={styles.overlayText}>
                 {mapScriptError
-                  ? `Markers failed to draw: ${mapScriptError}`
-                  : `Found ${pins.length} report${pins.length === 1 ? '' : 's'} but couldn't place any markers.`}
+                  ? t('wasteHotspotsPage.markersFailedToDraw', { error: mapScriptError })
+                  : t('wasteHotspotsPage.foundButNoMarkers', { n: pins.length })}
               </Text>
               <Pressable onPress={() => setReloadKey((k) => k + 1)}>
-                <Text style={styles.overlayRetry}>Retry</Text>
+                <Text style={styles.overlayRetry}>{t('wasteHotspotsPage.retry')}</Text>
               </Pressable>
             </View>
           </View>
@@ -294,17 +296,17 @@ export default function WasteHotspotsScreen() {
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#c0392b' }]} />
-          <Text style={styles.legendLabel}>High</Text>
+          <Text style={styles.legendLabel}>{t('wasteHotspotsPage.high')}</Text>
           <Text style={styles.legendCount}>{counts.high}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#d97706' }]} />
-          <Text style={styles.legendLabel}>Medium</Text>
+          <Text style={styles.legendLabel}>{t('wasteHotspotsPage.medium')}</Text>
           <Text style={styles.legendCount}>{counts.medium}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#1B6B3A' }]} />
-          <Text style={styles.legendLabel}>Low</Text>
+          <Text style={styles.legendLabel}>{t('wasteHotspotsPage.low')}</Text>
           <Text style={styles.legendCount}>{counts.low}</Text>
         </View>
       </View>
@@ -313,7 +315,7 @@ export default function WasteHotspotsScreen() {
         <Pressable
           style={styles.viewAllButton}
           onPress={() => webviewRef.current?.injectJavaScript('window.fitAll(); true;')}>
-          <Text style={styles.viewAllButtonText}>View All on Map</Text>
+          <Text style={styles.viewAllButtonText}>{t('wasteHotspotsPage.viewAllOnMap')}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

@@ -5,13 +5,13 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import { getMyFeedbackForReport } from '@/lib/feedback';
 import {
   type CompletionEvidence,
   formatRelativeTime,
   getCompletionEvidence,
   getReportById,
-  STATUS_LABEL,
   STATUS_ORDER,
   subscribeToReportStatus,
   type ReportRow,
@@ -24,14 +24,15 @@ const STEP_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   resolved: 'checkmark-done-outline',
 };
 
-const STEP_DESCRIPTION: Record<string, string> = {
-  submitted: 'Your report was received.',
-  team_assigned: 'A cleanup team has been assigned to this report.',
-  in_progress: 'The team is actively working on cleanup.',
-  resolved: 'This waste issue has been cleaned up.',
+const STEP_DESCRIPTION_KEY: Record<string, 'reportStatusPage.stepSubmittedDesc' | 'reportStatusPage.stepTeamAssignedDesc' | 'reportStatusPage.stepInProgressDesc' | 'reportStatusPage.stepResolvedDesc'> = {
+  submitted: 'reportStatusPage.stepSubmittedDesc',
+  team_assigned: 'reportStatusPage.stepTeamAssignedDesc',
+  in_progress: 'reportStatusPage.stepInProgressDesc',
+  resolved: 'reportStatusPage.stepResolvedDesc',
 };
 
 export default function ReportStatusScreen() {
+  const { t } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [report, setReport] = useState<ReportRow | null | undefined>(undefined);
   const [evidence, setEvidence] = useState<CompletionEvidence | null>(null);
@@ -76,7 +77,7 @@ export default function ReportStatusScreen() {
         <Pressable hitSlop={8} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#1A2E22" />
         </Pressable>
-        <Text style={styles.headerTitle}>Report Status</Text>
+        <Text style={styles.headerTitle}>{t('reportStatusPage.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
 
@@ -89,7 +90,7 @@ export default function ReportStatusScreen() {
       {report === null && (
         <View style={styles.centered}>
           <Ionicons name="alert-circle-outline" size={40} color="#c0392b" />
-          <Text style={styles.notFoundText}>Could not find this report.</Text>
+          <Text style={styles.notFoundText}>{t('reportStatusPage.couldNotFind')}</Text>
         </View>
       )}
 
@@ -98,7 +99,7 @@ export default function ReportStatusScreen() {
           <Image source={{ uri: report.media_url }} style={styles.media} contentFit="cover" />
 
           <Text style={styles.reportCode}>{report.report_code}</Text>
-          <Text style={styles.category}>{report.category}</Text>
+          <Text style={styles.category}>{t(`wasteCategory.${report.category}`)}</Text>
 
           <View style={styles.metaRow}>
             <Ionicons name="location-outline" size={13} color="#6b7770" />
@@ -106,7 +107,9 @@ export default function ReportStatusScreen() {
           </View>
           <View style={styles.metaRow}>
             <Ionicons name="time-outline" size={13} color="#6b7770" />
-            <Text style={styles.metaText}>Reported {formatRelativeTime(report.created_at)}</Text>
+            <Text style={styles.metaText}>
+              {t('reportStatusPage.reportedAgo', { time: formatRelativeTime(report.created_at, t) })}
+            </Text>
           </View>
 
           <View style={styles.stepper}>
@@ -127,9 +130,9 @@ export default function ReportStatusScreen() {
                   </View>
                   <View style={styles.stepTextColumn}>
                     <Text style={[styles.stepLabel, done && styles.stepLabelDone]}>
-                      {STATUS_LABEL[step]}
+                      {t(`reportStatus.${step}`)}
                     </Text>
-                    <Text style={styles.stepDescription}>{STEP_DESCRIPTION[step]}</Text>
+                    <Text style={styles.stepDescription}>{t(STEP_DESCRIPTION_KEY[step])}</Text>
                   </View>
                 </View>
               );
@@ -140,7 +143,7 @@ export default function ReportStatusScreen() {
             <View style={styles.resolvedSection}>
               {evidence && evidence.photos.length > 0 && (
                 <>
-                  <Text style={styles.resolvedHeading}>Cleanup Photos</Text>
+                  <Text style={styles.resolvedHeading}>{t('reportStatusPage.cleanupPhotos')}</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.evidenceRow}>
                     {evidence.photos.map((uri) => (
                       <Image key={uri} source={{ uri }} style={styles.evidencePhoto} contentFit="cover" />
@@ -153,14 +156,14 @@ export default function ReportStatusScreen() {
               {hasFeedback ? (
                 <View style={styles.thanksCard}>
                   <Ionicons name="heart" size={16} color="#1B6B3A" />
-                  <Text style={styles.thanksText}>Thanks for rating this cleanup!</Text>
+                  <Text style={styles.thanksText}>{t('reportStatusPage.thanksForRating')}</Text>
                 </View>
               ) : (
                 <Pressable
                   style={styles.rateButton}
                   onPress={() => router.push({ pathname: '/report-feedback', params: { id: report.id } })}>
                   <Ionicons name="star-outline" size={16} color="#ffffff" />
-                  <Text style={styles.rateButtonText}>Rate This Cleanup</Text>
+                  <Text style={styles.rateButtonText}>{t('reportStatusPage.rateThisCleanup')}</Text>
                 </Pressable>
               )}
             </View>

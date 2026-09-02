@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import { useReportFlow } from '@/contexts/report-flow-context';
 import { submitReport } from '@/lib/reports';
 
@@ -29,6 +30,7 @@ function formatSubmittedAt(iso: string) {
 }
 
 export default function ReportConfirmScreen() {
+  const { t } = useLanguage();
   const { media, analysis, duplicate, location, comments, setComments, applySubmission } =
     useReportFlow();
   const [submitting, setSubmitting] = useState(false);
@@ -52,7 +54,7 @@ export default function ReportConfirmScreen() {
       });
       router.replace('/report-submitted');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not submit this report. Please try again.');
+      setError(err instanceof Error ? err.message : t('reportConfirm.couldNotSubmit'));
     } finally {
       setSubmitting(false);
     }
@@ -64,7 +66,7 @@ export default function ReportConfirmScreen() {
         <Pressable hitSlop={8} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#1A2E22" />
         </Pressable>
-        <Text style={styles.headerTitle}>Confirm Details</Text>
+        <Text style={styles.headerTitle}>{t('reportConfirm.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
 
@@ -78,26 +80,26 @@ export default function ReportConfirmScreen() {
             </View>
           )}
           <Pressable onPress={() => router.replace('/report')}>
-            <Text style={styles.editPhotoLink}>Edit Photo</Text>
+            <Text style={styles.editPhotoLink}>{t('reportConfirm.editPhoto')}</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.label}>Location</Text>
+        <Text style={styles.label}>{t('reportConfirm.location')}</Text>
         <Pressable
           style={styles.locationRow}
           onPress={() => router.push('/report-location-picker')}>
           <Ionicons name="location-outline" size={18} color="#1B6B3A" />
           <Text style={styles.locationText} numberOfLines={2}>
-            {location?.address ?? 'Tap to set the report location'}
+            {location?.address ?? t('reportConfirm.tapToSetLocation')}
           </Text>
           <Ionicons name="create-outline" size={18} color="#9aa5a0" />
         </Pressable>
 
-        <Text style={styles.label}>Comments (Optional)</Text>
+        <Text style={styles.label}>{t('reportConfirm.commentsOptional')}</Text>
         <View style={styles.commentsBox}>
           <TextInput
             style={styles.commentsInput}
-            placeholder="Add more details..."
+            placeholder={t('reportConfirm.addMoreDetails')}
             placeholderTextColor="#9aa5a0"
             multiline
             maxLength={COMMENT_LIMIT}
@@ -119,11 +121,11 @@ export default function ReportConfirmScreen() {
           {submitting ? (
             <ActivityIndicator color="#ffffff" />
           ) : (
-            <Text style={styles.submitButtonText}>Submit Report</Text>
+            <Text style={styles.submitButtonText}>{t('reportConfirm.submitReport')}</Text>
           )}
         </Pressable>
         {!location && (
-          <Text style={styles.footerHint}>Set a location above to submit this report.</Text>
+          <Text style={styles.footerHint}>{t('reportConfirm.setLocationHint')}</Text>
         )}
       </View>
     </SafeAreaView>

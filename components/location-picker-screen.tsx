@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
+import { useLanguage } from '@/contexts/language-context';
 import { reverseGeocode } from '@/lib/geocoding';
 import { buildLocationPickerHtml } from '@/lib/map-html';
 
@@ -15,12 +16,17 @@ const DEFAULT_CENTER = { latitude: 20.2961, longitude: 85.8245 };
 export type PickedLocation = { latitude: number; longitude: number; address: string };
 
 type Props = {
-  title?: string;
+  titleKey?: 'locationPicker.setLocationTitle' | 'locationPicker.setYourLocationTitle';
   initialLocation: PickedLocation | null;
   onConfirm: (location: PickedLocation) => void;
 };
 
-export function LocationPickerScreen({ title = 'Set Location', initialLocation, onConfirm }: Props) {
+export function LocationPickerScreen({
+  titleKey = 'locationPicker.setLocationTitle',
+  initialLocation,
+  onConfirm,
+}: Props) {
+  const { t } = useLanguage();
   const webviewRef = useRef<WebView>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -66,7 +72,7 @@ export function LocationPickerScreen({ title = 'Set Location', initialLocation, 
   async function handleUseCurrentLocation() {
     const permission = await Location.requestForegroundPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Location access needed', 'Allow location access to use your current position.');
+      Alert.alert(t('locationPicker.locationAccessNeeded'), t('locationPicker.allowLocationCurrentPosition'));
       return;
     }
     setLocating(true);
@@ -78,7 +84,7 @@ export function LocationPickerScreen({ title = 'Set Location', initialLocation, 
         `window.setMarker(${position.coords.latitude}, ${position.coords.longitude}); true;`
       );
     } catch {
-      Alert.alert('Could not get location', 'Please try again or set a location manually on the map.');
+      Alert.alert(t('locationPicker.couldNotGetLocation'), t('locationPicker.tryAgainOrSetManually'));
     } finally {
       setLocating(false);
     }
@@ -99,7 +105,7 @@ export function LocationPickerScreen({ title = 'Set Location', initialLocation, 
         <Pressable hitSlop={8} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#1A2E22" />
         </Pressable>
-        <Text style={styles.headerTitle}>{title}</Text>
+        <Text style={styles.headerTitle}>{t(titleKey)}</Text>
         <View style={{ width: 22 }} />
       </View>
 
@@ -112,7 +118,7 @@ export function LocationPickerScreen({ title = 'Set Location', initialLocation, 
           javaScriptEnabled
         />
         <View pointerEvents="none" style={styles.mapHint}>
-          <Text style={styles.mapHintText}>Tap or drag the pin to set the exact spot</Text>
+          <Text style={styles.mapHintText}>{t('locationPicker.mapHint')}</Text>
         </View>
       </View>
 
@@ -126,13 +132,13 @@ export function LocationPickerScreen({ title = 'Set Location', initialLocation, 
           ) : (
             <Ionicons name="locate-outline" size={18} color="#1B6B3A" />
           )}
-          <Text style={styles.currentLocationText}>Use Current Location</Text>
+          <Text style={styles.currentLocationText}>{t('locationPicker.useCurrentLocation')}</Text>
         </Pressable>
 
         <View style={styles.addressRow}>
           <Ionicons name="location-outline" size={16} color="#6b7770" />
           <Text style={styles.addressText} numberOfLines={2}>
-            {resolving ? 'Resolving address...' : (address ?? 'Tap the map to drop a pin')}
+            {resolving ? t('locationPicker.resolvingAddress') : (address ?? t('locationPicker.tapMapToDropPin'))}
           </Text>
         </View>
 
@@ -140,7 +146,7 @@ export function LocationPickerScreen({ title = 'Set Location', initialLocation, 
           style={[styles.confirmButton, !coords && styles.confirmButtonDisabled]}
           disabled={!coords}
           onPress={handleConfirm}>
-          <Text style={styles.confirmButtonText}>Confirm Location</Text>
+          <Text style={styles.confirmButtonText}>{t('locationPicker.confirmLocation')}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

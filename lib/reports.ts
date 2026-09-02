@@ -108,15 +108,27 @@ export function formatDateTime(iso: string): string {
   });
 }
 
-export function formatRelativeTime(iso: string): string {
+// `t` is optional so every existing call site keeps working untranslated;
+// pass the current screen's `t` from useLanguage() to get this in the
+// citizen/field member's chosen language instead of hardcoded English.
+export function formatRelativeTime(
+  iso: string,
+  t?: (key: string, vars?: Record<string, string | number>) => string
+): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.round(diffMs / 60000);
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 1) return t ? t('timeAgo.justNow') : 'Just now';
+  if (minutes < 60) return t ? t('timeAgo.minAgo', { n: minutes }) : `${minutes} min ago`;
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} ${hours === 1 ? 'hr' : 'hrs'} ago`;
+  if (hours < 24) {
+    return t
+      ? t(hours === 1 ? 'timeAgo.hrAgo' : 'timeAgo.hrsAgo', { n: hours })
+      : `${hours} ${hours === 1 ? 'hr' : 'hrs'} ago`;
+  }
   const days = Math.round(hours / 24);
-  return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+  return t
+    ? t(days === 1 ? 'timeAgo.dayAgo' : 'timeAgo.daysAgo', { n: days })
+    : `${days} ${days === 1 ? 'day' : 'days'} ago`;
 }
 
 export async function submitReport(params: SubmitReportParams): Promise<SubmittedReport> {

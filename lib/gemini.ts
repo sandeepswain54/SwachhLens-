@@ -181,6 +181,12 @@ Strict accuracy rules — follow these exactly:
 - risks.location: same shape, but base it on the location context given below. If no location context is given, return { level: "Low", percent: 0, explanation: "Not available - no location was provided." }.
 - reason: one short sentence summarizing why this severity was assigned.`;
 
+const LANGUAGE_NAME: Record<string, string> = {
+  en: 'English',
+  hi: 'Hindi (हिंदी)',
+  or: 'Odia (ଓଡ଼ିଆ)',
+};
+
 function stripCodeFence(text: string) {
   const trimmed = text.trim();
   if (trimmed.startsWith('```')) {
@@ -193,6 +199,15 @@ export async function analyzeWasteMedia(params: {
   base64: string;
   mimeType: string;
   address?: string;
+  // The citizen/field member's chosen app language ('en' | 'hi' | 'or') —
+  // every free-text field in the response (explanations, visual evidence,
+  // reason, etc.) comes back written in this language in real time, matching
+  // whatever was picked on the language-select screen or in Profile. The
+  // enum fields (primaryType, level, size, ...) always stay the fixed
+  // English tokens the schema requires — those are translated for display
+  // separately, in lib/i18n/translations.ts, since they're also stored and
+  // read by the admin panel.
+  language?: string;
 }): Promise<WasteAnalysis> {
   if (!GEMINI_API_KEY) {
     throw new Error('Missing EXPO_PUBLIC_GEMINI_API_KEY. Check your .env file.');
@@ -202,6 +217,12 @@ export async function analyzeWasteMedia(params: {
     ? `\n\nLocation context for this report: ${params.address}`
     : '\n\nNo location context was provided for this report.';
 
+  const languageName = (params.language && LANGUAGE_NAME[params.language]) || null;
+  const languageInstruction =
+    languageName && languageName !== 'English'
+      ? `\n\nLanguage: write every free-text value (explanation, visualEvidence, scaleReference, reason, and each risk's explanation) in ${languageName}, in natural everyday wording an ordinary citizen would use — not a literal machine translation. detectedObjects entries should also be in ${languageName}. Keep every enum field (primaryType, secondaryType, size, level, priority, typeComparison[].type) exactly as one of the fixed English tokens listed above — never translate those.`
+      : '';
+
   const response = await fetch(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -209,7 +230,7 @@ export async function analyzeWasteMedia(params: {
       contents: [
         {
           parts: [
-            { text: PROMPT + locationContext },
+            { text: PROMPT + locationContext + languageInstruction },
             { inlineData: { mimeType: params.mimeType, data: params.base64 } },
           ],
         },

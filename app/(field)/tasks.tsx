@@ -6,9 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import {
   FIELD_TASK_STATUS_BADGE,
-  FIELD_TASK_STATUS_LABEL,
   type FieldTask,
   getMyTasks,
   routeForTaskStatus,
@@ -28,6 +28,7 @@ function inProgressBucket(status: FieldTask['status']): boolean {
 }
 
 export default function FieldTasksScreen() {
+  const { t } = useLanguage();
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
   const [teamId, setTeamId] = useState<string | null | undefined>(undefined);
   const [tasks, setTasks] = useState<FieldTask[]>([]);
@@ -130,15 +131,15 @@ export default function FieldTasksScreen() {
   }
 
   const TABS: { label: string; value: TabValue }[] = [
-    { label: `All (${counts.all})`, value: 'all' },
-    { label: `In Progress (${counts.in_progress})`, value: 'in_progress' },
-    { label: `Completed (${counts.completed})`, value: 'completed' },
+    { label: `${t('fieldTasks.tabAll')} (${counts.all})`, value: 'all' },
+    { label: `${t('fieldTasks.tabInProgress')} (${counts.in_progress})`, value: 'in_progress' },
+    { label: `${t('fieldTasks.tabCompleted')} (${counts.completed})`, value: 'completed' },
   ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Tasks</Text>
+        <Text style={styles.headerTitle}>{t('fieldTasks.headerTitle')}</Text>
       </View>
 
       <View style={styles.tabRow}>
@@ -159,15 +160,15 @@ export default function FieldTasksScreen() {
       ) : teamId === null ? (
         <View style={styles.centered}>
           <Ionicons name="alert-circle-outline" size={28} color="#c0392b" />
-          <Text style={styles.emptyText}>This login isn&apos;t a field team account.</Text>
+          <Text style={styles.emptyText}>{t('common.notFieldTeamAccount')}</Text>
         </View>
       ) : filtered.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="checkmark-done-circle-outline" size={28} color="#9aa5a0" />
           <Text style={styles.emptyText}>
             {tasks.length === 0
-              ? 'No tasks assigned yet. New tasks from the admin will show up here instantly.'
-              : 'Nothing here yet.'}
+              ? t('fieldHome.noTasksAssigned')
+              : t('fieldTasks.nothingHereYet')}
           </Text>
         </View>
       ) : (
@@ -184,12 +185,14 @@ export default function FieldTasksScreen() {
                     <Text style={styles.taskCode}>#{task.assignment_code}</Text>
                     <View style={[styles.statusPill, { backgroundColor: statusBadge.bg }]}>
                       <Text style={[styles.statusPillText, { color: statusBadge.text }]}>
-                        {FIELD_TASK_STATUS_LABEL[task.status]}
+                        {t(`fieldTaskStatus.${task.status}`)}
                       </Text>
                     </View>
                   </View>
-                  <Text style={styles.taskTitle}>{task.report.category}</Text>
-                  <Text style={[styles.priorityText, { color: priority.text }]}>{priority.label} Priority</Text>
+                  <Text style={styles.taskTitle}>{t(`wasteCategory.${task.report.category}`)}</Text>
+                  <Text style={[styles.priorityText, { color: priority.text }]}>
+                    {t('fieldHome.priority', { label: priority.label })}
+                  </Text>
                   <View style={styles.metaRow}>
                     <Ionicons name="location-outline" size={12} color="#6b7770" />
                     <Text style={styles.metaText} numberOfLines={1}>

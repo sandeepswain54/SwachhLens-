@@ -5,8 +5,10 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import { useReportFlow } from '@/contexts/report-flow-context';
 import type { RiskItem } from '@/lib/gemini';
+import type { TranslationKey } from '@/lib/i18n/translations';
 
 const CATEGORY_EMOJI: Record<string, string> = {
   'Overflowing Bin': '🗑️',
@@ -34,6 +36,26 @@ const PRIORITY_COLOR: Record<string, string> = {
 
 const SIZE_STEPS = ['Small', 'Medium', 'Large', 'Very Large'];
 
+// duplicate-check.ts's timeDescription/recommendedAction are persisted as-is
+// into the report's `analysis` JSON (read by the admin panel too), so they
+// stay fixed English strings at the source — these translate the small,
+// fixed set of shapes they can take for display here without touching that
+// shared data.
+function translateDuplicateTime(desc: string, t: (key: TranslationKey, vars?: Record<string, string | number>) => string): string {
+  if (desc === 'Just now') return t('timeAgo.justNow');
+  const hoursMatch = desc.match(/^(\d+)h ago$/);
+  if (hoursMatch) return t('timeAgo.hAgoShort', { n: hoursMatch[1] });
+  const daysMatch = desc.match(/^(\d+)d ago$/);
+  if (daysMatch) return t('timeAgo.dAgoShort', { n: daysMatch[1] });
+  return desc;
+}
+
+function translateRecommendation(action: string, t: (key: TranslationKey) => string): string {
+  if (action === 'Link to existing complaint') return t('reportResult.recommendLink');
+  if (action === 'Review before creating a new complaint') return t('reportResult.recommendReview');
+  return action;
+}
+
 function Bar({ percent, color = '#1B6B3A' }: { percent: number; color?: string }) {
   const clamped = Math.max(0, Math.min(100, percent));
   return (
@@ -56,6 +78,7 @@ function RiskCard({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <Pressable style={styles.riskCard} onPress={onToggle}>
       <View style={styles.riskCardHeader}>
@@ -63,7 +86,7 @@ function RiskCard({
         <View
           style={[styles.riskLevelBadge, { backgroundColor: `${LEVEL_COLOR[risk.level]}1a` }]}>
           <Text style={[styles.riskLevelBadgeText, { color: LEVEL_COLOR[risk.level] }]}>
-            {risk.level.toUpperCase()}
+            {t(`severityLevel.${risk.level}`).toUpperCase()}
           </Text>
         </View>
       </View>
@@ -74,6 +97,7 @@ function RiskCard({
 }
 
 export default function ReportResultScreen() {
+  const { t } = useLanguage();
   const { media, analysis, duplicate, location } = useReportFlow();
   const [expandedRisk, setExpandedRisk] = useState<string | null>(null);
 
@@ -95,7 +119,7 @@ export default function ReportResultScreen() {
         <Pressable hitSlop={8} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#1A2E22" />
         </Pressable>
-        <Text style={styles.headerTitle}>Analysis Result</Text>
+        <Text style={styles.headerTitle}>{t('reportResult.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
 
@@ -112,61 +136,63 @@ export default function ReportResultScreen() {
         <View style={styles.overviewCard}>
           <View style={styles.overviewTitleRow}>
             <Ionicons name="hardware-chip-outline" size={16} color="#ffffff" />
-            <Text style={styles.overviewTitle}>AI ANALYSIS</Text>
+            <Text style={styles.overviewTitle}>{t('reportResult.aiAnalysis')}</Text>
           </View>
 
           <View style={styles.overviewRow}>
             <Text style={styles.overviewRowLabel}>
-              {CATEGORY_EMOJI[wasteType.primaryType] ?? '🗑️'} {wasteType.primaryType}
+              {CATEGORY_EMOJI[wasteType.primaryType] ?? '🗑️'} {t(`wasteCategory.${wasteType.primaryType}`)}
             </Text>
             <Text style={styles.overviewRowValue}>
               {Math.round(wasteType.confidencePercent)}%
             </Text>
           </View>
           <View style={styles.overviewRow}>
-            <Text style={styles.overviewRowLabel}>📦 {volume.size}</Text>
+            <Text style={styles.overviewRowLabel}>📦 {t(`volumeSize.${volume.size}`)}</Text>
             <Text style={styles.overviewRowValue}>{Math.round(volume.confidencePercent)}%</Text>
           </View>
           <View style={styles.overviewRow}>
-            <Text style={styles.overviewRowLabel}>⚠️ {severity.level} Severity</Text>
+            <Text style={styles.overviewRowLabel}>⚠️ {t(`severityLevel.${severity.level}`)}</Text>
             <Text style={styles.overviewRowValue}>{severity.score}/100</Text>
           </View>
           <View style={styles.overviewRow}>
             <Text style={styles.overviewRowLabel}>
               {severity.priority === 'Urgent' ? '🔴' : severity.priority === 'High' ? '🟠' : '🟢'}{' '}
-              Priority: {severity.priority}
+              {t('reportResult.priority', { priority: t(`priorityLevel.${severity.priority}`) })}
             </Text>
           </View>
           <View style={styles.overviewRow}>
-            <Text style={styles.overviewRowLabel}>🔍 Duplicate</Text>
+            <Text style={styles.overviewRowLabel}>🔍 {t('reportResult.duplicateLabel')}</Text>
             <Text style={styles.overviewRowValue}>
               {duplicate && (duplicate.status === 'possible' || duplicate.status === 'yes')
-                ? `${duplicate.duplicateConfidencePercent}% Match`
+                ? t('reportResult.duplicateMatch', { percent: duplicate.duplicateConfidencePercent })
                 : duplicate?.status === 'none'
-                  ? 'None found'
-                  : 'Not Available'}
+                  ? t('reportResult.noneFound')
+                  : t('reportResult.notAvailable')}
             </Text>
           </View>
         </View>
 
         {/* 1. Waste Type Detection */}
         <View style={styles.card}>
-          <Text style={styles.sectionLabel}>Waste Type Detection</Text>
+          <Text style={styles.sectionLabel}>{t('reportResult.wasteTypeDetection')}</Text>
 
           <Text style={styles.bigValue}>
-            {CATEGORY_EMOJI[wasteType.primaryType] ?? '🗑️'} {wasteType.primaryType}
+            {CATEGORY_EMOJI[wasteType.primaryType] ?? '🗑️'} {t(`wasteCategory.${wasteType.primaryType}`)}
           </Text>
           {wasteType.secondaryType !== 'None' && (
-            <Text style={styles.subtleText}>Secondary: {wasteType.secondaryType}</Text>
+            <Text style={styles.subtleText}>
+              {t('reportResult.secondary', { type: t(`wasteCategory.${wasteType.secondaryType}`) })}
+            </Text>
           )}
 
-          <Text style={[styles.microLabel, { marginTop: 10 }]}>Confidence</Text>
+          <Text style={[styles.microLabel, { marginTop: 10 }]}>{t('reportResult.confidence')}</Text>
           <Bar percent={wasteType.confidencePercent} />
           <Text style={styles.subtleText}>{Math.round(wasteType.confidencePercent)}%</Text>
 
           {wasteType.detectedObjects.length > 0 && (
             <>
-              <Text style={[styles.microLabel, { marginTop: 12 }]}>Detected Objects</Text>
+              <Text style={[styles.microLabel, { marginTop: 12 }]}>{t('reportResult.detectedObjects')}</Text>
               <View style={styles.chipRow}>
                 {wasteType.detectedObjects.map((object) => (
                   <View key={object} style={styles.chip}>
@@ -177,15 +203,15 @@ export default function ReportResultScreen() {
             </>
           )}
 
-          <Text style={[styles.microLabel, { marginTop: 12 }]}>Visual Evidence</Text>
+          <Text style={[styles.microLabel, { marginTop: 12 }]}>{t('reportResult.visualEvidence')}</Text>
           <Text style={styles.subtleText}>{wasteType.visualEvidence}</Text>
 
-          <Text style={[styles.microLabel, { marginTop: 10 }]}>AI Explanation</Text>
+          <Text style={[styles.microLabel, { marginTop: 10 }]}>{t('reportResult.aiExplanation')}</Text>
           <Text style={styles.subtleText}>{wasteType.explanation}</Text>
 
           {wasteType.typeComparison.length > 1 && (
             <>
-              <Text style={[styles.microLabel, { marginTop: 14 }]}>Waste Type Comparison</Text>
+              <Text style={[styles.microLabel, { marginTop: 14 }]}>{t('reportResult.wasteTypeComparison')}</Text>
               <View style={{ gap: 8, marginTop: 4 }}>
                 {wasteType.typeComparison
                   .slice()
@@ -198,7 +224,7 @@ export default function ReportResultScreen() {
                             styles.compareLabel,
                             item.type === dominantType?.type && styles.compareLabelDominant,
                           ]}>
-                          {CATEGORY_EMOJI[item.type] ?? '🗑️'} {item.type}
+                          {CATEGORY_EMOJI[item.type] ?? '🗑️'} {t(`wasteCategory.${item.type}`)}
                         </Text>
                         <Text style={styles.subtleText}>{Math.round(item.percent)}%</Text>
                       </View>
@@ -215,45 +241,47 @@ export default function ReportResultScreen() {
 
         {/* 2. Waste Volume Estimation */}
         <View style={styles.card}>
-          <Text style={styles.sectionLabel}>Waste Volume Estimation</Text>
+          <Text style={styles.sectionLabel}>{t('reportResult.volumeEstimation')}</Text>
 
           <View style={styles.sizeScaleRow}>
             {SIZE_STEPS.map((step) => (
               <View key={step} style={styles.sizeScaleItem}>
                 <View style={[styles.sizeDot, step === volume.size && styles.sizeDotActive]} />
                 <Text style={[styles.sizeLabel, step === volume.size && styles.sizeLabelActive]}>
-                  {step}
+                  {t(`volumeSize.${step}`)}
                 </Text>
               </View>
             ))}
           </View>
 
           <Text style={[styles.microLabel, { marginTop: 14 }]}>
-            Estimated Volume{' '}
-            <Text style={styles.approxTag}>(approximate)</Text>
+            {t('reportResult.estimatedVolume')}{' '}
+            <Text style={styles.approxTag}>{t('reportResult.approximate')}</Text>
           </Text>
           <Text style={styles.bigValue}>{volume.estimatedVolumeLiters}</Text>
 
-          <Text style={[styles.microLabel, { marginTop: 12 }]}>Waste Coverage</Text>
+          <Text style={[styles.microLabel, { marginTop: 12 }]}>{t('reportResult.wasteCoverage')}</Text>
           <Bar percent={volume.coveragePercent} />
-          <Text style={styles.subtleText}>{Math.round(volume.coveragePercent)}% of visible area</Text>
+          <Text style={styles.subtleText}>
+            {t('reportResult.ofVisibleArea', { percent: Math.round(volume.coveragePercent) })}
+          </Text>
 
-          <Text style={[styles.microLabel, { marginTop: 12 }]}>Confidence</Text>
+          <Text style={[styles.microLabel, { marginTop: 12 }]}>{t('reportResult.confidence')}</Text>
           <Bar percent={volume.confidencePercent} />
           <Text style={styles.subtleText}>{Math.round(volume.confidencePercent)}%</Text>
 
-          <Text style={[styles.microLabel, { marginTop: 12 }]}>Scale Reference</Text>
+          <Text style={[styles.microLabel, { marginTop: 12 }]}>{t('reportResult.scaleReference')}</Text>
           <Text style={styles.subtleText}>
-            {volume.scaleReference ? `📏 ${volume.scaleReference}` : 'Not Available'}
+            {volume.scaleReference ? `📏 ${volume.scaleReference}` : t('reportResult.notAvailable')}
           </Text>
 
-          <Text style={[styles.microLabel, { marginTop: 12 }]}>AI Explanation</Text>
+          <Text style={[styles.microLabel, { marginTop: 12 }]}>{t('reportResult.aiExplanation')}</Text>
           <Text style={styles.subtleText}>{volume.explanation}</Text>
         </View>
 
         {/* 3. Severity Analysis */}
         <View style={styles.card}>
-          <Text style={styles.sectionLabel}>Severity Analysis</Text>
+          <Text style={styles.sectionLabel}>{t('reportResult.severityAnalysis')}</Text>
 
           <View style={styles.gaugeTrack}>
             <View
@@ -264,17 +292,17 @@ export default function ReportResultScreen() {
             />
           </View>
           <View style={styles.gaugeLabelsRow}>
-            <Text style={styles.gaugeLabel}>Low</Text>
-            <Text style={styles.gaugeLabel}>Medium</Text>
-            <Text style={styles.gaugeLabel}>High</Text>
-            <Text style={styles.gaugeLabel}>Critical</Text>
+            <Text style={styles.gaugeLabel}>{t('severityLevel.Low')}</Text>
+            <Text style={styles.gaugeLabel}>{t('severityLevel.Medium')}</Text>
+            <Text style={styles.gaugeLabel}>{t('severityLevel.High')}</Text>
+            <Text style={styles.gaugeLabel}>{t('severityLevel.Critical')}</Text>
           </View>
 
           <View style={styles.severityBadgeRow}>
             <Text style={styles.severityScore}>{severity.score}/100</Text>
             <View style={[styles.levelBadge, { backgroundColor: `${LEVEL_COLOR[severity.level]}1a` }]}>
               <Text style={[styles.levelBadgeText, { color: LEVEL_COLOR[severity.level] }]}>
-                {severity.level.toUpperCase()}
+                {t(`severityLevel.${severity.level}`).toUpperCase()}
               </Text>
             </View>
             <View
@@ -284,20 +312,20 @@ export default function ReportResultScreen() {
               ]}>
               <Text
                 style={[styles.levelBadgeText, { color: PRIORITY_COLOR[severity.priority] }]}>
-                {severity.priority.toUpperCase()}
+                {t(`priorityLevel.${severity.priority}`).toUpperCase()}
               </Text>
             </View>
           </View>
 
-          <Text style={[styles.microLabel, { marginTop: 14 }]}>Risk Breakdown</Text>
+          <Text style={[styles.microLabel, { marginTop: 14 }]}>{t('reportResult.riskBreakdown')}</Text>
           <View style={{ gap: 8, marginTop: 4 }}>
             {(
               [
-                ['Waste Volume', severity.risks.wasteVolume],
-                ['Drainage Risk', severity.risks.drainage],
-                ['Location Risk', severity.risks.location],
-                ['Hazard Risk', severity.risks.hazard],
-                ['Waste Spread', severity.risks.spreadRoadBlocking],
+                [t('reportResult.wasteVolumeRisk'), severity.risks.wasteVolume],
+                [t('reportResult.drainageRisk'), severity.risks.drainage],
+                [t('reportResult.locationRisk'), severity.risks.location],
+                [t('reportResult.hazardRisk'), severity.risks.hazard],
+                [t('reportResult.wasteSpread'), severity.risks.spreadRoadBlocking],
               ] as [string, RiskItem][]
             ).map(([label, risk]) => (
               <View key={label}>
@@ -310,51 +338,53 @@ export default function ReportResultScreen() {
             ))}
           </View>
 
-          <Text style={[styles.microLabel, { marginTop: 16 }]}>Risk Cards</Text>
+          <Text style={[styles.microLabel, { marginTop: 16 }]}>{t('reportResult.riskCards')}</Text>
           <View style={styles.riskCardGrid}>
             <RiskCard
               emoji="📦"
-              label="Volume Risk"
+              label={t('reportResult.volumeRiskCard')}
               risk={severity.risks.wasteVolume}
               expanded={expandedRisk === 'volume'}
               onToggle={() => setExpandedRisk((prev) => (prev === 'volume' ? null : 'volume'))}
             />
             <RiskCard
               emoji="🚰"
-              label="Drainage Risk"
+              label={t('reportResult.drainageRisk')}
               risk={severity.risks.drainage}
               expanded={expandedRisk === 'drainage'}
               onToggle={() => setExpandedRisk((prev) => (prev === 'drainage' ? null : 'drainage'))}
             />
             <RiskCard
               emoji="☣️"
-              label="Hazard Risk"
+              label={t('reportResult.hazardRisk')}
               risk={severity.risks.hazard}
               expanded={expandedRisk === 'hazard'}
               onToggle={() => setExpandedRisk((prev) => (prev === 'hazard' ? null : 'hazard'))}
             />
             <RiskCard
               emoji="🚗"
-              label="Road Blocking"
+              label={t('reportResult.roadBlocking')}
               risk={severity.risks.spreadRoadBlocking}
               expanded={expandedRisk === 'spread'}
               onToggle={() => setExpandedRisk((prev) => (prev === 'spread' ? null : 'spread'))}
             />
           </View>
 
-          <Text style={[styles.microLabel, { marginTop: 12 }]}>Reason</Text>
+          <Text style={[styles.microLabel, { marginTop: 12 }]}>{t('reportResult.reason')}</Text>
           <Text style={styles.subtleText}>{severity.reason}</Text>
         </View>
 
         {/* 4. Duplicate Complaint Detection */}
         <View style={styles.card}>
-          <Text style={styles.sectionLabel}>Duplicate Complaint Detection</Text>
+          <Text style={styles.sectionLabel}>{t('reportResult.duplicateComplaintDetection')}</Text>
 
           {(!duplicate || duplicate.status === 'not_available') && (
             <View style={styles.duplicateEmptyRow}>
               <Ionicons name="help-circle-outline" size={18} color="#9aa5a0" />
               <Text style={styles.subtleText}>
-                Duplicate Check: Not Available{location ? '' : ' — location not set'}
+                {t('reportResult.duplicateCheckNotAvailable', {
+                  suffix: location ? '' : t('reportResult.locationNotSetSuffix'),
+                })}
               </Text>
             </View>
           )}
@@ -363,7 +393,7 @@ export default function ReportResultScreen() {
             <View style={styles.duplicateEmptyRow}>
               <Ionicons name="checkmark-circle-outline" size={18} color="#1B6B3A" />
               <Text style={styles.subtleText}>
-                No similar reports found nearby in the last 72 hours.
+                {t('reportResult.noSimilarReportsFound')}
               </Text>
             </View>
           )}
@@ -372,59 +402,61 @@ export default function ReportResultScreen() {
             <>
               <View style={styles.matchRing}>
                 <Text style={styles.matchRingPercent}>{duplicate.duplicateConfidencePercent}%</Text>
-                <Text style={styles.matchRingLabel}>MATCH</Text>
+                <Text style={styles.matchRingLabel}>{t('reportResult.match').toUpperCase()}</Text>
               </View>
               <Text style={styles.matchStatusText}>
-                {duplicate.status === 'yes' ? 'LIKELY DUPLICATE' : 'POSSIBLE DUPLICATE'}
+                {duplicate.status === 'yes' ? t('reportResult.likelyDuplicate') : t('reportResult.possibleDuplicate')}
               </Text>
 
               <View style={styles.compareCard}>
                 <View style={styles.compareCardRow}>
-                  <Text style={styles.compareCardCell}>{wasteType.primaryType}</Text>
+                  <Text style={styles.compareCardCell}>{t(`wasteCategory.${wasteType.primaryType}`)}</Text>
                   <Text style={styles.compareCardArrow}>↔</Text>
-                  <Text style={styles.compareCardCell}>{wasteType.primaryType}</Text>
+                  <Text style={styles.compareCardCell}>{t(`wasteCategory.${wasteType.primaryType}`)}</Text>
                 </View>
                 <View style={styles.compareCardRow}>
-                  <Text style={styles.compareCardCell}>Today</Text>
+                  <Text style={styles.compareCardCell}>{t('reportResult.today')}</Text>
                   <Text style={styles.compareCardArrow}>↔</Text>
-                  <Text style={styles.compareCardCell}>{duplicate.timeDescription}</Text>
+                  <Text style={styles.compareCardCell}>{translateDuplicateTime(duplicate.timeDescription, t)}</Text>
                 </View>
                 <View style={styles.compareCardRow}>
-                  <Text style={styles.compareCardCell}>Current Location</Text>
+                  <Text style={styles.compareCardCell}>{t('reportResult.currentLocation')}</Text>
                   <Text style={styles.compareCardArrow}>↔</Text>
-                  <Text style={styles.compareCardCell}>{duplicate.locationDistanceMeters} m away</Text>
+                  <Text style={styles.compareCardCell}>
+                    {t('reportResult.mAway', { m: duplicate.locationDistanceMeters })}
+                  </Text>
                 </View>
               </View>
 
               <View style={{ gap: 6, marginTop: 12 }}>
                 <View style={styles.matchIndicatorRow}>
-                  <Text style={styles.subtleText}>📍 Location</Text>
-                  <Text style={styles.matchIndicatorGood}>✓ Match</Text>
+                  <Text style={styles.subtleText}>📍 {t('reportResult.locationIcon')}</Text>
+                  <Text style={styles.matchIndicatorGood}>✓ {t('reportResult.match')}</Text>
                 </View>
                 <View style={styles.matchIndicatorRow}>
-                  <Text style={styles.subtleText}>⏱️ Time</Text>
-                  <Text style={styles.matchIndicatorGood}>✓ Match</Text>
+                  <Text style={styles.subtleText}>⏱️ {t('reportResult.timeIcon')}</Text>
+                  <Text style={styles.matchIndicatorGood}>✓ {t('reportResult.match')}</Text>
                 </View>
                 <View style={styles.matchIndicatorRow}>
-                  <Text style={styles.subtleText}>🗑️ Waste Type</Text>
-                  <Text style={styles.matchIndicatorGood}>✓ Match</Text>
+                  <Text style={styles.subtleText}>🗑️ {t('reportResult.wasteTypeIcon')}</Text>
+                  <Text style={styles.matchIndicatorGood}>✓ {t('reportResult.match')}</Text>
                 </View>
                 <View style={styles.matchIndicatorRow}>
-                  <Text style={styles.subtleText}>📸 Image</Text>
-                  <Text style={styles.subtleText}>Not Available</Text>
+                  <Text style={styles.subtleText}>📸 {t('reportResult.imageIcon')}</Text>
+                  <Text style={styles.subtleText}>{t('reportResult.notAvailable')}</Text>
                 </View>
               </View>
 
               <View style={styles.divider} />
 
-              <Text style={styles.microLabel}>Existing Complaint</Text>
+              <Text style={styles.microLabel}>{t('reportResult.existingComplaint')}</Text>
               <Text style={styles.bigValue}>{duplicate.similarComplaintId}</Text>
 
-              <Text style={[styles.microLabel, { marginTop: 8 }]}>Status</Text>
-              <Text style={styles.subtleText}>🟡 {duplicate.existingComplaintStatus}</Text>
+              <Text style={[styles.microLabel, { marginTop: 8 }]}>{t('reportResult.status')}</Text>
+              <Text style={styles.subtleText}>🟡 {t(`reportStatus.${duplicate.existingComplaintStatus}`)}</Text>
 
-              <Text style={[styles.microLabel, { marginTop: 8 }]}>AI Recommendation</Text>
-              <Text style={styles.subtleText}>{duplicate.recommendedAction}</Text>
+              <Text style={[styles.microLabel, { marginTop: 8 }]}>{t('reportResult.aiRecommendation')}</Text>
+              <Text style={styles.subtleText}>{translateRecommendation(duplicate.recommendedAction, t)}</Text>
             </>
           )}
         </View>
@@ -432,7 +464,7 @@ export default function ReportResultScreen() {
 
       <View style={styles.footer}>
         <Pressable style={styles.continueButton} onPress={() => router.push('/report-confirm')}>
-          <Text style={styles.continueButtonText}>Continue</Text>
+          <Text style={styles.continueButtonText}>{t('reportResult.continueButton')}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

@@ -5,10 +5,12 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import { getAssignmentRefForReport, submitFeedback } from '@/lib/feedback';
 import { getReportById, type ReportRow } from '@/lib/reports';
 
 export default function ReportFeedbackScreen() {
+  const { t } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [report, setReport] = useState<ReportRow | null | undefined>(undefined);
   const [rating, setRating] = useState(0);
@@ -27,7 +29,7 @@ export default function ReportFeedbackScreen() {
 
   async function handleSubmit() {
     if (rating === 0) {
-      Alert.alert('Pick a rating', 'Tap a star to rate this cleanup.');
+      Alert.alert(t('reportFeedback.pickARating'), t('reportFeedback.tapStarToRate'));
       return;
     }
     setSubmitting(true);
@@ -42,7 +44,7 @@ export default function ReportFeedbackScreen() {
       });
       router.back();
     } catch (err) {
-      Alert.alert('Could not submit review', err instanceof Error ? err.message : 'Please try again.');
+      Alert.alert(t('reportFeedback.couldNotSubmitReview'), err instanceof Error ? err.message : t('common.pleaseTryAgain'));
     } finally {
       setSubmitting(false);
     }
@@ -54,7 +56,7 @@ export default function ReportFeedbackScreen() {
         <Pressable hitSlop={8} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#1A2E22" />
         </Pressable>
-        <Text style={styles.headerTitle}>Rate This Cleanup</Text>
+        <Text style={styles.headerTitle}>{t('reportFeedback.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
 
@@ -69,7 +71,7 @@ export default function ReportFeedbackScreen() {
               <Image source={{ uri: report.media_url }} style={styles.reportThumb} contentFit="cover" />
               <View style={styles.reportInfo}>
                 <Text style={styles.reportCode}>{report.report_code}</Text>
-                <Text style={styles.reportCategory}>{report.category}</Text>
+                <Text style={styles.reportCategory}>{t(`wasteCategory.${report.category}`)}</Text>
                 <Text style={styles.reportAddress} numberOfLines={1}>
                   {report.address}
                 </Text>
@@ -77,7 +79,7 @@ export default function ReportFeedbackScreen() {
             </View>
           )}
 
-          <Text style={styles.promptText}>How was the cleanup?</Text>
+          <Text style={styles.promptText}>{t('reportFeedback.howWasCleanup')}</Text>
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((star) => (
               <Pressable key={star} onPress={() => setRating(star)} hitSlop={6}>
@@ -91,12 +93,12 @@ export default function ReportFeedbackScreen() {
           </View>
 
           <Text style={styles.sectionHeading}>
-            Add a Comment <Text style={styles.optionalText}>(Optional)</Text>
+            {t('reportFeedback.addCommentOptional')}
           </Text>
           <TextInput
             style={styles.commentInput}
             multiline
-            placeholder="Tell us how it went..."
+            placeholder={t('reportFeedback.tellUsHowItWent')}
             placeholderTextColor="#9aa5a0"
             value={comment}
             onChangeText={setComment}
@@ -109,7 +111,7 @@ export default function ReportFeedbackScreen() {
           {submitting ? (
             <ActivityIndicator color="#ffffff" size="small" />
           ) : (
-            <Text style={styles.submitButtonText}>Submit Review</Text>
+            <Text style={styles.submitButtonText}>{t('reportFeedback.submitReview')}</Text>
           )}
         </Pressable>
       </View>

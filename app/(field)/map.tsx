@@ -7,6 +7,7 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
+import { useLanguage } from '@/contexts/language-context';
 import { type FieldTask, getMyTasks, subscribeToMyTasks } from '@/lib/field-tasks';
 import { getMyTeam } from '@/lib/field-team';
 import { priorityMeta } from '@/lib/field-ui';
@@ -34,14 +35,15 @@ function kindFor(task: FieldTask): MarkerKind {
   return 'in_progress';
 }
 
-const LEGEND: { kind: MarkerKind; color: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { kind: 'urgent', color: '#c0392b', label: 'High Priority', icon: 'alert' },
-  { kind: 'pending', color: '#d97706', label: 'Pending', icon: 'hourglass' },
-  { kind: 'in_progress', color: '#2563eb', label: 'In Progress', icon: 'time' },
-  { kind: 'completed', color: '#1B6B3A', label: 'Completed', icon: 'checkmark' },
+const LEGEND: { kind: MarkerKind; color: string; labelKey: 'fieldMap.legendHighPriority' | 'fieldMap.legendPending' | 'fieldMap.legendInProgress' | 'fieldMap.legendCompleted'; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { kind: 'urgent', color: '#c0392b', labelKey: 'fieldMap.legendHighPriority', icon: 'alert' },
+  { kind: 'pending', color: '#d97706', labelKey: 'fieldMap.legendPending', icon: 'hourglass' },
+  { kind: 'in_progress', color: '#2563eb', labelKey: 'fieldMap.legendInProgress', icon: 'time' },
+  { kind: 'completed', color: '#1B6B3A', labelKey: 'fieldMap.legendCompleted', icon: 'checkmark' },
 ];
 
 export default function FieldMapScreen() {
+  const { t } = useLanguage();
   const [teamId, setTeamId] = useState<string | null | undefined>(undefined);
   const [tasks, setTasks] = useState<FieldTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -261,7 +263,7 @@ export default function FieldMapScreen() {
           longitude: selectedTask.report.longitude,
         });
         if (!route) {
-          Alert.alert('Could not get a route', 'The routing service is unavailable right now — try again shortly.');
+          Alert.alert(t('fieldMap.couldNotGetRoute'), t('fieldMap.routingUnavailable'));
           return;
         }
         lastRouteRef.current = { taskId: selectedTask.id, coords: route.coordinates };
@@ -284,10 +286,10 @@ export default function FieldMapScreen() {
   }
 
   function handleFilterPress() {
-    Alert.alert('Filter by Priority', undefined, [
-      { text: 'All Priorities', onPress: () => setUrgentOnly(false) },
-      { text: 'High Priority Only', onPress: () => setUrgentOnly(true) },
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('common.filterByPriority'), undefined, [
+      { text: t('common.allPriorities'), onPress: () => setUrgentOnly(false) },
+      { text: t('common.highPriorityOnly'), onPress: () => setUrgentOnly(true) },
+      { text: t('common.cancel'), style: 'cancel' },
     ]);
   }
 
@@ -299,19 +301,19 @@ export default function FieldMapScreen() {
   }
 
   const TABS: { label: string; value: TabValue; icon: keyof typeof Ionicons.glyphMap }[] = [
-    { label: `All Tasks (${counts.all})`, value: 'all', icon: 'location' },
-    { label: `In Progress (${counts.in_progress})`, value: 'in_progress', icon: 'time' },
-    { label: `Completed (${counts.completed})`, value: 'completed', icon: 'checkmark-circle' },
-    { label: `Pending (${counts.pending})`, value: 'pending', icon: 'hourglass' },
+    { label: `${t('fieldMap.allTasks')} (${counts.all})`, value: 'all', icon: 'location' },
+    { label: `${t('fieldTasks.tabInProgress')} (${counts.in_progress})`, value: 'in_progress', icon: 'time' },
+    { label: `${t('fieldTasks.tabCompleted')} (${counts.completed})`, value: 'completed', icon: 'checkmark-circle' },
+    { label: `${t('fieldHome.pending')} (${counts.pending})`, value: 'pending', icon: 'hourglass' },
   ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Map</Text>
+        <Text style={styles.headerTitle}>{t('fieldMap.headerTitle')}</Text>
         <Pressable style={styles.listViewButton} onPress={() => router.push('/(field)/tasks')}>
           <Ionicons name="list" size={15} color="#1B6B3A" />
-          <Text style={styles.listViewText}>List View</Text>
+          <Text style={styles.listViewText}>{t('fieldMap.listView')}</Text>
         </Pressable>
       </View>
 
@@ -347,15 +349,15 @@ export default function FieldMapScreen() {
         <View style={styles.mapButtons}>
           <Pressable style={styles.mapButton} onPress={handleFocusMe}>
             <Ionicons name="locate" size={18} color="#1A2E22" />
-            <Text style={styles.mapButtonLabel}>My Location</Text>
+            <Text style={styles.mapButtonLabel}>{t('fieldMap.myLocation')}</Text>
           </Pressable>
           <Pressable style={styles.mapButton} onPress={handleFilterPress}>
             <Ionicons name="filter" size={18} color={urgentOnly ? '#c0392b' : '#1A2E22'} />
-            <Text style={styles.mapButtonLabel}>Filter</Text>
+            <Text style={styles.mapButtonLabel}>{t('fieldMap.filter')}</Text>
           </Pressable>
           <Pressable style={styles.mapButton} onPress={handleFitAll}>
             <Ionicons name="navigate" size={18} color="#1A2E22" />
-            <Text style={styles.mapButtonLabel}>Re-center</Text>
+            <Text style={styles.mapButtonLabel}>{t('fieldMap.recenter')}</Text>
           </Pressable>
         </View>
       </View>
@@ -370,11 +372,11 @@ export default function FieldMapScreen() {
                 <View
                   style={[styles.priorityBadge, { backgroundColor: priorityMeta(selectedTask.report.urgency_label).bg }]}>
                   <Text style={[styles.priorityBadgeText, { color: priorityMeta(selectedTask.report.urgency_label).text }]}>
-                    {priorityMeta(selectedTask.report.urgency_label).label} Priority
+                    {t('fieldHome.priority', { label: t(`severityLevel.${priorityMeta(selectedTask.report.urgency_label).label}`) })}
                   </Text>
                 </View>
               </View>
-              <Text style={styles.cardTitle}>{selectedTask.report.category}</Text>
+              <Text style={styles.cardTitle}>{t(`wasteCategory.${selectedTask.report.category}`)}</Text>
               <View style={styles.metaRow}>
                 <Ionicons name="location" size={12} color="#1B6B3A" />
                 <Text style={styles.metaText} numberOfLines={1}>
@@ -390,11 +392,11 @@ export default function FieldMapScreen() {
                 ) : (
                   <>
                     <Ionicons name="navigate" size={13} color="#1B6B3A" />
-                    <Text style={styles.navigateButtonText}>Navigate</Text>
+                    <Text style={styles.navigateButtonText}>{t('fieldMap.navigate')}</Text>
                   </>
                 )}
               </Pressable>
-              {eta && <Text style={styles.etaText}>ETA: {eta}</Text>}
+              {eta && <Text style={styles.etaText}>{t('fieldMap.eta', { eta })}</Text>}
             </View>
           </View>
         )}
@@ -405,7 +407,7 @@ export default function FieldMapScreen() {
               <View style={[styles.legendDot, { backgroundColor: item.color }]}>
                 <Ionicons name={item.icon} size={9} color="#ffffff" />
               </View>
-              <Text style={styles.legendLabel}>{item.label}</Text>
+              <Text style={styles.legendLabel}>{t(item.labelKey)}</Text>
             </View>
           ))}
         </View>

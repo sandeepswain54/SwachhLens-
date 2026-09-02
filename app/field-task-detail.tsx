@@ -5,9 +5,9 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import {
   FIELD_TASK_STATUS_BADGE,
-  FIELD_TASK_STATUS_LABEL,
   getTaskById,
   startOnTheWay,
   subscribeToTask,
@@ -17,6 +17,7 @@ import { priorityMeta } from '@/lib/field-ui';
 import { formatDateTime, formatRelativeTime, SIZE_KG_ESTIMATE } from '@/lib/reports';
 
 export default function FieldTaskDetailScreen() {
+  const { t } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [task, setTask] = useState<FieldTask | null | undefined>(undefined);
   const [starting, setStarting] = useState(false);
@@ -40,7 +41,7 @@ export default function FieldTaskDetailScreen() {
         await startOnTheWay(task.id);
         router.push({ pathname: '/field-task-on-the-way', params: { id: task.id } });
       } catch (err) {
-        Alert.alert('Could not start task', err instanceof Error ? err.message : 'Please try again.');
+        Alert.alert(t('fieldTaskDetail.couldNotStartTask'), err instanceof Error ? err.message : t('common.pleaseTryAgain'));
       } finally {
         setStarting(false);
       }
@@ -67,9 +68,9 @@ export default function FieldTaskDetailScreen() {
     return (
       <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
         <Ionicons name="alert-circle-outline" size={32} color="#c0392b" />
-        <Text style={styles.notFoundText}>Could not find this task.</Text>
+        <Text style={styles.notFoundText}>{t('fieldTaskDetail.couldNotFindTask')}</Text>
         <Pressable onPress={() => router.back()} style={styles.notFoundButton}>
-          <Text style={styles.notFoundButtonText}>Go Back</Text>
+          <Text style={styles.notFoundButtonText}>{t('fieldTaskDetail.goBack')}</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -88,12 +89,14 @@ export default function FieldTaskDetailScreen() {
         </Pressable>
         <Text style={styles.headerTitle}>#{task.assignment_code}</Text>
         <View style={[styles.priorityBadge, { backgroundColor: priority.bg }]}>
-          <Text style={[styles.priorityBadgeText, { color: priority.text }]}>{priority.label} Priority</Text>
+          <Text style={[styles.priorityBadgeText, { color: priority.text }]}>
+            {t('fieldHome.priority', { label: t(`severityLevel.${priority.label}`) })}
+          </Text>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.category}>{task.report.category}</Text>
+        <Text style={styles.category}>{t(`wasteCategory.${task.report.category}`)}</Text>
         <View style={styles.metaRow}>
           <Ionicons name="location-outline" size={13} color="#6b7770" />
           <Text style={styles.metaText}>{task.report.address}</Text>
@@ -103,38 +106,38 @@ export default function FieldTaskDetailScreen() {
 
         <View style={[styles.statusPill, { backgroundColor: statusBadge.bg }]}>
           <Text style={[styles.statusPillText, { color: statusBadge.text }]}>
-            {FIELD_TASK_STATUS_LABEL[task.status]}
+            {t(`fieldTaskStatus.${task.status}`)}
           </Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Reported On</Text>
+          <Text style={styles.infoLabel}>{t('fieldTaskDetail.reportedOn')}</Text>
           <Text style={styles.infoValue}>{formatDateTime(task.report.created_at)}</Text>
         </View>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Reported By</Text>
-          <Text style={styles.infoValue}>Citizen (App User)</Text>
+          <Text style={styles.infoLabel}>{t('fieldTaskDetail.reportedBy')}</Text>
+          <Text style={styles.infoValue}>{t('fieldTaskDetail.citizenAppUser')}</Text>
         </View>
 
-        <Text style={styles.sectionHeading}>Description</Text>
+        <Text style={styles.sectionHeading}>{t('fieldTaskDetail.description')}</Text>
         <Text style={styles.description}>
-          {task.report.comments || 'No additional details were provided with this report.'}
+          {task.report.comments || t('fieldTaskDetail.noDetailsProvided')}
         </Text>
 
         <View style={styles.analysisCard}>
-          <Text style={styles.sectionHeading}>AI Analysis</Text>
+          <Text style={styles.sectionHeading}>{t('fieldTaskDetail.aiAnalysis')}</Text>
           <View style={styles.analysisRow}>
-            <Text style={styles.analysisLabel}>Waste Type</Text>
-            <Text style={styles.analysisValue}>{task.report.category}</Text>
+            <Text style={styles.analysisLabel}>{t('fieldTaskDetail.wasteType')}</Text>
+            <Text style={styles.analysisValue}>{t(`wasteCategory.${task.report.category}`)}</Text>
           </View>
           <View style={styles.analysisRow}>
-            <Text style={styles.analysisLabel}>Volume (Estimated)</Text>
+            <Text style={styles.analysisLabel}>{t('fieldTaskDetail.volumeEstimated')}</Text>
             <Text style={styles.analysisValue}>
-              {volume ? `${volume.size}${kgEstimate ? ` (~${kgEstimate} kg)` : ''}` : 'Not available'}
+              {volume ? `${t(`volumeSize.${volume.size}`)}${kgEstimate ? ` (~${kgEstimate} kg)` : ''}` : t('fieldTaskDetail.notAvailable')}
             </Text>
           </View>
           <View style={styles.analysisRow}>
-            <Text style={styles.analysisLabel}>Severity Score</Text>
+            <Text style={styles.analysisLabel}>{t('fieldTaskDetail.severityScore')}</Text>
             <Text style={styles.analysisValue}>{task.report.severity_score}/100</Text>
           </View>
         </View>
@@ -143,15 +146,18 @@ export default function FieldTaskDetailScreen() {
           <View style={styles.reviewNotice}>
             <Ionicons name="time-outline" size={16} color="#7c3aed" />
             <Text style={styles.reviewNoticeText}>
-              Submitted {task.submitted_for_review_at ? formatRelativeTime(task.submitted_for_review_at) : 'recently'}
-              . Waiting for admin approval.
+              {t('fieldTaskDetail.submittedWaitingApproval', {
+                time: task.submitted_for_review_at
+                  ? formatRelativeTime(task.submitted_for_review_at, t)
+                  : t('fieldTaskDetail.submittedRecently'),
+              })}
             </Text>
           </View>
         )}
         {task.status === 'completed' && (
           <View style={styles.doneNotice}>
             <Ionicons name="checkmark-circle" size={16} color="#1B6B3A" />
-            <Text style={styles.doneNoticeText}>This task was approved and marked complete.</Text>
+            <Text style={styles.doneNoticeText}>{t('fieldTaskDetail.approvedComplete')}</Text>
           </View>
         )}
       </ScrollView>
@@ -164,10 +170,10 @@ export default function FieldTaskDetailScreen() {
             ) : (
               <Text style={styles.primaryButtonText}>
                 {task.status === 'pending'
-                  ? 'Start Task'
+                  ? t('fieldHome.startTask')
                   : task.status === 'on_the_way'
-                    ? 'Continue: On the Way'
-                    : 'Continue: Upload Progress'}
+                    ? t('fieldHome.continueOnTheWay')
+                    : t('fieldHome.continueUploadProgress')}
               </Text>
             )}
           </Pressable>

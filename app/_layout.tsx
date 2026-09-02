@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
+import { LanguageProvider } from '@/contexts/language-context';
 import { ReportFlowProvider } from '@/contexts/report-flow-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -17,37 +18,43 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <ReportFlowProvider>
-        <Stack>
-          <Stack.Screen name="welcome" options={{ headerShown: false }} />
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="signup" options={{ headerShown: false }} />
-          <Stack.Screen name="check-email" options={{ headerShown: false }} />
-          <Stack.Screen name="verify-email" options={{ headerShown: false }} />
-          <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
-          <Stack.Screen name="reset-password" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(field)" options={{ headerShown: false }} />
-          <Stack.Screen name="field-task-detail" options={{ headerShown: false }} />
-          <Stack.Screen name="field-task-on-the-way" options={{ headerShown: false }} />
-          <Stack.Screen name="field-task-progress" options={{ headerShown: false }} />
-          <Stack.Screen name="field-task-submitted" options={{ headerShown: false }} />
-          <Stack.Screen name="report-scan" options={{ headerShown: false }} />
-          <Stack.Screen name="report-result" options={{ headerShown: false }} />
-          <Stack.Screen name="report-confirm" options={{ headerShown: false }} />
-          <Stack.Screen name="report-location-picker" options={{ headerShown: false }} />
-          <Stack.Screen name="profile-location-picker" options={{ headerShown: false }} />
-          <Stack.Screen name="report-submitted" options={{ headerShown: false }} />
-          <Stack.Screen name="report-status" options={{ headerShown: false }} />
-          <Stack.Screen name="report-feedback" options={{ headerShown: false }} />
-          <Stack.Screen name="waste-hotspots" options={{ headerShown: false }} />
-          <Stack.Screen name="personal-information" options={{ headerShown: false }} />
-          <Stack.Screen name="saved-locations" options={{ headerShown: false }} />
-          <Stack.Screen name="notifications" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        </Stack>
-      </ReportFlowProvider>
-      <StatusBar hidden />
+      <LanguageProvider>
+        <ReportFlowProvider>
+          <Stack>
+            <Stack.Screen name="welcome" options={{ headerShown: false }} />
+            <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen name="signup" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="language-select"
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen name="check-email" options={{ headerShown: false }} />
+            <Stack.Screen name="verify-email" options={{ headerShown: false }} />
+            <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+            <Stack.Screen name="reset-password" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(field)" options={{ headerShown: false }} />
+            <Stack.Screen name="field-task-detail" options={{ headerShown: false }} />
+            <Stack.Screen name="field-task-on-the-way" options={{ headerShown: false }} />
+            <Stack.Screen name="field-task-progress" options={{ headerShown: false }} />
+            <Stack.Screen name="field-task-submitted" options={{ headerShown: false }} />
+            <Stack.Screen name="report-scan" options={{ headerShown: false }} />
+            <Stack.Screen name="report-result" options={{ headerShown: false }} />
+            <Stack.Screen name="report-confirm" options={{ headerShown: false }} />
+            <Stack.Screen name="report-location-picker" options={{ headerShown: false }} />
+            <Stack.Screen name="profile-location-picker" options={{ headerShown: false }} />
+            <Stack.Screen name="report-submitted" options={{ headerShown: false }} />
+            <Stack.Screen name="report-status" options={{ headerShown: false }} />
+            <Stack.Screen name="report-feedback" options={{ headerShown: false }} />
+            <Stack.Screen name="waste-hotspots" options={{ headerShown: false }} />
+            <Stack.Screen name="personal-information" options={{ headerShown: false }} />
+            <Stack.Screen name="saved-locations" options={{ headerShown: false }} />
+            <Stack.Screen name="notifications" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+          </Stack>
+        </ReportFlowProvider>
+        <StatusBar hidden />
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

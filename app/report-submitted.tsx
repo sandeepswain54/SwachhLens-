@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import { useReportFlow } from '@/contexts/report-flow-context';
 
 const DOTS = [
@@ -15,6 +16,7 @@ const DOTS = [
 ] as const;
 
 export default function ReportSubmittedScreen() {
+  const { t } = useLanguage();
   const { reportId, submittedAt, reset } = useReportFlow();
 
   useEffect(() => {
@@ -51,23 +53,23 @@ export default function ReportSubmittedScreen() {
           <Ionicons name="checkmark-circle" size={88} color="#1B6B3A" />
         </View>
 
-        <Text style={styles.title}>Report Submitted!</Text>
-        <Text style={styles.subtitle}>Thank you for helping keep our city clean.</Text>
+        <Text style={styles.title}>{t('reportSubmitted.title')}</Text>
+        <Text style={styles.subtitle}>{t('reportSubmitted.subtitle')}</Text>
 
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>Report ID</Text>
+          <Text style={styles.cardLabel}>{t('reportSubmitted.reportId')}</Text>
           <Text style={styles.cardValue}>{reportId}</Text>
 
           <View style={styles.cardDivider} />
 
-          <Text style={styles.cardLabel}>Submitted on</Text>
+          <Text style={styles.cardLabel}>{t('reportSubmitted.submittedOn')}</Text>
           <Text style={styles.cardValue}>{submittedAt}</Text>
         </View>
       </View>
 
       <View style={styles.footer}>
         <Pressable style={styles.primaryButton} onPress={handleGoToMyReports}>
-          <Text style={styles.primaryButtonText}>Go to My Reports</Text>
+          <Text style={styles.primaryButtonText}>{t('reportSubmitted.goToMyReports')}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

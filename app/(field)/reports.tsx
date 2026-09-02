@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import {
   colorForCategory,
   computeCategoryBreakdown,
@@ -16,7 +17,6 @@ import {
 } from '@/lib/field-report-stats';
 import {
   FIELD_TASK_STATUS_BADGE,
-  FIELD_TASK_STATUS_LABEL,
   type FieldTask,
   getMyTasks,
   routeForTaskStatus,
@@ -25,10 +25,16 @@ import {
 import { getMyTeam } from '@/lib/field-team';
 import { formatDateTime } from '@/lib/reports';
 
-const PERIOD_LABEL: Record<ReportPeriod, string> = {
-  today: 'Today',
-  week: 'This Week',
-  month: 'This Month',
+const DELTA_CAPTION_KEY: Record<ReportPeriod, 'fieldReports.vsYesterday' | 'fieldReports.vsLastWeek' | 'fieldReports.vsLastMonth'> = {
+  today: 'fieldReports.vsYesterday',
+  week: 'fieldReports.vsLastWeek',
+  month: 'fieldReports.vsLastMonth',
+};
+
+const PERIOD_LABEL_KEY: Record<ReportPeriod, 'common.today' | 'common.thisWeek' | 'common.thisMonth'> = {
+  today: 'common.today',
+  week: 'common.thisWeek',
+  month: 'common.thisMonth',
 };
 
 const RECENT_ACTIVITY_ICON: Record<FieldTask['status'], keyof typeof Ionicons.glyphMap> = {
@@ -40,8 +46,9 @@ const RECENT_ACTIVITY_ICON: Record<FieldTask['status'], keyof typeof Ionicons.gl
 };
 
 function DeltaLabel({ deltaPercent, caption }: { deltaPercent: number | null; caption: string }) {
+  const { t } = useLanguage();
   if (deltaPercent === null) {
-    return <Text style={styles.deltaNeutral}>No data {caption}</Text>;
+    return <Text style={styles.deltaNeutral}>{t('fieldReports.noData')} {caption}</Text>;
   }
   const isUp = deltaPercent >= 0;
   return (
@@ -55,6 +62,7 @@ function DeltaLabel({ deltaPercent, caption }: { deltaPercent: number | null; ca
 }
 
 export default function FieldReportsScreen() {
+  const { t } = useLanguage();
   const [teamId, setTeamId] = useState<string | null | undefined>(undefined);
   const [tasks, setTasks] = useState<FieldTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,11 +121,11 @@ export default function FieldReportsScreen() {
   }, [tasks]);
 
   function handlePeriodPress() {
-    Alert.alert('Select Period', undefined, [
-      { text: 'Today', onPress: () => setPeriod('today') },
-      { text: 'This Week', onPress: () => setPeriod('week') },
-      { text: 'This Month', onPress: () => setPeriod('month') },
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('common.selectPeriod'), undefined, [
+      { text: t('common.today'), onPress: () => setPeriod('today') },
+      { text: t('common.thisWeek'), onPress: () => setPeriod('week') },
+      { text: t('common.thisMonth'), onPress: () => setPeriod('month') },
+      { text: t('common.cancel'), style: 'cancel' },
     ]);
   }
 
@@ -137,7 +145,7 @@ export default function FieldReportsScreen() {
     return (
       <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
         <Ionicons name="alert-circle-outline" size={28} color="#c0392b" />
-        <Text style={styles.emptyText}>This login isn&apos;t a field team account.</Text>
+        <Text style={styles.emptyText}>{t('common.notFieldTeamAccount')}</Text>
       </SafeAreaView>
     );
   }
@@ -149,12 +157,12 @@ export default function FieldReportsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerTitle}>Reports</Text>
-            <Text style={styles.headerSubtitle}>Track performance and impact</Text>
+            <Text style={styles.headerTitle}>{t('fieldReports.headerTitle')}</Text>
+            <Text style={styles.headerSubtitle}>{t('fieldReports.headerSubtitle')}</Text>
           </View>
           <Pressable style={styles.periodButton} onPress={handlePeriodPress}>
             <Ionicons name="calendar-outline" size={14} color="#1B6B3A" />
-            <Text style={styles.periodButtonText}>{PERIOD_LABEL[period]}</Text>
+            <Text style={styles.periodButtonText}>{t(PERIOD_LABEL_KEY[period])}</Text>
             <Ionicons name="chevron-down" size={13} color="#1B6B3A" />
           </Pressable>
         </View>
@@ -165,44 +173,44 @@ export default function FieldReportsScreen() {
             color="#1B6B3A"
             bg="#e3f3ea"
             value={String(stats.tasksCompleted.value)}
-            label="Tasks Completed"
+            label={t('fieldReports.tasksCompleted')}
             deltaPercent={stats.tasksCompleted.deltaPercent}
-            deltaCaption={range.deltaCaption}
+            deltaCaption={t(DELTA_CAPTION_KEY[period])}
           />
           <StatCard
             icon="cube-outline"
             color="#2563eb"
             bg="#e6eefd"
             value={`${stats.tonsCollected.value.toFixed(1)} T`}
-            label="Tons Collected"
+            label={t('fieldReports.tonsCollected')}
             deltaPercent={stats.tonsCollected.deltaPercent}
-            deltaCaption={range.deltaCaption}
+            deltaCaption={t(DELTA_CAPTION_KEY[period])}
           />
           <StatCard
             icon="stopwatch-outline"
             color="#7c3aed"
             bg="#ede6fb"
             value={stats.avgResponseHrs.value === null ? '—' : `${stats.avgResponseHrs.value.toFixed(1)}h`}
-            label="Avg. Response Time"
+            label={t('fieldReports.avgResponseTime')}
             deltaPercent={stats.avgResponseHrs.deltaPercent}
-            deltaCaption={range.deltaCaption}
+            deltaCaption={t(DELTA_CAPTION_KEY[period])}
           />
           <StatCard
             icon="flag-outline"
             color="#d97706"
             bg="#fbead2"
             value={String(stats.urgentCompleted.value)}
-            label="Urgent Completed"
+            label={t('fieldReports.urgentCompleted')}
             deltaPercent={stats.urgentCompleted.deltaPercent}
-            deltaCaption={range.deltaCaption}
+            deltaCaption={t(DELTA_CAPTION_KEY[period])}
           />
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardHeading}>Tasks Trend</Text>
-          <Text style={styles.cardSubheading}>{range.label}</Text>
+          <Text style={styles.cardHeading}>{t('fieldReports.tasksTrend')}</Text>
+          <Text style={styles.cardSubheading}>{t(PERIOD_LABEL_KEY[period])}</Text>
           {trend.every((p) => p.value === 0) ? (
-            <Text style={styles.emptyInlineText}>No completed tasks in this period yet.</Text>
+            <Text style={styles.emptyInlineText}>{t('fieldReports.noCompletedTasksPeriod')}</Text>
           ) : (
             <View style={styles.trendChart}>
               {trend.map((point) => (
@@ -226,14 +234,14 @@ export default function FieldReportsScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeadingRow}>
             <View>
-              <Text style={styles.cardHeading}>Waste Breakdown</Text>
-              <Text style={styles.cardSubheading}>{range.label}</Text>
+              <Text style={styles.cardHeading}>{t('fieldReports.wasteBreakdown')}</Text>
+              <Text style={styles.cardSubheading}>{t(PERIOD_LABEL_KEY[period])}</Text>
             </View>
             <Text style={styles.wasteTotalValue}>{(totalKg / 1000).toFixed(1)} T</Text>
           </View>
 
           {breakdown.length === 0 ? (
-            <Text style={styles.emptyInlineText}>No completed tasks in this period yet.</Text>
+            <Text style={styles.emptyInlineText}>{t('fieldReports.noCompletedTasksPeriod')}</Text>
           ) : (
             <>
               <View style={styles.stackedBar}>
@@ -250,7 +258,7 @@ export default function FieldReportsScreen() {
                   <View key={b.category} style={styles.breakdownRow}>
                     <View style={[styles.breakdownDot, { backgroundColor: colorForCategory(b.category) }]} />
                     <Text style={styles.breakdownLabel} numberOfLines={1}>
-                      {b.category}
+                      {t(`wasteCategory.${b.category}`)}
                     </Text>
                     <Text style={styles.breakdownKg}>{(b.kg / 1000).toFixed(2)} T</Text>
                     <Text style={styles.breakdownPercent}>{b.percent.toFixed(0)}%</Text>
@@ -263,14 +271,14 @@ export default function FieldReportsScreen() {
 
         <View style={styles.card}>
           <View style={styles.cardHeadingRow}>
-            <Text style={styles.cardHeading}>Recent Activity</Text>
+            <Text style={styles.cardHeading}>{t('fieldReports.recentActivity')}</Text>
             <Pressable onPress={() => router.push({ pathname: '/(field)/tasks', params: { tab: 'all' } })}>
-              <Text style={styles.viewAllText}>View All</Text>
+              <Text style={styles.viewAllText}>{t('common.viewAll')}</Text>
             </Pressable>
           </View>
 
           {recentActivity.length === 0 ? (
-            <Text style={styles.emptyInlineText}>No tasks yet.</Text>
+            <Text style={styles.emptyInlineText}>{t('fieldReports.noTasksYet')}</Text>
           ) : (
             <View style={styles.activityList}>
               {recentActivity.map((task, index) => {
@@ -291,7 +299,7 @@ export default function FieldReportsScreen() {
                     <View style={styles.activityInfo}>
                       <Text style={styles.activityCode}>#{task.assignment_code}</Text>
                       <Text style={styles.activityTitle} numberOfLines={1}>
-                        {task.report.category}
+                        {t(`wasteCategory.${task.report.category}`)}
                       </Text>
                       <Text style={styles.activityDate}>{formatDateTime(task.created_at)}</Text>
                     </View>
@@ -299,7 +307,7 @@ export default function FieldReportsScreen() {
                       <Text style={[styles.activityValue, { color: badge.text }]}>
                         {task.status === 'completed' && kg > 0
                           ? `${(kg / 1000).toFixed(1)} T`
-                          : FIELD_TASK_STATUS_LABEL[task.status]}
+                          : t(`fieldTaskStatus.${task.status}`)}
                       </Text>
                       <Ionicons name="chevron-forward" size={14} color="#c3cdc7" />
                     </View>

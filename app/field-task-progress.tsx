@@ -15,11 +15,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import { uploadProgressPhotos } from '@/lib/field-media';
 import {
   cancelTask,
   FIELD_TASK_STATUS_BADGE,
-  FIELD_TASK_STATUS_LABEL,
   getTaskById,
   submitTaskForReview,
   type FieldTask,
@@ -29,6 +29,7 @@ const MIN_PHOTOS = 2;
 const MAX_PHOTOS = 6;
 
 export default function FieldTaskProgressScreen() {
+  const { t } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [task, setTask] = useState<FieldTask | null | undefined>(undefined);
   const [photos, setPhotos] = useState<string[]>([]);
@@ -50,20 +51,20 @@ export default function FieldTaskProgressScreen() {
 
   function handleAddPhoto() {
     if (photos.length >= MAX_PHOTOS) {
-      Alert.alert('Photo limit reached', `You can attach up to ${MAX_PHOTOS} photos.`);
+      Alert.alert(t('fieldTaskProgress.photoLimitReached'), t('fieldTaskProgress.photoLimitBody', { n: MAX_PHOTOS }));
       return;
     }
-    Alert.alert('Add Photo', undefined, [
-      { text: 'Take Photo', onPress: takePhoto },
-      { text: 'Choose from Gallery', onPress: pickFromGallery },
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('fieldTaskProgress.addPhoto'), undefined, [
+      { text: t('common.takePhoto'), onPress: takePhoto },
+      { text: t('common.chooseFromGallery'), onPress: pickFromGallery },
+      { text: t('common.cancel'), style: 'cancel' },
     ]);
   }
 
   async function takePhoto() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Camera permission needed', 'Enable camera access to take a progress photo.');
+      Alert.alert(t('fieldTaskProgress.cameraPermissionNeeded'), t('fieldTaskProgress.enableCameraProgress'));
       return;
     }
     const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.6 });
@@ -75,7 +76,7 @@ export default function FieldTaskProgressScreen() {
   async function pickFromGallery() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Photo library permission needed', 'Enable photo access to attach progress photos.');
+      Alert.alert(t('fieldTaskProgress.photoLibraryPermissionNeeded'), t('fieldTaskProgress.enableGalleryProgress'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -101,7 +102,7 @@ export default function FieldTaskProgressScreen() {
       await submitTaskForReview(task.id, { photoUrls: urls, notes });
       router.replace({ pathname: '/field-task-submitted', params: { id: task.id } });
     } catch (err) {
-      Alert.alert('Could not submit', err instanceof Error ? err.message : 'Please try again.');
+      Alert.alert(t('fieldTaskProgress.couldNotSubmit'), err instanceof Error ? err.message : t('common.pleaseTryAgain'));
     } finally {
       setSubmitting(false);
     }
@@ -109,10 +110,10 @@ export default function FieldTaskProgressScreen() {
 
   function handleCancelTask() {
     if (!task) return;
-    Alert.alert('Cancel this task?', 'It will go back to "New" so you (or another team) can pick it up again.', [
-      { text: 'Keep Working', style: 'cancel' },
+    Alert.alert(t('fieldTaskProgress.cancelTaskConfirmTitle'), t('fieldTaskProgress.cancelTaskConfirmBody'), [
+      { text: t('fieldTaskProgress.keepWorking'), style: 'cancel' },
       {
-        text: 'Cancel Task',
+        text: t('fieldTaskProgress.cancelTask'),
         style: 'destructive',
         onPress: async () => {
           setCancelling(true);
@@ -120,7 +121,7 @@ export default function FieldTaskProgressScreen() {
             await cancelTask(task.id);
             router.replace('/(field)');
           } catch (err) {
-            Alert.alert('Could not cancel', err instanceof Error ? err.message : 'Please try again.');
+            Alert.alert(t('fieldTaskProgress.couldNotCancel'), err instanceof Error ? err.message : t('common.pleaseTryAgain'));
             setCancelling(false);
           }
         },
@@ -138,7 +139,7 @@ export default function FieldTaskProgressScreen() {
   if (task === null) {
     return (
       <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
-        <Text style={styles.notFoundText}>Could not find this task.</Text>
+        <Text style={styles.notFoundText}>{t('fieldTaskProgress.couldNotFindTask')}</Text>
       </SafeAreaView>
     );
   }
@@ -155,21 +156,21 @@ export default function FieldTaskProgressScreen() {
         <Text style={styles.headerTitle}>#{task.assignment_code}</Text>
         <View style={[styles.statusBadge, { backgroundColor: statusBadge.bg }]}>
           <Text style={[styles.statusBadgeText, { color: statusBadge.text }]}>
-            {FIELD_TASK_STATUS_LABEL[task.status]}
+            {t(`fieldTaskStatus.${task.status}`)}
           </Text>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.category}>{task.report.category}</Text>
+        <Text style={styles.category}>{t(`wasteCategory.${task.report.category}`)}</Text>
         <View style={styles.metaRow}>
           <Ionicons name="location-outline" size={13} color="#6b7770" />
           <Text style={styles.metaText}>{task.report.address}</Text>
         </View>
 
-        <Text style={styles.sectionHeading}>Upload Progress</Text>
+        <Text style={styles.sectionHeading}>{t('fieldTaskProgress.uploadProgress')}</Text>
         <Text style={styles.sectionSubheading}>
-          (Add at least {MIN_PHOTOS} photo{MIN_PHOTOS > 1 ? 's' : ''})
+          {t('fieldTaskProgress.addAtLeastPhotos', { n: MIN_PHOTOS })}
         </Text>
 
         <View style={styles.photoGrid}>
@@ -189,12 +190,12 @@ export default function FieldTaskProgressScreen() {
         </View>
 
         <Text style={styles.sectionHeading}>
-          Add Notes <Text style={styles.optionalText}>(Optional)</Text>
+          {t('fieldTaskProgress.addNotesOptional')}
         </Text>
         <TextInput
           style={styles.notesInput}
           multiline
-          placeholder="e.g. Garbage collected and area cleaned."
+          placeholder={t('fieldTaskProgress.notesPlaceholder')}
           placeholderTextColor="#9aa5a0"
           value={notes}
           onChangeText={setNotes}
@@ -206,11 +207,11 @@ export default function FieldTaskProgressScreen() {
           {submitting ? (
             <ActivityIndicator color="#ffffff" size="small" />
           ) : (
-            <Text style={styles.submitButtonText}>Submit for Review</Text>
+            <Text style={styles.submitButtonText}>{t('fieldTaskProgress.submitForReview')}</Text>
           )}
         </Pressable>
         <Pressable disabled={cancelling || submitting} onPress={handleCancelTask} style={styles.cancelButton}>
-          <Text style={styles.cancelButtonText}>Cancel Task</Text>
+          <Text style={styles.cancelButtonText}>{t('fieldTaskProgress.cancelTask')}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

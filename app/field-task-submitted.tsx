@@ -4,10 +4,12 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import { getTaskById, type FieldTask } from '@/lib/field-tasks';
 import { formatDateTime } from '@/lib/reports';
 
 export default function FieldTaskSubmittedScreen() {
+  const { t } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [task, setTask] = useState<FieldTask | null | undefined>(undefined);
 
@@ -29,9 +31,9 @@ export default function FieldTaskSubmittedScreen() {
         <View style={styles.iconCircle}>
           <Ionicons name="checkmark" size={40} color="#ffffff" />
         </View>
-        <Text style={styles.title}>Submitted for Review!</Text>
+        <Text style={styles.title}>{t('fieldTaskSubmitted.title')}</Text>
         <Text style={styles.subtitle}>
-          Great work! Your task has been submitted for verification.
+          {t('fieldTaskSubmitted.subtitle')}
         </Text>
 
         {task === undefined && <ActivityIndicator color="#1B6B3A" style={{ marginTop: 20 }} />}
@@ -39,11 +41,11 @@ export default function FieldTaskSubmittedScreen() {
         {task && (
           <View style={styles.card}>
             <Text style={styles.taskCode}>#{task.assignment_code}</Text>
-            <Text style={styles.taskTitle}>{task.report.category}</Text>
+            <Text style={styles.taskTitle}>{t(`wasteCategory.${task.report.category}`)}</Text>
             <Text style={styles.taskAddress}>{task.report.address}</Text>
             <View style={styles.divider} />
             <View style={styles.row}>
-              <Text style={styles.rowLabel}>Submitted On</Text>
+              <Text style={styles.rowLabel}>{t('fieldTaskSubmitted.submittedOn')}</Text>
               <Text style={styles.rowValue}>
                 {task.submitted_for_review_at ? formatDateTime(task.submitted_for_review_at) : '—'}
               </Text>
@@ -54,7 +56,7 @@ export default function FieldTaskSubmittedScreen() {
 
       <View style={styles.footer}>
         <Pressable style={styles.button} onPress={() => router.replace('/(field)')}>
-          <Text style={styles.buttonText}>Back to Tasks</Text>
+          <Text style={styles.buttonText}>{t('fieldTaskSubmitted.backToTasks')}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

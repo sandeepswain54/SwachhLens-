@@ -4,15 +4,16 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import {
   formatRelativeTime,
   getMyReports,
   STATUS_COLOR,
-  STATUS_LABEL,
   type ReportRow,
 } from '@/lib/reports';
 
 export default function SavedLocationsScreen() {
+  const { t } = useLanguage();
   const [reports, setReports] = useState<ReportRow[] | null>(null);
 
   useFocusEffect(
@@ -35,7 +36,7 @@ export default function SavedLocationsScreen() {
         <Pressable hitSlop={8} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#1A2E22" />
         </Pressable>
-        <Text style={styles.headerTitle}>Saved Locations</Text>
+        <Text style={styles.headerTitle}>{t('savedLocationsPage.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
 
@@ -46,7 +47,7 @@ export default function SavedLocationsScreen() {
       ) : reports.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="location-outline" size={36} color="#c3cac6" />
-          <Text style={styles.emptyText}>No locations yet. They&apos;ll show up once you submit a report.</Text>
+          <Text style={styles.emptyText}>{t('savedLocationsPage.noLocationsYet')}</Text>
         </View>
       ) : (
         <FlatList
@@ -65,12 +66,12 @@ export default function SavedLocationsScreen() {
                   {item.address}
                 </Text>
                 <Text style={styles.cardMeta}>
-                  {item.category} · {formatRelativeTime(item.created_at)}
+                  {t(`wasteCategory.${item.category}`)} · {formatRelativeTime(item.created_at, t)}
                 </Text>
               </View>
               <View style={[styles.statusBadge, { backgroundColor: STATUS_COLOR[item.status].bg }]}>
                 <Text style={[styles.statusBadgeText, { color: STATUS_COLOR[item.status].text }]}>
-                  {STATUS_LABEL[item.status]}
+                  {t(`reportStatus.${item.status}`)}
                 </Text>
               </View>
             </Pressable>

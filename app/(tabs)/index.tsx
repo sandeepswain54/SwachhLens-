@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import {
   type CitizenNotification,
   getMyNotifications,
@@ -28,17 +29,16 @@ import {
   getMyImpactStats,
   getMyReports,
   STATUS_COLOR,
-  STATUS_LABEL,
   type ImpactStats,
   type ReportRow,
 } from '@/lib/reports';
 import { supabase } from '@/lib/supabase';
 
-function getGreeting(): string {
+function getGreetingKey(): 'common.greetingMorning' | 'common.greetingAfternoon' | 'common.greetingEvening' {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good Morning';
-  if (hour < 17) return 'Good Afternoon';
-  return 'Good Evening';
+  if (hour < 12) return 'common.greetingMorning';
+  if (hour < 17) return 'common.greetingAfternoon';
+  return 'common.greetingEvening';
 }
 
 const SEVERITY_BADGE: Record<string, { bg: string; text: string }> = {
@@ -54,7 +54,7 @@ const AI_FEATURES = [
     iconSet: 'community',
     color: '#1B6B3A',
     bg: '#e3f3ea',
-    label: 'Detect Waste\nType',
+    labelKey: 'citizenHome.aiDetectWasteType',
     feature: 'detect',
   },
   {
@@ -62,7 +62,7 @@ const AI_FEATURES = [
     iconSet: 'ion',
     color: '#2563eb',
     bg: '#e6eefd',
-    label: 'Estimate\nVolume',
+    labelKey: 'citizenHome.aiEstimateVolume',
     feature: 'volume',
   },
   {
@@ -70,7 +70,7 @@ const AI_FEATURES = [
     iconSet: 'ion',
     color: '#7c3aed',
     bg: '#ede6fb',
-    label: 'Check\nSeverity',
+    labelKey: 'citizenHome.aiCheckSeverity',
     feature: 'severity',
   },
   {
@@ -78,12 +78,13 @@ const AI_FEATURES = [
     iconSet: 'ion',
     color: '#d97706',
     bg: '#fbead2',
-    label: 'Find\nDuplicates',
+    labelKey: 'citizenHome.aiFindDuplicates',
     feature: 'duplicate',
   },
 ] as const;
 
 export default function HomeScreen() {
+  const { t } = useLanguage();
   const [latestReport, setLatestReport] = useState<ReportRow | null | undefined>(undefined);
   const [impact, setImpact] = useState<ImpactStats>({ submitted: 0, resolved: 0, wasteRemovedKg: 0 });
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -105,7 +106,7 @@ export default function HomeScreen() {
         try {
           const permission = await Location.requestForegroundPermissionsAsync();
           if (!permission.granted) {
-            if (!cancelled) setLocationLabel('Set your location');
+            if (!cancelled) setLocationLabel(t('common.setYourLocation'));
             return;
           }
           const position = await Location.getCurrentPositionAsync({
@@ -118,7 +119,7 @@ export default function HomeScreen() {
 
           if (cancelled) return;
           if (!address) {
-            setLocationLabel('Set your location');
+            setLocationLabel(t('common.setYourLocation'));
             return;
           }
           setLocationLabel(address);
@@ -130,7 +131,7 @@ export default function HomeScreen() {
             longitude: position.coords.longitude,
           }).catch(() => null);
         } catch {
-          if (!cancelled) setLocationLabel('Set your location');
+          if (!cancelled) setLocationLabel(t('common.setYourLocation'));
         } finally {
           if (!cancelled) setLocating(false);
         }
@@ -172,7 +173,7 @@ export default function HomeScreen() {
         cancelled = true;
         unsubscribe?.();
       };
-    }, [])
+    }, [t])
   );
 
   function handleNotificationPress(n: CitizenNotification) {
@@ -211,7 +212,7 @@ export default function HomeScreen() {
 
             <View style={styles.greetingBlock}>
               <Text style={styles.greeting}>
-                {getGreeting()}
+                {t(getGreetingKey())}
                 {profile ? `, ${profile.fullName}` : ''}
               </Text>
 
@@ -220,7 +221,7 @@ export default function HomeScreen() {
                 onPress={() => router.push('/profile-location-picker')}>
                 <Ionicons name="location-outline" size={16} color="#1B6B3A" />
                 <Text style={styles.locationText} numberOfLines={1}>
-                  {locating ? 'Detecting location...' : (locationLabel ?? 'Set your location')}
+                  {locating ? t('common.detectingLocation') : (locationLabel ?? t('common.setYourLocation'))}
                 </Text>
                 {locating ? (
                   <ActivityIndicator size="small" color="#1B6B3A" />
@@ -237,15 +238,15 @@ export default function HomeScreen() {
             {/* Report a Waste Issue */}
             <View style={styles.reportCard}>
               <View style={styles.reportCardText}>
-                <Text style={styles.reportCardTitle}>Report a Waste Issue</Text>
+                <Text style={styles.reportCardTitle}>{t('citizenHome.reportCardTitle')}</Text>
                 <Text style={styles.reportCardSubtitle}>
-                  Found unwanted, overflowed or misplaced waste?
+                  {t('citizenHome.reportCardSubtitle1')}
                 </Text>
-                <Text style={styles.reportCardSubtitle}>Take a photo and let AI analyze it.</Text>
+                <Text style={styles.reportCardSubtitle}>{t('citizenHome.reportCardSubtitle2')}</Text>
 
                 <Pressable style={styles.reportNowButton} onPress={() => router.push('/report')}>
                   <Ionicons name="camera" size={18} color="#1B6B3A" />
-                  <Text style={styles.reportNowText}>Report Now</Text>
+                  <Text style={styles.reportNowText}>{t('citizenHome.reportNow')}</Text>
                 </Pressable>
               </View>
 
@@ -258,10 +259,10 @@ export default function HomeScreen() {
 
             {/* AI Powered */}
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>AI Powered</Text>
+              <Text style={styles.sectionTitle}>{t('citizenHome.aiPowered')}</Text>
               <View style={styles.aiRow}>
                 {AI_FEATURES.map((feature, index) => (
-                  <View key={feature.label} style={styles.aiItemWrapper}>
+                  <View key={feature.feature} style={styles.aiItemWrapper}>
                     {index > 0 && <View style={styles.aiDivider} />}
                     <Pressable
                       style={styles.aiItem}
@@ -279,7 +280,7 @@ export default function HomeScreen() {
                           <Ionicons name={feature.icon as never} size={22} color={feature.color} />
                         )}
                       </View>
-                      <Text style={styles.aiLabel}>{feature.label}</Text>
+                      <Text style={styles.aiLabel}>{t(feature.labelKey)}</Text>
                     </Pressable>
                   </View>
                 ))}
@@ -288,9 +289,9 @@ export default function HomeScreen() {
 
             {/* Your Active Report */}
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionHeading}>Your Active Report</Text>
+              <Text style={styles.sectionHeading}>{t('citizenHome.yourActiveReport')}</Text>
               <Pressable onPress={() => router.push('/(tabs)/my-reports')}>
-                <Text style={styles.linkText}>View All</Text>
+                <Text style={styles.linkText}>{t('common.viewAll')}</Text>
               </Pressable>
             </View>
 
@@ -298,7 +299,7 @@ export default function HomeScreen() {
               <View style={styles.emptyReportCard}>
                 <Ionicons name="camera-outline" size={22} color="#9aa5a0" />
                 <Text style={styles.emptyReportText}>
-                  No reports yet. Tap Report Now to submit your first one.
+                  {t('citizenHome.noReportsYet')}
                 </Text>
               </View>
             ) : (
@@ -327,10 +328,10 @@ export default function HomeScreen() {
                             .text,
                         },
                       ]}>
-                      {latestReport.severity_label.toUpperCase()}
+                      {t(`severityLevel.${latestReport.severity_label}`).toUpperCase()}
                     </Text>
                   </View>
-                  <Text style={styles.activeReportTitle}>{latestReport.category}</Text>
+                  <Text style={styles.activeReportTitle}>{t(`wasteCategory.${latestReport.category}`)}</Text>
                   <View style={styles.metaRow}>
                     <Ionicons name="location-outline" size={13} color="#6b7770" />
                     <Text style={styles.metaText} numberOfLines={1}>
@@ -340,7 +341,7 @@ export default function HomeScreen() {
                   <View style={styles.metaRow}>
                     <Ionicons name="time-outline" size={13} color="#6b7770" />
                     <Text style={styles.metaText}>
-                      Reported {formatRelativeTime(latestReport.created_at)}
+                      {t('citizenHome.reportedAgo', { time: formatRelativeTime(latestReport.created_at, t) })}
                     </Text>
                   </View>
                 </View>
@@ -357,7 +358,7 @@ export default function HomeScreen() {
                           styles.badgeAssignedText,
                           { color: STATUS_COLOR[latestReport.status].text },
                         ]}>
-                        {STATUS_LABEL[latestReport.status]}
+                        {t(`reportStatus.${latestReport.status}`)}
                       </Text>
                     </View>
                   </View>
@@ -369,7 +370,7 @@ export default function HomeScreen() {
                         params: { id: latestReport.id },
                       })
                     }>
-                    <Text style={styles.trackButtonText}>Track Status</Text>
+                    <Text style={styles.trackButtonText}>{t('citizenHome.trackStatus')}</Text>
                   </Pressable>
                 </View>
               </View>
@@ -377,9 +378,9 @@ export default function HomeScreen() {
 
             {/* Waste Hotspots Near You */}
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionHeading}>Waste Hotspots Near You</Text>
+              <Text style={styles.sectionHeading}>{t('citizenHome.wasteHotspotsNearYou')}</Text>
               <Pressable onPress={() => router.push('/waste-hotspots')}>
-                <Text style={styles.linkText}>View Map</Text>
+                <Text style={styles.linkText}>{t('common.viewMap')}</Text>
               </Pressable>
             </View>
 
@@ -398,10 +399,10 @@ export default function HomeScreen() {
                   <View style={styles.dotHigh} />
                   <Text style={styles.hotspotBadgeHighText}>HIGH</Text>
                 </View>
-                <Text style={styles.hotspotTitle}>Garbage Dump</Text>
+                <Text style={styles.hotspotTitle}>{t('citizenHome.garbageDump')}</Text>
                 <View style={styles.metaRow}>
                   <Ionicons name="location-outline" size={13} color="#6b7770" />
-                  <Text style={styles.metaText}>0.8 km away</Text>
+                  <Text style={styles.metaText}>{t('citizenHome.kmAway', { km: '0.8' })}</Text>
                 </View>
               </View>
 
@@ -416,10 +417,10 @@ export default function HomeScreen() {
                   <View style={styles.dotMedium} />
                   <Text style={styles.hotspotBadgeMediumText}>MEDIUM</Text>
                 </View>
-                <Text style={styles.hotspotTitle}>Overflowing Bin</Text>
+                <Text style={styles.hotspotTitle}>{t('citizenHome.overflowingBin')}</Text>
                 <View style={styles.metaRow}>
                   <Ionicons name="location-outline" size={13} color="#6b7770" />
-                  <Text style={styles.metaText}>1.4 km away</Text>
+                  <Text style={styles.metaText}>{t('citizenHome.kmAway', { km: '1.4' })}</Text>
                 </View>
               </View>
             </ScrollView>
@@ -432,7 +433,7 @@ export default function HomeScreen() {
             </View>
 
             {/* Your Impact */}
-            <Text style={styles.sectionHeading}>Your Impact</Text>
+            <Text style={styles.sectionHeading}>{t('citizenHome.yourImpact')}</Text>
             <View style={styles.card}>
               <View style={styles.impactRow}>
                 <View style={styles.impactItem}>
@@ -440,21 +441,21 @@ export default function HomeScreen() {
                     <Ionicons name="hand-left-outline" size={20} color="#1B6B3A" />
                   </View>
                   <Text style={styles.impactValue}>{impact.submitted}</Text>
-                  <Text style={styles.impactLabel}>{'Reports\nSubmitted'}</Text>
+                  <Text style={styles.impactLabel}>{t('citizenHome.reportsSubmitted')}</Text>
                 </View>
                 <View style={styles.impactItem}>
                   <View style={styles.impactIconCircle}>
                     <Ionicons name="checkmark-circle-outline" size={20} color="#1B6B3A" />
                   </View>
                   <Text style={styles.impactValue}>{impact.resolved}</Text>
-                  <Text style={styles.impactLabel}>{'Reports\nResolved'}</Text>
+                  <Text style={styles.impactLabel}>{t('citizenHome.reportsResolved')}</Text>
                 </View>
                 <View style={styles.impactItem}>
                   <View style={styles.impactIconCircle}>
                     <MaterialCommunityIcons name="recycle" size={20} color="#1B6B3A" />
                   </View>
-                  <Text style={styles.impactValue}>{impact.wasteRemovedKg} kg</Text>
-                  <Text style={styles.impactLabel}>{'Waste\nRemoved'}</Text>
+                  <Text style={styles.impactValue}>{impact.wasteRemovedKg} {t('common.kg')}</Text>
+                  <Text style={styles.impactLabel}>{t('citizenHome.wasteRemoved')}</Text>
                 </View>
               </View>
             </View>
@@ -467,11 +468,11 @@ export default function HomeScreen() {
           <Pressable style={styles.notifPanel} onPress={(e) => e.stopPropagation()}>
             <SafeAreaView edges={['top']}>
               <View style={styles.notifHeader}>
-                <Text style={styles.notifHeaderTitle}>Notifications</Text>
+                <Text style={styles.notifHeaderTitle}>{t('common.notifications')}</Text>
                 <View style={styles.notifHeaderActions}>
                   {unreadCount > 0 && (
                     <Pressable onPress={handleMarkAllRead}>
-                      <Text style={styles.notifMarkAllText}>Mark all read</Text>
+                      <Text style={styles.notifMarkAllText}>{t('common.markAllRead')}</Text>
                     </Pressable>
                   )}
                   <Pressable hitSlop={8} onPress={() => setNotifOpen(false)}>
@@ -482,7 +483,7 @@ export default function HomeScreen() {
 
               <ScrollView style={styles.notifList} showsVerticalScrollIndicator={false}>
                 {notifications.length === 0 ? (
-                  <Text style={styles.notifEmptyText}>No notifications yet.</Text>
+                  <Text style={styles.notifEmptyText}>{t('common.noNotificationsYet')}</Text>
                 ) : (
                   notifications.map((n) => (
                     <Pressable
@@ -493,7 +494,7 @@ export default function HomeScreen() {
                       <View style={styles.notifRowBody}>
                         <Text style={styles.notifTitle}>{n.title}</Text>
                         <Text style={styles.notifBody}>{n.body}</Text>
-                        <Text style={styles.notifTime}>{formatRelativeTime(n.created_at)}</Text>
+                        <Text style={styles.notifTime}>{formatRelativeTime(n.created_at, t)}</Text>
                       </View>
                     </Pressable>
                   ))

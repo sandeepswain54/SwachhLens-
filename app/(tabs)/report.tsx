@@ -4,42 +4,43 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import { useReportFlow } from '@/contexts/report-flow-context';
 
 type PickedAsset = ImagePicker.ImagePickerAsset;
 
 const FEATURE_CONFIG = {
   detect: {
-    title: 'Detect Waste Type',
-    question: 'Capture the waste so AI can detect its type',
-    description: "We'll identify what kind of waste this is.",
+    titleKey: 'report.detectTitle',
+    questionKey: 'report.detectQuestion',
+    descriptionKey: 'report.detectDescription',
     icon: 'brain',
     iconSet: 'community',
     color: '#1B6B3A',
     bg: '#e3f3ea',
   },
   volume: {
-    title: 'Estimate Volume',
-    question: 'Capture the waste so AI can estimate its volume',
-    description: "We'll estimate how much waste is present.",
+    titleKey: 'report.volumeTitle',
+    questionKey: 'report.volumeQuestion',
+    descriptionKey: 'report.volumeDescription',
     icon: 'cube-outline',
     iconSet: 'ion',
     color: '#2563eb',
     bg: '#e6eefd',
   },
   severity: {
-    title: 'Check Severity',
-    question: 'Capture the waste so AI can check its severity',
-    description: "We'll assess how urgent this issue is.",
+    titleKey: 'report.severityTitle',
+    questionKey: 'report.severityQuestion',
+    descriptionKey: 'report.severityDescription',
     icon: 'warning-outline',
     iconSet: 'ion',
     color: '#7c3aed',
     bg: '#ede6fb',
   },
   duplicate: {
-    title: 'Find Duplicates',
-    question: 'Capture the waste so AI can check for duplicates',
-    description: "We'll check if this has already been reported nearby.",
+    titleKey: 'report.duplicateTitle',
+    questionKey: 'report.duplicateQuestion',
+    descriptionKey: 'report.duplicateDescription',
     icon: 'finger-print-outline',
     iconSet: 'ion',
     color: '#d97706',
@@ -49,33 +50,29 @@ const FEATURE_CONFIG = {
 
 type FeatureKey = keyof typeof FEATURE_CONFIG;
 
-const DEFAULT_CONFIG = {
-  title: 'Report Waste',
-  question: 'What did you want to report?',
-};
-
 const OPTIONS = [
   {
     key: 'photo',
     icon: 'camera-outline',
-    title: 'Take Photo',
-    subtitle: 'Capture waste image',
+    titleKey: 'report.optionPhotoTitle',
+    subtitleKey: 'report.optionPhotoSubtitle',
   },
   {
     key: 'video',
     icon: 'videocam-outline',
-    title: 'Record Video',
-    subtitle: 'Record a short video',
+    titleKey: 'report.optionVideoTitle',
+    subtitleKey: 'report.optionVideoSubtitle',
   },
   {
     key: 'gallery',
     icon: 'images-outline',
-    title: 'Choose from Gallery',
-    subtitle: 'Upload from gallery',
+    titleKey: 'report.optionGalleryTitle',
+    subtitleKey: 'report.optionGallerySubtitle',
   },
 ] as const;
 
 export default function ReportScreen() {
+  const { t } = useLanguage();
   const { feature } = useLocalSearchParams<{ feature?: string }>();
   const { setMedia } = useReportFlow();
 
@@ -94,7 +91,7 @@ export default function ReportScreen() {
   async function handleTakePhoto() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Camera access needed', 'Allow camera access to take a photo of the waste.');
+      Alert.alert(t('report.cameraAccessNeeded'), t('report.allowCameraPhoto'));
       return;
     }
     const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.6 });
@@ -104,7 +101,7 @@ export default function ReportScreen() {
   async function handleRecordVideo() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Camera access needed', 'Allow camera access to record a video of the waste.');
+      Alert.alert(t('report.cameraAccessNeeded'), t('report.allowCameraVideo'));
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
@@ -118,7 +115,7 @@ export default function ReportScreen() {
   async function handleChooseFromGallery() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Photos access needed', 'Allow photo library access to choose media.');
+      Alert.alert(t('report.photosAccessNeeded'), t('report.allowPhotoLibrary'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -140,7 +137,7 @@ export default function ReportScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{activeFeature?.title ?? DEFAULT_CONFIG.title}</Text>
+        <Text style={styles.headerTitle}>{activeFeature ? t(activeFeature.titleKey) : t('report.defaultTitle')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -159,14 +156,14 @@ export default function ReportScreen() {
             </View>
             <View style={styles.featureBannerText}>
               <Text style={[styles.featureBannerTitle, { color: activeFeature.color }]}>
-                {activeFeature.title}
+                {t(activeFeature.titleKey)}
               </Text>
-              <Text style={styles.featureBannerDescription}>{activeFeature.description}</Text>
+              <Text style={styles.featureBannerDescription}>{t(activeFeature.descriptionKey)}</Text>
             </View>
           </View>
         )}
 
-        <Text style={styles.question}>{activeFeature?.question ?? DEFAULT_CONFIG.question}</Text>
+        <Text style={styles.question}>{activeFeature ? t(activeFeature.questionKey) : t('report.defaultQuestion')}</Text>
 
         <View style={styles.optionList}>
           {OPTIONS.map((option) => (
@@ -178,8 +175,8 @@ export default function ReportScreen() {
                 <Ionicons name={option.icon} size={22} color="#1B6B3A" />
               </View>
               <View style={styles.optionText}>
-                <Text style={styles.optionTitle}>{option.title}</Text>
-                <Text style={styles.optionSubtitle}>{option.subtitle}</Text>
+                <Text style={styles.optionTitle}>{t(option.titleKey)}</Text>
+                <Text style={styles.optionSubtitle}>{t(option.subtitleKey)}</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#c3cac6" />
             </Pressable>
@@ -189,11 +186,11 @@ export default function ReportScreen() {
         <View style={styles.tipsBox}>
           <View style={styles.tipsHeaderRow}>
             <Ionicons name="checkmark-circle-outline" size={16} color="#1B6B3A" />
-            <Text style={styles.tipsHeading}>Tips</Text>
+            <Text style={styles.tipsHeading}>{t('report.tipsHeading')}</Text>
           </View>
-          <Text style={styles.tipItem}>• Capture clear images</Text>
-          <Text style={styles.tipItem}>• Include the waste area</Text>
-          <Text style={styles.tipItem}>• Ensure good lighting</Text>
+          <Text style={styles.tipItem}>• {t('report.tip1')}</Text>
+          <Text style={styles.tipItem}>• {t('report.tip2')}</Text>
+          <Text style={styles.tipItem}>• {t('report.tip3')}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

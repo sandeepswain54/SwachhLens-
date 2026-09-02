@@ -2,12 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router/js-tabs';
 
 import { HapticTab } from '@/components/haptic-tab';
+import { useLanguage } from '@/contexts/language-context';
 
 // Field-team bottom nav, matching the citizen (tabs) layout's structure.
 // Only Home is wired up to real data right now — the other four screens are
 // intentional "Coming Soon" placeholders (see coming-soon-screen.tsx) so the
 // nav bar matches the design while nothing beyond Home does real work yet.
 export default function FieldTabLayout() {
+  const { t } = useLanguage();
+
   return (
     <Tabs
       screenOptions={{
@@ -28,7 +31,7 @@ export default function FieldTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('fieldTabs.home'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
           ),
@@ -37,7 +40,7 @@ export default function FieldTabLayout() {
       <Tabs.Screen
         name="tasks"
         options={{
-          title: 'Tasks',
+          title: t('fieldTabs.tasks'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'clipboard' : 'clipboard-outline'} size={24} color={color} />
           ),
@@ -46,7 +49,7 @@ export default function FieldTabLayout() {
       <Tabs.Screen
         name="map"
         options={{
-          title: 'Map',
+          title: t('fieldTabs.map'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'location' : 'location-outline'} size={24} color={color} />
           ),
@@ -55,7 +58,7 @@ export default function FieldTabLayout() {
       <Tabs.Screen
         name="reports"
         options={{
-          title: 'Reports',
+          title: t('fieldTabs.reports'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'bar-chart' : 'bar-chart-outline'} size={24} color={color} />
           ),
@@ -64,7 +67,7 @@ export default function FieldTabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('fieldTabs.profile'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
           ),

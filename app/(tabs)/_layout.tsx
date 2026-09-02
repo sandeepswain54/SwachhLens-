@@ -2,8 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router/js-tabs';
 
 import { HapticTab } from '@/components/haptic-tab';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function TabLayout() {
+  const { t } = useLanguage();
+
   return (
     <Tabs
       screenOptions={{
@@ -24,7 +27,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('citizenTabs.home'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
           ),
@@ -33,7 +36,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="report"
         options={{
-          title: 'Report',
+          title: t('citizenTabs.report'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'camera' : 'camera-outline'} size={24} color={color} />
           ),
@@ -42,7 +45,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="my-reports"
         options={{
-          title: 'My Reports',
+          title: t('citizenTabs.myReports'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'reader' : 'reader-outline'} size={24} color={color} />
           ),
@@ -51,7 +54,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('citizenTabs.profile'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
           ),

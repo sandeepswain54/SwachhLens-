@@ -105,7 +105,7 @@ export default function SignUpScreen() {
       return;
     }
 
-    router.replace('/(tabs)');
+    router.replace({ pathname: '/language-select', params: { next: '/(tabs)' } });
   }
 
   return (

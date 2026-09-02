@@ -13,23 +13,24 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import {
   formatRelativeTime,
   getMyReports,
   STATUS_COLOR,
-  STATUS_LABEL,
   type ReportRow,
 } from '@/lib/reports';
 
 type FilterKey = 'all' | 'active' | 'resolved';
 
-const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'active', label: 'Active' },
-  { key: 'resolved', label: 'Resolved' },
+const FILTERS: { key: FilterKey; labelKey: 'myReports.filterAll' | 'myReports.filterActive' | 'myReports.filterResolved' }[] = [
+  { key: 'all', labelKey: 'myReports.filterAll' },
+  { key: 'active', labelKey: 'myReports.filterActive' },
+  { key: 'resolved', labelKey: 'myReports.filterResolved' },
 ];
 
 export default function MyReportsScreen() {
+  const { t } = useLanguage();
   const [reports, setReports] = useState<ReportRow[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterKey>('all');
@@ -61,7 +62,7 @@ export default function MyReportsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Your Active Reports</Text>
+        <Text style={styles.headerTitle}>{t('myReports.headerTitle')}</Text>
       </View>
 
       <View style={styles.tabRow}>
@@ -71,7 +72,7 @@ export default function MyReportsScreen() {
             style={[styles.tabPill, filter === item.key && styles.tabPillActive]}
             onPress={() => setFilter(item.key)}>
             <Text style={[styles.tabPillText, filter === item.key && styles.tabPillTextActive]}>
-              {item.label}
+              {t(item.labelKey)}
             </Text>
           </Pressable>
         ))}
@@ -84,7 +85,7 @@ export default function MyReportsScreen() {
       ) : filtered.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="document-text-outline" size={36} color="#c3cac6" />
-          <Text style={styles.emptyText}>No reports here yet.</Text>
+          <Text style={styles.emptyText}>{t('myReports.noReportsHere')}</Text>
         </View>
       ) : (
         <FlatList
@@ -101,13 +102,13 @@ export default function MyReportsScreen() {
               <Image source={{ uri: item.media_url }} style={styles.thumb} contentFit="cover" />
               <View style={styles.cardBody}>
                 <Text style={styles.cardCode}>
-                  {item.report_code} {item.category}
+                  {item.report_code} {t(`wasteCategory.${item.category}`)}
                 </Text>
-                <Text style={styles.cardTime}>{formatRelativeTime(item.created_at)}</Text>
+                <Text style={styles.cardTime}>{formatRelativeTime(item.created_at, t)}</Text>
               </View>
               <View style={[styles.statusBadge, { backgroundColor: STATUS_COLOR[item.status].bg }]}>
                 <Text style={[styles.statusBadgeText, { color: STATUS_COLOR[item.status].text }]}>
-                  {STATUS_LABEL[item.status]}
+                  {t(`reportStatus.${item.status}`)}
                 </Text>
               </View>
             </Pressable>

@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import {
   type CitizenNotification,
   getMyNotifications,
@@ -15,6 +16,7 @@ import { formatRelativeTime } from '@/lib/reports';
 import { supabase } from '@/lib/supabase';
 
 export default function NotificationsScreen() {
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState<CitizenNotification[] | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -70,10 +72,10 @@ export default function NotificationsScreen() {
         <Pressable hitSlop={8} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#1A2E22" />
         </Pressable>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <Text style={styles.headerTitle}>{t('notificationsPage.title')}</Text>
         {unreadCount > 0 ? (
           <Pressable hitSlop={8} onPress={handleMarkAllRead}>
-            <Text style={styles.markAllText}>Mark all read</Text>
+            <Text style={styles.markAllText}>{t('common.markAllRead')}</Text>
           </Pressable>
         ) : (
           <View style={{ width: 22 }} />
@@ -87,7 +89,7 @@ export default function NotificationsScreen() {
       ) : notifications.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="notifications-outline" size={36} color="#c3cac6" />
-          <Text style={styles.emptyText}>No notifications yet.</Text>
+          <Text style={styles.emptyText}>{t('common.noNotificationsYet')}</Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
@@ -100,7 +102,7 @@ export default function NotificationsScreen() {
               <View style={styles.rowBody}>
                 <Text style={styles.title}>{n.title}</Text>
                 <Text style={styles.body}>{n.body}</Text>
-                <Text style={styles.time}>{formatRelativeTime(n.created_at)}</Text>
+                <Text style={styles.time}>{formatRelativeTime(n.created_at, t)}</Text>
               </View>
             </Pressable>
           ))}

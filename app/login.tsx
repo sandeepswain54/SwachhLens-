@@ -97,7 +97,10 @@ export default function LoginScreen() {
       return;
     }
 
-    router.replace(team ? '/(field)' : '/(tabs)');
+    router.replace({
+      pathname: '/language-select',
+      params: { next: team ? '/(field)' : '/(tabs)' },
+    });
   }
 
   return (

@@ -8,7 +8,7 @@ export default function ReportLocationPickerRoute() {
 
   return (
     <LocationPickerScreen
-      title="Set Location"
+      titleKey="locationPicker.setLocationTitle"
       initialLocation={location}
       onConfirm={(picked) => {
         setLocation(picked);

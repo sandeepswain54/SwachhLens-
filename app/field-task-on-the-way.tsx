@@ -7,6 +7,7 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
+import { useLanguage } from '@/contexts/language-context';
 import { arriveAtTask, getTaskById, type FieldTask } from '@/lib/field-tasks';
 import { fetchRoadRoute, formatEta, haversineMeters } from '@/lib/geo';
 import { buildLiveTrackingMapHtml } from '@/lib/map-html';
@@ -20,6 +21,7 @@ const ROUTE_REFRESH_METERS = 150;
 type LatLng = { latitude: number; longitude: number };
 
 export default function FieldTaskOnTheWayScreen() {
+  const { t } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [task, setTask] = useState<FieldTask | null | undefined>(undefined);
   const [eta, setEta] = useState<string | null>(null);
@@ -110,7 +112,7 @@ export default function FieldTaskOnTheWayScreen() {
       await arriveAtTask(task.id);
       router.replace({ pathname: '/field-task-progress', params: { id: task.id } });
     } catch (err) {
-      Alert.alert('Could not update task', err instanceof Error ? err.message : 'Please try again.');
+      Alert.alert(t('fieldTaskOnTheWay.couldNotUpdateTask'), err instanceof Error ? err.message : t('common.pleaseTryAgain'));
     } finally {
       setArriving(false);
     }
@@ -126,7 +128,7 @@ export default function FieldTaskOnTheWayScreen() {
   if (task === null) {
     return (
       <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
-        <Text style={styles.notFoundText}>Could not find this task.</Text>
+        <Text style={styles.notFoundText}>{t('fieldTaskOnTheWay.couldNotFindTask')}</Text>
       </SafeAreaView>
     );
   }
@@ -137,7 +139,7 @@ export default function FieldTaskOnTheWayScreen() {
         <Pressable hitSlop={8} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#1A2E22" />
         </Pressable>
-        <Text style={styles.headerTitle}>On the Way</Text>
+        <Text style={styles.headerTitle}>{t('fieldTaskOnTheWay.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
 
@@ -161,7 +163,7 @@ export default function FieldTaskOnTheWayScreen() {
         <View style={styles.cardTop}>
           <View style={styles.cardInfo}>
             <Text style={styles.taskCode}>#{task.assignment_code}</Text>
-            <Text style={styles.taskTitle}>{task.report.category}</Text>
+            <Text style={styles.taskTitle}>{t(`wasteCategory.${task.report.category}`)}</Text>
             <Text style={styles.taskAddress} numberOfLines={1}>
               {task.report.address}
             </Text>
@@ -170,15 +172,15 @@ export default function FieldTaskOnTheWayScreen() {
         </View>
 
         <View style={styles.etaRow}>
-          <Text style={styles.etaLabel}>ETA</Text>
-          <Text style={styles.etaValue}>{eta ?? 'Calculating…'}</Text>
+          <Text style={styles.etaLabel}>{t('fieldTaskOnTheWay.eta')}</Text>
+          <Text style={styles.etaValue}>{eta ?? t('fieldTaskOnTheWay.calculating')}</Text>
         </View>
 
         <Pressable style={styles.arrivedButton} disabled={arriving} onPress={handleArrived}>
           {arriving ? (
             <ActivityIndicator color="#ffffff" size="small" />
           ) : (
-            <Text style={styles.arrivedButtonText}>I Have Reached</Text>
+            <Text style={styles.arrivedButtonText}>{t('fieldTaskOnTheWay.iHaveReached')}</Text>
           )}
         </Pressable>
       </View>

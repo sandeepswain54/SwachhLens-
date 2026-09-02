@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import {
   type FieldNotification,
   getMyNotifications,
@@ -22,24 +23,23 @@ import {
   subscribeToMyNotifications,
 } from '@/lib/field-notifications';
 import {
-  FIELD_TASK_STATUS_LABEL,
   type FieldTask,
   getMyTasks,
   routeForTaskStatus,
   subscribeToMyTasks,
 } from '@/lib/field-tasks';
 import { priorityMeta } from '@/lib/field-ui';
-import { getMyTeam, subscribeToMyTeam, TEAM_STATUS_LABEL, type MyTeam } from '@/lib/field-team';
+import { getMyTeam, subscribeToMyTeam, type MyTeam } from '@/lib/field-team';
 import { formatDistance, haversineMeters } from '@/lib/geo';
 import { getCurrentProfile } from '@/lib/profile';
 import { formatRelativeTime } from '@/lib/reports';
 import { supabase } from '@/lib/supabase';
 
-function getGreeting(): string {
+function getGreetingKey(): 'common.greetingMorning' | 'common.greetingAfternoon' | 'common.greetingEvening' {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good Morning';
-  if (hour < 17) return 'Good Afternoon';
-  return 'Good Evening';
+  if (hour < 12) return 'common.greetingMorning';
+  if (hour < 17) return 'common.greetingAfternoon';
+  return 'common.greetingEvening';
 }
 
 function isToday(iso: string): boolean {
@@ -67,6 +67,7 @@ const STATUS_DOT: Record<MyTeam['status'], string> = {
 const SHEET_BG = '#eaf3ef';
 
 export default function FieldHomeScreen() {
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const [team, setTeam] = useState<MyTeam | null | undefined>(undefined);
   const [fullName, setFullName] = useState('');
@@ -282,9 +283,9 @@ export default function FieldHomeScreen() {
     return (
       <SafeAreaView style={styles.loadingContainer} edges={['top', 'bottom']}>
         <Ionicons name="alert-circle-outline" size={32} color="#c0392b" />
-        <Text style={styles.errorTitle}>This login isn&apos;t a field team account.</Text>
+        <Text style={styles.errorTitle}>{t('common.notFieldTeamAccount')}</Text>
         <Pressable style={styles.errorLogoutButton} onPress={handleLogout}>
-          <Text style={styles.errorLogoutText}>Back to Login</Text>
+          <Text style={styles.errorLogoutText}>{t('common.backToLogin')}</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -308,33 +309,33 @@ export default function FieldHomeScreen() {
             </View>
 
             <Text style={styles.greeting}>
-              {getGreeting()}, <Text style={styles.greetingName}>{fullName || team.leader_name}</Text> 👋
+              {t(getGreetingKey())}, <Text style={styles.greetingName}>{fullName || team.leader_name}</Text> 👋
             </Text>
             <Text style={styles.teamName}>
               {team.team_name} ({team.zone})
             </Text>
             <View style={styles.statusRow}>
               <View style={[styles.statusDot, { backgroundColor: STATUS_DOT[team.status] }]} />
-              <Text style={styles.statusText}>{TEAM_STATUS_LABEL[team.status]}</Text>
+              <Text style={styles.statusText}>{t(`teamStatus.${team.status}`)}</Text>
             </View>
           </View>
 
           <View style={styles.sheet}>
             <View style={styles.statsRow}>
-              <StatCard icon="clipboard-outline" color="#1B6B3A" bg="#e3f3ea" value={stats.assignedToday} label={'Assigned\nToday'} />
-              <StatCard icon="checkmark-done-outline" color="#2563eb" bg="#e6eefd" value={stats.completed} label="Completed" />
-              <StatCard icon="hourglass-outline" color="#d97706" bg="#fbead2" value={stats.inProgress} label={'In\nProgress'} />
-              <StatCard icon="time-outline" color="#7c3aed" bg="#ede6fb" value={stats.pending} label="Pending" />
+              <StatCard icon="clipboard-outline" color="#1B6B3A" bg="#e3f3ea" value={stats.assignedToday} label={t('fieldHome.assignedToday')} />
+              <StatCard icon="checkmark-done-outline" color="#2563eb" bg="#e6eefd" value={stats.completed} label={t('fieldHome.completed')} />
+              <StatCard icon="hourglass-outline" color="#d97706" bg="#fbead2" value={stats.inProgress} label={t('fieldHome.inProgress')} />
+              <StatCard icon="time-outline" color="#7c3aed" bg="#ede6fb" value={stats.pending} label={t('fieldHome.pending')} />
             </View>
 
             {tasks.length > 0 && (
               <View style={styles.overviewCard}>
-                <Text style={styles.overviewHeading}>Today&apos;s Overview</Text>
+                <Text style={styles.overviewHeading}>{t('fieldHome.todaysOverview')}</Text>
                 <View style={styles.overviewRow}>
-                  <OverviewTile icon="flag-outline" value={String(overview.urgentActive)} label="Urgent Now" />
-                  <OverviewTile icon="list-outline" value={overview.completedRatio} label="Completed" />
-                  <OverviewTile icon="stopwatch-outline" value={overview.avgResponseLabel} label="Avg. Response" />
-                  <OverviewTile icon="navigate-outline" value={overview.nextDistanceLabel} label="Next Task" />
+                  <OverviewTile icon="flag-outline" value={String(overview.urgentActive)} label={t('fieldHome.urgentNow')} />
+                  <OverviewTile icon="list-outline" value={overview.completedRatio} label={t('fieldHome.completed')} />
+                  <OverviewTile icon="stopwatch-outline" value={overview.avgResponseLabel} label={t('fieldHome.avgResponse')} />
+                  <OverviewTile icon="navigate-outline" value={overview.nextDistanceLabel} label={t('fieldHome.nextTaskLabel')} />
                 </View>
               </View>
             )}
@@ -344,13 +345,13 @@ export default function FieldHomeScreen() {
             ) : tasks.length === 0 ? (
               <View style={styles.emptyCard}>
                 <Ionicons name="checkmark-done-circle-outline" size={28} color="#9aa5a0" />
-                <Text style={styles.emptyText}>No tasks assigned yet. New tasks from the admin will show up here instantly.</Text>
+                <Text style={styles.emptyText}>{t('fieldHome.noTasksAssigned')}</Text>
               </View>
             ) : (
               <>
                 {nextTask && (
                   <View style={styles.nextTaskSection}>
-                    <Text style={styles.sectionHeading}>Your Next Task</Text>
+                    <Text style={styles.sectionHeading}>{t('fieldHome.yourNextTask')}</Text>
                     <View style={styles.nextTaskCard}>
                       <View style={styles.nextTaskTop}>
                         <Image
@@ -371,11 +372,11 @@ export default function FieldHomeScreen() {
                                   styles.priorityBadgeText,
                                   { color: priorityMeta(nextTask.report.urgency_label).text },
                                 ]}>
-                                {priorityMeta(nextTask.report.urgency_label).label} Priority
+                                {t('fieldHome.priority', { label: t(`severityLevel.${priorityMeta(nextTask.report.urgency_label).label}`) })}
                               </Text>
                             </View>
                           </View>
-                          <Text style={styles.taskTitle}>{nextTask.report.category}</Text>
+                          <Text style={styles.taskTitle}>{t(`wasteCategory.${nextTask.report.category}`)}</Text>
                           <View style={styles.metaRow}>
                             <Ionicons name="location-outline" size={13} color="#6b7770" />
                             <Text style={styles.metaText} numberOfLines={1}>
@@ -384,7 +385,7 @@ export default function FieldHomeScreen() {
                           </View>
                           <View style={styles.metaBottomRow}>
                             <Text style={styles.metaTimeText}>
-                              Assigned {formatRelativeTime(nextTask.assigned_at ?? nextTask.created_at)}
+                              {t('fieldHome.assignedAgo', { time: formatRelativeTime(nextTask.assigned_at ?? nextTask.created_at, t) })}
                             </Text>
                             {distanceFor(nextTask) && (
                               <>
@@ -400,10 +401,10 @@ export default function FieldHomeScreen() {
                         <Ionicons name="send" size={16} color="#ffffff" />
                         <Text style={styles.startButtonText}>
                           {nextTask.status === 'pending'
-                            ? 'Start Task'
+                            ? t('fieldHome.startTask')
                             : nextTask.status === 'on_the_way'
-                              ? 'Continue: On the Way'
-                              : 'Continue: Upload Progress'}
+                              ? t('fieldHome.continueOnTheWay')
+                              : t('fieldHome.continueUploadProgress')}
                         </Text>
                       </Pressable>
                     </View>
@@ -412,7 +413,7 @@ export default function FieldHomeScreen() {
 
                 <View style={styles.recentSection}>
                   <Text style={styles.sectionHeading}>
-                    {nextTask ? 'Recent Assignments' : 'All Assignments'}
+                    {nextTask ? t('fieldHome.recentAssignments') : t('fieldHome.allAssignments')}
                   </Text>
                   <View style={styles.recentList}>
                     {otherTasks.map((task, index) => (
@@ -430,7 +431,7 @@ export default function FieldHomeScreen() {
                         />
                         <View style={styles.recentInfo}>
                           <Text style={styles.taskCode}>#{task.assignment_code}</Text>
-                          <Text style={styles.recentTitle}>{task.report.category}</Text>
+                          <Text style={styles.recentTitle}>{t(`wasteCategory.${task.report.category}`)}</Text>
                           <View style={styles.metaRow}>
                             <Ionicons name="location-outline" size={12} color="#6b7770" />
                             <Text style={styles.metaText} numberOfLines={1}>
@@ -452,10 +453,10 @@ export default function FieldHomeScreen() {
                                 styles.priorityBadgeText,
                                 { color: priorityMeta(task.report.urgency_label).text },
                               ]}>
-                              {priorityMeta(task.report.urgency_label).label}
+                              {t(`severityLevel.${priorityMeta(task.report.urgency_label).label}`)}
                             </Text>
                           </View>
-                          <Text style={styles.recentStatusText}>{FIELD_TASK_STATUS_LABEL[task.status]}</Text>
+                          <Text style={styles.recentStatusText}>{t(`fieldTaskStatus.${task.status}`)}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={16} color="#c3cdc7" />
                       </Pressable>
@@ -472,11 +473,11 @@ export default function FieldHomeScreen() {
           <Pressable style={styles.notifPanel} onPress={(e) => e.stopPropagation()}>
             <SafeAreaView edges={['top']}>
               <View style={styles.notifHeader}>
-                <Text style={styles.notifHeaderTitle}>Notifications</Text>
+                <Text style={styles.notifHeaderTitle}>{t('common.notifications')}</Text>
                 <View style={styles.notifHeaderActions}>
                   {unreadCount > 0 && (
                     <Pressable onPress={handleMarkAllRead}>
-                      <Text style={styles.notifMarkAllText}>Mark all read</Text>
+                      <Text style={styles.notifMarkAllText}>{t('common.markAllRead')}</Text>
                     </Pressable>
                   )}
                   <Pressable hitSlop={8} onPress={() => setNotifOpen(false)}>
@@ -487,7 +488,7 @@ export default function FieldHomeScreen() {
 
               <ScrollView style={styles.notifList} showsVerticalScrollIndicator={false}>
                 {notifications.length === 0 ? (
-                  <Text style={styles.notifEmptyText}>No notifications yet.</Text>
+                  <Text style={styles.notifEmptyText}>{t('common.noNotificationsYet')}</Text>
                 ) : (
                   notifications.map((n) => (
                     <Pressable
@@ -498,7 +499,7 @@ export default function FieldHomeScreen() {
                       <View style={styles.notifRowBody}>
                         <Text style={styles.notifTitle}>{n.title}</Text>
                         <Text style={styles.notifBody}>{n.body}</Text>
-                        <Text style={styles.notifTime}>{formatRelativeTime(n.created_at)}</Text>
+                        <Text style={styles.notifTime}>{formatRelativeTime(n.created_at, t)}</Text>
                       </View>
                     </Pressable>
                   ))

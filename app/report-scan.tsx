@@ -6,18 +6,19 @@ import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '@/contexts/language-context';
 import { useReportFlow, type ReportLocation } from '@/contexts/report-flow-context';
 import { checkForDuplicate } from '@/lib/duplicate-check';
 import { reverseGeocode } from '@/lib/geocoding';
 import { analyzeWasteMedia } from '@/lib/gemini';
 
-const STEPS = [
-  'Detecting waste type...',
-  'Estimating volume...',
-  'Checking severity...',
-  'Finding location...',
-  'Checking for duplicates...',
-];
+const STEP_KEYS = [
+  'reportScan.step1',
+  'reportScan.step2',
+  'reportScan.step3',
+  'reportScan.step4',
+  'reportScan.step5',
+] as const;
 
 async function fetchLocation(): Promise<ReportLocation | null> {
   const permission = await Location.requestForegroundPermissionsAsync();
@@ -34,6 +35,7 @@ async function fetchLocation(): Promise<ReportLocation | null> {
 }
 
 export default function ReportScanScreen() {
+  const { t, language } = useLanguage();
   const { media, setAnalysis, setDuplicate, setLocation } = useReportFlow();
   const [completedSteps, setCompletedSteps] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +62,7 @@ export default function ReportScanScreen() {
 
     let cancelled = false;
     const stepTimer = setInterval(() => {
-      setCompletedSteps((prev) => (prev < STEPS.length - 1 ? prev + 1 : prev));
+      setCompletedSteps((prev) => (prev < STEP_KEYS.length - 1 ? prev + 1 : prev));
     }, 900);
 
     async function run() {
@@ -78,6 +80,7 @@ export default function ReportScanScreen() {
           base64,
           mimeType: media!.mimeType,
           address: location?.address,
+          language,
         });
         if (cancelled) return;
         setAnalysis(analysis);
@@ -92,11 +95,11 @@ export default function ReportScanScreen() {
         if (cancelled) return;
         setDuplicate(duplicate);
 
-        setCompletedSteps(STEPS.length);
+        setCompletedSteps(STEP_KEYS.length);
         router.replace('/report-result');
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+          setError(err instanceof Error ? err.message : t('reportScan.somethingWrong'));
         }
       }
     }
@@ -116,12 +119,12 @@ export default function ReportScanScreen() {
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.errorContent}>
           <Ionicons name="alert-circle-outline" size={48} color="#c0392b" />
-          <Text style={styles.errorTitle}>Analysis Failed</Text>
+          <Text style={styles.errorTitle}>{t('reportScan.analysisFailed')}</Text>
           <Text style={styles.errorSubtitle}>{error}</Text>
           <Pressable
             style={styles.retryButton}
             onPress={() => (router.canGoBack() ? router.back() : router.replace('/report'))}>
-            <Text style={styles.retryButtonText}>Try Again</Text>
+            <Text style={styles.retryButtonText}>{t('reportScan.tryAgain')}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -136,12 +139,12 @@ export default function ReportScanScreen() {
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/report'))}>
           <Ionicons name="arrow-back" size={22} color="#1A2E22" />
         </Pressable>
-        <Text style={styles.headerTitle}>AI Analyzing...</Text>
+        <Text style={styles.headerTitle}>{t('reportScan.title')}</Text>
         <View style={{ width: 22 }} />
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.subtitle}>Please wait while we analyze the waste</Text>
+        <Text style={styles.subtitle}>{t('reportScan.subtitle')}</Text>
 
         <View style={styles.ring}>
           <Animated.View style={[styles.ringSpinner, { transform: [{ rotate }] }]} />
@@ -149,8 +152,8 @@ export default function ReportScanScreen() {
         </View>
 
         <View style={styles.stepList}>
-          {STEPS.map((step, index) => (
-            <View key={step} style={styles.stepRow}>
+          {STEP_KEYS.map((stepKey, index) => (
+            <View key={stepKey} style={styles.stepRow}>
               <Ionicons
                 name={index < completedSteps ? 'checkmark-circle' : 'ellipse-outline'}
                 size={18}
@@ -158,7 +161,7 @@ export default function ReportScanScreen() {
               />
               <Text
                 style={[styles.stepText, index < completedSteps && styles.stepTextDone]}>
-                {step}
+                {t(stepKey)}
               </Text>
             </View>
           ))}
@@ -166,7 +169,7 @@ export default function ReportScanScreen() {
 
         <View style={styles.hintRow}>
           <Ionicons name="time-outline" size={14} color="#9aa5a0" />
-          <Text style={styles.hintText}>This may take a few seconds</Text>
+          <Text style={styles.hintText}>{t('reportScan.hint')}</Text>
         </View>
       </View>
     </SafeAreaView>
