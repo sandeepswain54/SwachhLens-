@@ -4,6 +4,9 @@
   --green-light: #e9f7ee;
   --green-accent: #2e9e5b;
   --yellow: #f4a300;
+  --orange: #e0672a;
+  --teal: #1f8a72;
+  --blue: #3667c9;
   --text-dark: #1b1b1b;
   --gray: #555;
   --border: #e0e0e0;
@@ -1230,5 +1233,482 @@ button {
 @media (max-width: 900px) {
   .admin-gov-header {
     padding: 12px 18px;
+  }
+}
+
+/* =========================================================
+   Homepage — below the fold (scroll) sections
+   ========================================================= */
+
+/* ----- Section heading (shared) ----- */
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.title-leaf {
+  font-size: 20px;
+}
+
+/* ----- Leadership Quote Banner ----- */
+.leaders-quote {
+  background: linear-gradient(90deg, #fff4e0, #fdebc9 55%, #fff4e0);
+  padding: 26px 32px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.leaders-quote-inner {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.leader-photo-main {
+  flex-shrink: 0;
+  width: 130px;
+  height: 130px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.leader-photo-main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.leaders-quote-text {
+  flex: 1;
+  min-width: 220px;
+  text-align: center;
+  padding: 0 12px;
+}
+
+.quote-mark {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--green-dark);
+  line-height: 1;
+}
+
+.quote-body {
+  font-size: 17px;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--text-dark);
+  line-height: 1.5;
+  margin: 6px 0 14px;
+}
+
+.quote-author {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--green-dark);
+}
+
+.quote-role {
+  font-size: 13px;
+  color: var(--gray);
+}
+
+.leaders-side {
+  display: flex;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.leader-mini {
+  width: 150px;
+  text-align: center;
+}
+
+.leader-mini img {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  margin-bottom: 8px;
+}
+
+.leader-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-dark);
+}
+
+.leader-title {
+  font-size: 11px;
+  color: var(--gray);
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
+/* ----- Mission Enablers ----- */
+.mission-enablers {
+  padding: 36px 32px;
+  background: #fff;
+}
+
+.mission-enablers .section-title {
+  margin-bottom: 24px;
+}
+
+.enabler-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.enabler-card {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.enabler-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.enabler-head {
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  text-align: center;
+  padding: 12px 10px;
+}
+
+.enabler-head-green {
+  background: var(--green-mid);
+}
+
+.enabler-head-yellow {
+  background: var(--yellow);
+  color: #4a2e00;
+}
+
+.enabler-head-orange {
+  background: var(--orange);
+}
+
+.enabler-head-teal {
+  background: var(--teal);
+}
+
+.enabler-body {
+  padding: 22px 18px 24px;
+  text-align: center;
+}
+
+.enabler-icon {
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+
+.enabler-highlight {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
+.enabler-highlight-green {
+  color: var(--green-mid);
+}
+
+.enabler-highlight-yellow {
+  color: var(--yellow);
+}
+
+.enabler-highlight-orange {
+  color: var(--orange);
+}
+
+.enabler-highlight-teal {
+  color: var(--teal);
+}
+
+.enabler-body p {
+  font-size: 13px;
+  color: var(--gray);
+}
+
+/* ----- SwachhLens Impact in Numbers ----- */
+.impact-numbers {
+  padding: 36px 32px;
+  background: var(--green-light);
+}
+
+.impact-numbers .section-title {
+  margin-bottom: 24px;
+}
+
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.impact-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.impact-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.impact-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--green-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.impact-trend {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green-accent);
+  white-space: nowrap;
+}
+
+.impact-label {
+  font-size: 13px;
+  color: var(--gray);
+  margin-bottom: 6px;
+  min-height: 34px;
+}
+
+.impact-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 14px;
+}
+
+.impact-sparkline {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 34px;
+}
+
+.impact-sparkline span {
+  flex: 1;
+  background: var(--green-accent);
+  border-radius: 2px 2px 0 0;
+  opacity: 0.85;
+}
+
+.impact-sparkline span:last-child {
+  opacity: 1;
+}
+
+.impact-sparkline-yellow span {
+  background: var(--yellow);
+}
+
+.impact-sparkline-blue span {
+  background: var(--blue);
+}
+
+/* ----- Latest Campaigns + Upcoming Events ----- */
+.campaigns-events {
+  display: flex;
+  gap: 28px;
+  padding: 36px 32px 48px;
+  background: #fff;
+  max-width: 1200px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.campaigns-col {
+  flex: 1.6;
+  min-width: 320px;
+}
+
+.events-col {
+  flex: 1;
+  min-width: 280px;
+}
+
+.col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.col-head .section-title {
+  justify-content: flex-start;
+  text-align: left;
+  font-size: 19px;
+}
+
+.view-all {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green-dark);
+  white-space: nowrap;
+}
+
+.campaign-list {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.campaign-card {
+  flex: 1;
+  min-width: 180px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.campaign-card img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  display: block;
+}
+
+.campaign-info {
+  padding: 14px;
+}
+
+.campaign-date {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green-accent);
+  text-transform: uppercase;
+}
+
+.campaign-info h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 6px 0 4px;
+}
+
+.campaign-info p {
+  font-size: 12px;
+  color: var(--gray);
+  line-height: 1.4;
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.event-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--green-light);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.event-date {
+  flex-shrink: 0;
+  width: 54px;
+  height: 54px;
+  border-radius: 8px;
+  background: var(--green-dark);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-date .day {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.event-date .mon {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.event-info h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 3px;
+  line-height: 1.35;
+}
+
+.event-info p {
+  font-size: 12px;
+  color: var(--gray);
+}
+
+/* ----- Responsive: below-the-fold sections ----- */
+@media (max-width: 900px) {
+  .leaders-quote-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+  .leaders-side {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .enabler-grid,
+  .impact-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .campaigns-events {
+    flex-direction: column;
+  }
+  .campaign-list {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 520px) {
+  .enabler-grid,
+  .impact-grid {
+    grid-template-columns: 1fr;
   }
 }
