@@ -290,17 +290,42 @@ button {
 }
 
 .sidebar-card {
+  display: block;
   background: var(--green-light);
   border: 1px solid #d5ecdc;
   border-radius: 10px;
   padding: 20px;
   text-align: center;
   position: relative;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.sidebar-card:hover,
+.sidebar-card:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+  border-color: var(--green-accent);
 }
 
 .sidebar-card.highlight {
   background: #e7edfb;
   border-color: #d3ddf7;
+}
+
+.sidebar-card.highlight:hover,
+.sidebar-card.highlight:focus-visible {
+  border-color: #a9bdf2;
+}
+
+.sidebar-card.alt {
+  background: #fdf3e0;
+  border-color: #f5ddb0;
+}
+
+.sidebar-card.alt:hover,
+.sidebar-card.alt:focus-visible {
+  border-color: var(--yellow);
 }
 
 .sidebar-icon {
@@ -318,6 +343,12 @@ button {
   display: inline-block;
   font-weight: 700;
   color: var(--green-dark);
+  transition: transform 0.2s ease;
+}
+
+.sidebar-card:hover .sidebar-link,
+.sidebar-card:focus-visible .sidebar-link {
+  transform: translateX(3px);
 }
 
 /* ===== Hero / Carousel ===== */
@@ -511,10 +542,12 @@ button {
   }
   .sidebar {
     flex-direction: row;
+    flex-wrap: wrap;
     width: 100%;
   }
   .sidebar-card {
     flex: 1;
+    min-width: 160px;
   }
   .hero {
     min-height: 380px;

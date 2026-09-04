@@ -14,12 +14,6 @@
     <header class="top-bar">
       <div class="top-bar-left">
         <img src="assets/logo2.png" alt="Ministry Emblem" class="gov-emblem" />
-        <div class="gov-text">
-          <p class="gov-line-en">Ministry of Housing and Urban Affairs</p>
-          <p class="gov-line-en small">Government of India</p>
-          <p class="gov-line-hi">आवास और शहरी कार्य मंत्रालय</p>
-          <p class="gov-line-hi small">भारत सरकार</p>
-        </div>
       </div>
 
       <div class="top-bar-center">
@@ -87,16 +81,21 @@
   <!-- ===== Main Content ===== -->
   <main class="main-content">
     <aside class="sidebar">
-      <div class="sidebar-card">
+      <a href="login.html" class="sidebar-card">
         <div class="sidebar-icon">🏢</div>
         <p>Municipality<br />Login</p>
-        <a href="login.html" class="sidebar-link">→</a>
-      </div>
-      <div class="sidebar-card highlight">
+        <span class="sidebar-link" aria-hidden="true">→</span>
+      </a>
+      <a href="admin-login.html" class="sidebar-card highlight">
         <div class="sidebar-icon">⚙️</div>
         <p>SwachhLens<br />Admin</p>
-        <a href="admin-login.html" class="sidebar-link">→</a>
-      </div>
+        <span class="sidebar-link" aria-hidden="true">→</span>
+      </a>
+      <a href="#" class="sidebar-card alt">
+        <div class="sidebar-icon">📱</div>
+        <p>Mobile App for<br />Citizen / Field Staff</p>
+        <span class="sidebar-link" aria-hidden="true">→</span>
+      </a>
     </aside>
 
     <section class="hero">
