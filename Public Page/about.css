@@ -1,58 +1,8 @@
 /* =========================================================
    About Us Page
+   (shared helpers — .accent-underline, .reveal, .section-title-left,
+   .col-head — now live in style.css so other pages can reuse them)
    ========================================================= */
-
-/* ----- Shared bits ----- */
-.accent-underline {
-  display: block;
-  width: 56px;
-  height: 4px;
-  border-radius: 2px;
-  margin-top: 10px;
-  background: linear-gradient(90deg, var(--green-accent), var(--yellow));
-}
-
-.accent-underline.small {
-  width: 34px;
-  height: 3px;
-  margin-top: 6px;
-  margin-bottom: 12px;
-}
-
-.section-title-left {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-dark);
-}
-
-.col-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto 22px;
-  padding: 0 32px;
-}
-
-/* ----- Scroll reveal ----- */
-.reveal {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
-}
-
-.reveal.in-view {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .reveal {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-}
 
 .pillars-grid .reveal:nth-child(2) { transition-delay: 0.1s; }
 .pillars-grid .reveal:nth-child(3) { transition-delay: 0.2s; }
@@ -88,19 +38,6 @@
 .about-hero-text {
   flex: 1.1;
   min-width: 280px;
-}
-
-.about-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--green-dark);
-  background: var(--green-light);
-  padding: 6px 14px;
-  border-radius: 20px;
-  margin-bottom: 14px;
 }
 
 .about-hero-text h1 {
