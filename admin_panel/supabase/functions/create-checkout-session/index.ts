@@ -68,7 +68,7 @@ Deno.serve(async (req: Request) => {
   // details — only an approved registration should be payable.
   const { data: registration, error: fetchError } = await admin
     .from('municipality_registrations')
-    .select('id, status, official_email, municipality_name, payment_status')
+    .select('id, status, official_email, municipality_name, payment_status, plan')
     .eq('id', registrationId)
     .maybeSingle();
 
@@ -76,8 +76,11 @@ Deno.serve(async (req: Request) => {
   if (registration.status !== 'approved') {
     return json({ error: 'Your registration must be approved before choosing a plan.' }, 400);
   }
-  if (registration.payment_status === 'paid') {
-    return json({ error: 'A plan is already active for this registration.' }, 400);
+  // Once paid, the "Plans & Payment" tab still shows every plan so a
+  // municipality can upgrade — only block re-buying the exact plan it
+  // already has.
+  if (registration.payment_status === 'paid' && registration.plan === plan) {
+    return json({ error: 'This is already your active plan.' }, 400);
   }
 
   const planInfo = PLANS[plan];

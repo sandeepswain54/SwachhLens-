@@ -381,6 +381,235 @@
   color: var(--gray);
 }
 
+/* =========================================================
+   Tabs / views, and the content added to each one
+   ========================================================= */
+.muni-view + .muni-view {
+  margin-top: 0;
+}
+
+.muni-view section + section {
+  margin-top: 22px;
+}
+
+/* ---- Detail grid (Application Status, Profile) ---- */
+.muni-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+  margin-top: 6px;
+}
+
+.muni-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.muni-detail-item .muni-detail-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--gray);
+}
+
+.muni-detail-item .muni-detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+  word-break: break-word;
+}
+
+.muni-detail-item .muni-detail-value a {
+  color: var(--green-accent);
+}
+
+.muni-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.muni-status-badge.submitted,
+.muni-status-badge.under_review,
+.muni-status-badge.open { background: var(--yellow-light, #fdf3e0); color: var(--yellow); }
+.muni-status-badge.approved,
+.muni-status-badge.paid,
+.muni-status-badge.resolved { background: var(--green-light); color: var(--green-dark); }
+.muni-status-badge.rejected,
+.muni-status-badge.refunded { background: #fdecea; color: #b3261e; }
+
+.muni-rejected-note {
+  margin-top: 18px;
+  background: #fdecea;
+  color: #b3261e;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+}
+
+/* ---- Plans & Payment ---- */
+.muni-current-plan-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  background: var(--green-light);
+}
+
+.muni-current-plan-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--green-dark);
+}
+
+.muni-current-plan-card h3 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--green-dark);
+  margin: 2px 0 4px;
+}
+
+.muni-current-plan-card p {
+  font-size: 13px;
+  color: var(--gray);
+}
+
+.plan-card .plan-current-badge {
+  position: absolute;
+  top: -12px;
+  left: 18px;
+  background: var(--green-dark);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.plan-card.is-current {
+  border-color: var(--green-accent);
+}
+
+.muni-table-wrap {
+  overflow-x: auto;
+  margin-top: 10px;
+}
+
+.muni-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.muni-table th {
+  text-align: left;
+  padding: 10px 12px;
+  color: var(--gray);
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.muni-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.muni-empty-note {
+  font-size: 13px;
+  color: var(--gray);
+  padding: 14px 2px 2px;
+}
+
+/* ---- Support ---- */
+.muni-form-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.muni-form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.muni-form-group label em {
+  color: #d33;
+  font-style: normal;
+}
+
+.muni-form-group input,
+.muni-form-group textarea {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.muni-form-group input:focus,
+.muni-form-group textarea:focus {
+  outline: none;
+  border-color: var(--green-accent);
+}
+
+.muni-support-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 12px;
+}
+
+.muni-support-item:first-child {
+  margin-top: 0;
+}
+
+.muni-support-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.muni-support-item-head strong {
+  font-size: 14px;
+}
+
+.muni-support-item p {
+  font-size: 13px;
+  color: var(--gray);
+  margin-bottom: 6px;
+}
+
+.muni-support-item-date {
+  font-size: 11px;
+  color: var(--gray);
+}
+
+.muni-support-reply {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 13px;
+}
+
+.muni-support-reply strong {
+  color: var(--green-dark);
+}
+
 @media (max-width: 1000px) {
   .muni-status-row,
   .muni-plans-grid {

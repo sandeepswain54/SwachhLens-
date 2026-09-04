@@ -20,12 +20,12 @@
         </div>
       </div>
 
-      <ul class="muni-nav">
-        <li class="active"><a href="municipality-status.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
-        <li><a href="#"><span class="nav-icon">📄</span> Application Status</a></li>
-        <li><a href="#"><span class="nav-icon">💳</span> Plans &amp; Payment</a></li>
-        <li><a href="#"><span class="nav-icon">👤</span> Profile</a></li>
-        <li><a href="#"><span class="nav-icon">🎧</span> Support</a></li>
+      <ul class="muni-nav" id="muniNav">
+        <li class="active" data-view="dashboard"><a href="#" data-view-link="dashboard"><span class="nav-icon">🏠</span> Dashboard</a></li>
+        <li data-view="status"><a href="#" data-view-link="status"><span class="nav-icon">📄</span> Application Status</a></li>
+        <li data-view="plans"><a href="#" data-view-link="plans"><span class="nav-icon">💳</span> Plans &amp; Payment</a></li>
+        <li data-view="profile"><a href="#" data-view-link="profile"><span class="nav-icon">👤</span> Profile</a></li>
+        <li data-view="support"><a href="#" data-view-link="support"><span class="nav-icon">🎧</span> Support</a></li>
         <li><a href="#" id="muniLogoutLink"><span class="nav-icon">🚪</span> Logout</a></li>
       </ul>
 
@@ -46,100 +46,132 @@
 
       <p id="muniLoadError" class="form-message"></p>
 
-      <section class="muni-status-row" id="muniStatusRow" hidden>
-        <div class="panel muni-status-panel">
-          <h3>Municipality Registration Status</h3>
+      <!-- ===== Dashboard ===== -->
+      <div class="muni-view" id="view-dashboard">
+        <section class="muni-status-row" id="muniStatusRow" hidden>
+          <div class="panel muni-status-panel">
+            <h3>Municipality Registration Status</h3>
 
-          <div class="muni-stepper" id="muniStepper">
-            <div class="muni-step" data-step="submitted">
-              <div class="muni-step-circle">✓</div>
-              <span class="muni-step-label">Submitted</span>
-              <span class="muni-step-date" data-date="submitted"></span>
-            </div>
-            <div class="muni-step-line"></div>
-            <div class="muni-step" data-step="under_review">
-              <div class="muni-step-circle">✓</div>
-              <span class="muni-step-label">Under Review</span>
-              <span class="muni-step-date" data-date="under_review"></span>
-            </div>
-            <div class="muni-step-line"></div>
-            <div class="muni-step" data-step="approved">
-              <div class="muni-step-circle">✓</div>
-              <span class="muni-step-label">Approved</span>
-              <span class="muni-step-date" data-date="approved"></span>
-            </div>
-            <div class="muni-step-line"></div>
-            <div class="muni-step" data-step="plan">
-              <div class="muni-step-circle">✓</div>
-              <span class="muni-step-label">Plan Selection</span>
-              <span class="muni-step-date" data-date="plan">Pending</span>
+            <div class="muni-stepper" id="muniStepper">
+              <div class="muni-step" data-step="submitted">
+                <div class="muni-step-circle">✓</div>
+                <span class="muni-step-label">Submitted</span>
+                <span class="muni-step-date" data-date="submitted"></span>
+              </div>
+              <div class="muni-step-line"></div>
+              <div class="muni-step" data-step="under_review">
+                <div class="muni-step-circle">✓</div>
+                <span class="muni-step-label">Under Review</span>
+                <span class="muni-step-date" data-date="under_review"></span>
+              </div>
+              <div class="muni-step-line"></div>
+              <div class="muni-step" data-step="approved">
+                <div class="muni-step-circle">✓</div>
+                <span class="muni-step-label">Approved</span>
+                <span class="muni-step-date" data-date="approved"></span>
+              </div>
+              <div class="muni-step-line"></div>
+              <div class="muni-step" data-step="plan">
+                <div class="muni-step-circle">✓</div>
+                <span class="muni-step-label">Plan Selection</span>
+                <span class="muni-step-date" data-date="plan">Pending</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="panel muni-status-banner" id="muniStatusBanner"></div>
-      </section>
+          <div class="panel muni-status-banner" id="muniStatusBanner"></div>
+        </section>
 
-      <section class="muni-plans-section" id="muniPlansSection" hidden>
-        <h2>Choose Your Plan</h2>
-        <p>Select a plan that best fits your municipality's needs. You can upgrade anytime.</p>
+        <section class="muni-plans-section" id="muniPlansSection" hidden>
+          <h2>Choose Your Plan</h2>
+          <p>Select a plan that best fits your municipality's needs. You can upgrade anytime from the Plans &amp; Payment tab.</p>
 
-        <div class="muni-plans-grid" id="muniPlansGrid">
-          <div class="plan-card" data-plan="basic">
-            <h3>Basic</h3>
-            <div class="plan-price">₹24,000 <span>/ year</span></div>
-            <p class="plan-desc">Essential municipal management</p>
-            <ul class="plan-features">
-              <li>✅ Complaint management</li>
-              <li>✅ Waste collection tracking</li>
-              <li>✅ Basic reporting &amp; dashboard</li>
-              <li>✅ Citizen engagement tools</li>
-              <li>✅ Email support</li>
-            </ul>
-            <button type="button" class="outline-btn choose-plan-btn" data-plan="basic">Choose Basic Plan</button>
+          <div class="muni-plans-grid" id="muniPlansGrid"></div>
+
+          <div class="plan-confirmed" id="muniPlanConfirmed" hidden>
+            <div class="plan-confirmed-icon">✅</div>
+            <div>
+              <h3>You're on the <span id="muniPlanConfirmedName">—</span> Plan</h3>
+              <p>Payment received — your SwachhLens account is active. Sign in below with the credentials you registered with to open your dashboard.</p>
+              <a class="signin-btn" id="muniAdminPanelLink" href="#" target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; text-decoration:none;">Click to Visit Your Custom Admin Panel →</a>
+            </div>
           </div>
+        </section>
+      </div>
 
-          <div class="plan-card popular" data-plan="standard">
-            <span class="plan-badge">Most Popular</span>
-            <h3>Standard</h3>
-            <div class="plan-price">₹60,000 <span>/ year</span></div>
-            <p class="plan-desc">Operations + AI + vehicle management</p>
-            <ul class="plan-features">
-              <li>✅ All Basic features</li>
-              <li>✅ AI-based waste classification</li>
-              <li>✅ Vehicle &amp; route management</li>
-              <li>✅ Advanced analytics &amp; reports</li>
-              <li>✅ Team management</li>
-              <li>✅ Priority support</li>
-            </ul>
-            <button type="button" class="signin-btn choose-plan-btn" data-plan="standard">Choose Standard Plan</button>
-          </div>
+      <!-- ===== Application Status ===== -->
+      <div class="muni-view" id="view-status" hidden>
+        <section class="panel">
+          <h3>Application Status</h3>
+          <div class="muni-detail-grid" id="muniStatusDetailGrid"></div>
+          <div id="muniRejectedNote" class="muni-rejected-note" hidden></div>
+        </section>
+      </div>
 
-          <div class="plan-card smart" data-plan="smart_city">
-            <h3>Smart City</h3>
-            <div class="plan-price">₹1,20,000 <span>/ year</span></div>
-            <p class="plan-desc">Complete municipal management + advanced AI &amp; analytics</p>
-            <ul class="plan-features">
-              <li>✅ All Standard features</li>
-              <li>✅ Predictive analytics &amp; insights</li>
-              <li>✅ Smart bin monitoring (IoT ready)</li>
-              <li>✅ Advanced AI recommendations</li>
-              <li>✅ Custom integrations</li>
-              <li>✅ Dedicated support manager</li>
-            </ul>
-            <button type="button" class="outline-btn choose-plan-btn" data-plan="smart_city">Choose Smart City Plan</button>
-          </div>
-        </div>
-
-        <div class="plan-confirmed" id="muniPlanConfirmed" hidden>
-          <div class="plan-confirmed-icon">✅</div>
+      <!-- ===== Plans & Payment ===== -->
+      <div class="muni-view" id="view-plans" hidden>
+        <section class="panel muni-current-plan-card" id="muniCurrentPlanCard" hidden>
           <div>
-            <h3>You're on the <span id="muniPlanConfirmedName">—</span> Plan</h3>
-            <p>Payment received — your SwachhLens account is active. Sign in below with the credentials you registered with to open your dashboard.</p>
-            <a class="signin-btn" href="https://swachlens.vercel.app/login" target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; text-decoration:none;">Go to Admin Panel →</a>
+            <span class="muni-current-plan-label">Current Plan</span>
+            <h3 id="muniCurrentPlanName">—</h3>
+            <p id="muniCurrentPlanMeta"></p>
           </div>
-        </div>
-      </section>
+          <a class="signin-btn" id="muniAdminPanelLink2" href="#" target="_blank" rel="noopener" style="text-decoration:none;">Click to Visit Your Custom Admin Panel →</a>
+        </section>
+
+        <section class="muni-plans-section">
+          <h2>All Plans</h2>
+          <p>Browse every plan any time — pick a new one to upgrade, whether or not you've already paid.</p>
+          <p id="muniPlansLockedNote" class="form-message" hidden>You'll be able to choose a plan once your registration is approved.</p>
+          <div class="muni-plans-grid" id="muniAllPlansGrid"></div>
+        </section>
+
+        <section class="panel">
+          <h3>Payment History</h3>
+          <div class="muni-table-wrap">
+            <table class="muni-table" id="muniPaymentHistoryTable">
+              <thead>
+                <tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Reference</th></tr>
+              </thead>
+              <tbody id="muniPaymentHistoryBody"></tbody>
+            </table>
+          </div>
+          <p id="muniPaymentHistoryEmpty" class="muni-empty-note">No payments yet.</p>
+        </section>
+      </div>
+
+      <!-- ===== Profile ===== -->
+      <div class="muni-view" id="view-profile" hidden>
+        <section class="panel">
+          <h3>Municipality Profile</h3>
+          <div class="muni-detail-grid" id="muniProfileGrid"></div>
+        </section>
+      </div>
+
+      <!-- ===== Support ===== -->
+      <div class="muni-view" id="view-support" hidden>
+        <section class="panel">
+          <h3>Raise a Support Request</h3>
+          <form id="muniSupportForm">
+            <div class="muni-form-group">
+              <label for="muniSupportSubject">Subject <em>*</em></label>
+              <input type="text" id="muniSupportSubject" placeholder="e.g. Payment not reflecting" required />
+            </div>
+            <div class="muni-form-group">
+              <label for="muniSupportMessage">Message <em>*</em></label>
+              <textarea id="muniSupportMessage" rows="4" placeholder="Describe your issue or question" required></textarea>
+            </div>
+            <button type="submit" class="signin-btn" id="muniSupportSubmitBtn">Submit Request</button>
+          </form>
+          <p id="muniSupportFormMessage" class="form-message"></p>
+        </section>
+
+        <section class="panel">
+          <h3>Your Support Requests</h3>
+          <div id="muniSupportList"></div>
+          <p id="muniSupportListEmpty" class="muni-empty-note">You haven't raised any support requests yet.</p>
+        </section>
+      </div>
     </main>
   </div>
 

@@ -59,12 +59,14 @@ Deno.serve(async (req: Request) => {
   }
 
   const admin = createClient(supabaseUrl, serviceRoleKey);
+  const paidAt = new Date().toISOString();
+
   const { data: registration, error: updateError } = await admin
     .from('municipality_registrations')
     .update({
       plan,
       payment_status: 'paid',
-      paid_at: new Date().toISOString(),
+      paid_at: paidAt,
       stripe_session_id: sessionId,
     })
     .eq('id', registrationId)
@@ -74,6 +76,20 @@ Deno.serve(async (req: Request) => {
   if (updateError || !registration) {
     return json({ error: updateError?.message ?? 'Could not activate the plan.' }, 400);
   }
+
+  // Log this payment to history (Public Page's "Plans & Payment" tab reads
+  // from this table). Best-effort: a logging failure shouldn't undo an
+  // already-confirmed, already-activated payment.
+  await admin.from('municipality_payments').insert({
+    registration_id: registrationId,
+    user_id: registration.user_id,
+    plan,
+    amount: (session.amount_total ?? 0) / 100,
+    currency: session.currency ?? 'inr',
+    status: 'paid',
+    stripe_session_id: sessionId,
+    paid_at: paidAt,
+  });
 
   return json({ registration });
 });
