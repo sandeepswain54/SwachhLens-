@@ -1,0 +1,395 @@
+/* =========================================================
+   Municipality Dashboard (status + plans)
+   ========================================================= */
+.muni-app {
+  display: flex;
+  min-height: 100vh;
+  background: #f4f6f5;
+}
+
+.muni-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, var(--green-light), #f4f6f5 70%);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 22px 0;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.muni-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+
+.muni-sidebar-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: var(--green-dark);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.muni-sidebar-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-dark);
+}
+
+.muni-sidebar-header p {
+  font-size: 12px;
+  color: var(--gray);
+}
+
+.muni-nav {
+  list-style: none;
+  flex: 1;
+}
+
+.muni-nav li a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 22px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dark);
+  border-left: 3px solid transparent;
+}
+
+.muni-nav li a:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.muni-nav li.active a {
+  background: #fff;
+  border-left-color: var(--green-accent);
+  color: var(--green-dark);
+  font-weight: 700;
+}
+
+.muni-nav .nav-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.muni-sidebar-footer {
+  padding: 18px 22px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 14px;
+}
+
+.muni-sidebar-footer p {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--green-dark);
+}
+
+.muni-main {
+  flex: 1;
+  min-width: 0;
+  padding: 30px 36px 60px;
+}
+
+.muni-welcome-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.muni-welcome-row h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.muni-welcome-row > div:first-child > p {
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.muni-quote-chip {
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 13px;
+  border-radius: 10px;
+  padding: 10px 16px;
+}
+
+.muni-status-row {
+  display: grid;
+  grid-template-columns: 2fr 1.1fr;
+  gap: 18px;
+  margin-bottom: 30px;
+  align-items: stretch;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.muni-status-panel h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 22px;
+}
+
+.muni-stepper {
+  display: flex;
+  align-items: flex-start;
+}
+
+.muni-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.muni-step-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--border);
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  transition: background 0.2s, color 0.2s;
+}
+
+.muni-step.done .muni-step-circle {
+  background: var(--green-accent);
+  color: #fff;
+}
+
+.muni-step.current .muni-step-circle {
+  background: var(--yellow);
+  color: #fff;
+}
+
+.muni-step.rejected .muni-step-circle {
+  background: var(--red);
+  color: #fff;
+}
+
+.muni-step-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.muni-step-date {
+  font-size: 11px;
+  color: var(--gray);
+}
+
+.muni-step-line {
+  flex: 1;
+  height: 3px;
+  background: var(--border);
+  margin-top: 17px;
+  border-radius: 2px;
+}
+
+.muni-step-line.done {
+  background: var(--green-accent);
+}
+
+.muni-status-banner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.muni-status-banner .banner-icon {
+  font-size: 30px;
+}
+
+.muni-status-banner h4 {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.muni-status-banner p {
+  font-size: 13px;
+  color: var(--gray);
+}
+
+.muni-status-banner.approved { background: var(--green-light); }
+.muni-status-banner.approved h4 { color: var(--green-dark); }
+
+.muni-status-banner.rejected { background: #fdecea; }
+.muni-status-banner.rejected h4 { color: #b3261e; }
+
+.muni-status-banner.pending { background: var(--yellow-light, #fdf3e0); }
+.muni-status-banner.pending h4 { color: var(--yellow); }
+
+.muni-plans-section h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.muni-plans-section > p {
+  font-size: 13px;
+  color: var(--gray);
+  margin-bottom: 20px;
+}
+
+.muni-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.plan-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-card.popular {
+  border-color: var(--green-accent);
+  box-shadow: 0 4px 18px rgba(46, 158, 91, 0.15);
+}
+
+.plan-card.smart {
+  background: #fffaf0;
+  border-color: #f4d9a0;
+}
+
+.plan-badge {
+  position: absolute;
+  top: -12px;
+  right: 18px;
+  background: var(--green-dark);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.plan-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin-bottom: 6px;
+}
+
+.plan-card.smart h3 {
+  color: #b8860b;
+}
+
+.plan-price {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.plan-price span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray);
+}
+
+.plan-desc {
+  font-size: 13px;
+  color: var(--gray);
+  margin-bottom: 16px;
+}
+
+.plan-features {
+  list-style: none;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+.choose-plan-btn {
+  width: 100%;
+}
+
+.choose-plan-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.plan-confirmed {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--green-light);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-top: 6px;
+}
+
+.plan-confirmed-icon {
+  font-size: 30px;
+}
+
+.plan-confirmed h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--green-dark);
+  margin-bottom: 4px;
+}
+
+.plan-confirmed p {
+  font-size: 13px;
+  color: var(--gray);
+}
+
+@media (max-width: 1000px) {
+  .muni-status-row,
+  .muni-plans-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 800px) {
+  .muni-sidebar {
+    display: none;
+  }
+}

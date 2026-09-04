@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Register Your Municipality - SwachhLens</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===== Sticky Site Header (stays in place while the page scrolls) ===== -->
+  <div class="site-header">
+    <!-- ===== Top Government Bar ===== -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <img src="assets/logo2.png" alt="Ministry Emblem" class="gov-emblem" />
+        <div class="gov-text">
+          <p class="gov-line-en">Ministry of Housing and Urban Affairs</p>
+          <p class="gov-line-en small">Government of India</p>
+          <p class="gov-line-hi">आवास और शहरी कार्य मंत्रालय</p>
+          <p class="gov-line-hi small">भारत सरकार</p>
+        </div>
+      </div>
+
+      <div class="top-bar-center">
+        <img src="assets/applogo.png" alt="SwachhLens Logo" class="app-logo" />
+        <div class="brand-text">
+          <h1>Swachh<span>Lens</span></h1>
+          <p>AI-Powered Waste Management</p>
+        </div>
+      </div>
+
+      <div class="top-bar-right">
+        <img src="assets/logo3.jpg" alt="Swachh Bharat" class="campaign-logo" />
+      </div>
+    </header>
+
+    <!-- ===== Nav Bar ===== -->
+    <nav class="nav-bar">
+      <ul class="nav-links">
+        <li><a href="index.html">🏠 Home</a></li>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Services</a></li>
+        <li><a href="#">How It Works ◆</a></li>
+        <li><a href="#">Municipalities</a></li>
+        <li><a href="#">Resources</a></li>
+        <li><a href="#">Media</a></li>
+      </ul>
+      <div class="nav-right">
+        <div class="search-box">
+          <input type="text" placeholder="Search..." />
+          <button aria-label="Search">🔍</button>
+        </div>
+        <a href="login.html" class="municipality-btn">🏢 Municipality Login</a>
+        <a href="register.html" class="register-btn active-page">🏢 Register Your Municipality</a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ===== Breadcrumb ===== -->
+  <div class="breadcrumb">
+    <a href="index.html">🏠 Home</a> <span>»</span> <span class="current">Register Your Municipality</span>
+  </div>
+
+  <!-- ===== Register Content ===== -->
+  <main class="register-page">
+    <section class="register-form-panel">
+      <div class="register-heading">
+        <div class="register-heading-icon">🏢</div>
+        <div>
+          <h2>Register Your Municipality</h2>
+          <p>Join SwachhLens to access our AI-powered platform for better waste management, improved sanitation and cleaner cities. Fill in your details below to get started.</p>
+        </div>
+      </div>
+
+      <div class="register-feature-list">
+        <div class="register-feature">
+          <div class="register-feature-icon">🍃</div>
+          <span>Cleaner Cities</span>
+        </div>
+        <div class="register-feature">
+          <div class="register-feature-icon">👥</div>
+          <span>Healthier Communities</span>
+        </div>
+        <div class="register-feature">
+          <div class="register-feature-icon">📈</div>
+          <span>Sustainable Future</span>
+        </div>
+      </div>
+
+      <p id="registerFormMessage" class="form-message"></p>
+
+      <form class="register-form" id="registerForm">
+        <div class="form-section-label">Basic Information</div>
+        <div class="form-grid">
+          <label class="input-field">
+            <span class="input-icon">🏢</span>
+            <input type="text" placeholder="Enter municipality name" id="fMunicipalityName" required />
+            <span class="field-label">Municipality Name <em>*</em></span>
+          </label>
+          <label class="input-field">
+            <span class="input-icon">🌐</span>
+            <select id="fState" required>
+              <option value="" disabled selected>Select state</option>
+            </select>
+            <span class="field-label">State <em>*</em></span>
+          </label>
+
+          <label class="input-field">
+            <span class="input-icon">🏛️</span>
+            <select id="fDistrict" required disabled>
+              <option value="" disabled selected>Select state first</option>
+            </select>
+            <span class="field-label">District <em>*</em></span>
+          </label>
+          <label class="input-field">
+            <span class="input-icon">📍</span>
+            <input type="text" placeholder="Click to detect, or type manually" id="fCurrentLocation" required />
+            <button type="button" class="locate-btn" id="detectLocationBtn" title="Detect my current location">🎯</button>
+            <span class="field-label">Current Location <em>*</em></span>
+          </label>
+
+          <label class="input-field">
+            <span class="input-icon">🏙️</span>
+            <select id="fMunicipalityType" required>
+              <option value="" disabled selected>Select municipality type</option>
+              <option>Municipal Corporation</option>
+              <option>Municipal Council</option>
+              <option>Nagar Panchayat</option>
+            </select>
+            <span class="field-label">Municipality Type <em>*</em></span>
+          </label>
+          <label class="input-field">
+            <span class="input-icon">🔢</span>
+            <input type="text" placeholder="Enter municipality code" id="fMunicipalityCode" required />
+            <span class="field-label">Municipality Code (ULB Code) <em>*</em></span>
+          </label>
+        </div>
+
+        <div class="form-section-label">Account &amp; Contact Details</div>
+        <div class="form-grid">
+          <label class="input-field">
+            <span class="input-icon">✉️</span>
+            <input type="email" placeholder="Enter official email ID" id="fEmail" required />
+            <span class="field-label">Official Email ID <em>*</em></span>
+          </label>
+          <label class="input-field">
+            <span class="input-icon">🔒</span>
+            <input type="password" placeholder="Create a password (min. 6 characters)" id="fPassword" minlength="6" required />
+            <button type="button" class="toggle-eye small" id="toggleRegisterPassword">👁️</button>
+            <span class="field-label">Password <em>*</em></span>
+          </label>
+
+          <label class="input-field">
+            <span class="input-icon">👤</span>
+            <input type="text" placeholder="Enter designation" id="fDesignation" required />
+            <span class="field-label">Designation <em>*</em></span>
+          </label>
+          <label class="input-field">
+            <span class="input-icon">📞</span>
+            <input type="tel" placeholder="Enter 10 digit mobile number" id="fContactNumber" pattern="[0-9]{10}" required />
+            <span class="field-label">Contact Number <em>*</em></span>
+          </label>
+        </div>
+
+        <div class="form-section-label">Official Document</div>
+        <div class="form-grid single">
+          <div class="upload-field">
+            <span class="field-label">Upload Authorization Document <em>*</em></span>
+            <div class="upload-row">
+              <span class="input-icon">📄</span>
+              <label class="choose-file-btn">
+                Choose File
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" id="fAuthDoc" hidden />
+              </label>
+              <span class="file-name">No file chosen</span>
+            </div>
+            <p class="upload-hint">Upload official document (e.g., authorization letter, municipality registration certificate, etc.) PDF, JPG or PNG (Max 5 MB)</p>
+          </div>
+
+          <div class="upload-field">
+            <span class="field-label">Upload Municipality Image</span>
+            <div class="upload-row">
+              <span class="input-icon">🖼️</span>
+              <label class="choose-file-btn">
+                Choose File
+                <input type="file" accept=".jpg,.jpeg,.png" id="fMuniImage" hidden />
+              </label>
+              <span class="file-name">No file chosen</span>
+            </div>
+            <p class="upload-hint">Upload a photo of the municipality office/building (JPG or PNG, Max 5 MB)</p>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <a href="index.html" class="cancel-btn">Cancel</a>
+          <button type="submit" class="signin-btn" id="registerSubmitBtn">Submit Registration <span>→</span></button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="data-india.js"></script>
+  <script src="script.js"></script>
+  <script src="register.js"></script>
+</body>
+</html>

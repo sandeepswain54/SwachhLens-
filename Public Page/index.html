@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SwachhLens - AI-Powered Waste Management</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===== Sticky Site Header (stays in place while the page scrolls) ===== -->
+  <div class="site-header">
+    <!-- ===== Top Government Bar ===== -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <img src="assets/logo2.png" alt="Ministry Emblem" class="gov-emblem" />
+        <div class="gov-text">
+          <p class="gov-line-en">Ministry of Housing and Urban Affairs</p>
+          <p class="gov-line-en small">Government of India</p>
+          <p class="gov-line-hi">आवास और शहरी कार्य मंत्रालय</p>
+          <p class="gov-line-hi small">भारत सरकार</p>
+        </div>
+      </div>
+
+      <div class="top-bar-center">
+        <img src="assets/applogo.png" alt="SwachhLens Logo" class="app-logo" />
+        <div class="brand-text">
+          <h1>Swachh<span>Lens</span></h1>
+          <p>AI-Powered Waste Management</p>
+        </div>
+      </div>
+
+      <div class="top-bar-right">
+        <div class="top-bar-right-controls">
+          <button class="lang-select">🌐 English <span class="caret">▾</span></button>
+          <span class="divider">|</span>
+          <button class="font-btn">A+</button>
+          <span class="divider">|</span>
+          <button class="font-btn">A</button>
+          <span class="divider">|</span>
+          <button class="font-btn">A-</button>
+        </div>
+        <img src="assets/logo3.jpg" alt="Swachh Bharat" class="campaign-logo" />
+      </div>
+    </header>
+
+    <!-- ===== What's New Ticker ===== -->
+    <div class="ticker-bar">
+      <div class="ticker-label">📢 What's New</div>
+      <div class="ticker-viewport">
+        <div class="ticker-track">
+          <span>• SwachhLens now open for municipality registrations</span>
+          <span>• AI-based waste classification module launched</span>
+          <span>• Supporting cleaner, healthier and smarter cities</span>
+          <span>• Join the SwachhLens movement today</span>
+          <!-- duplicate for seamless loop -->
+          <span>• SwachhLens now open for municipality registrations</span>
+          <span>• AI-based waste classification module launched</span>
+          <span>• Supporting cleaner, healthier and smarter cities</span>
+          <span>• Join the SwachhLens movement today</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Nav Bar ===== -->
+    <nav class="nav-bar">
+      <ul class="nav-links">
+        <li class="active"><a href="#">🏠 Home</a></li>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Services</a></li>
+        <li><a href="#">How It Works</a></li>
+        <li><a href="#">Municipalities</a></li>
+        <li><a href="#">Resources</a></li>
+        <li><a href="#">Media</a></li>
+        <li><a href="#">Contact Us</a></li>
+      </ul>
+      <div class="nav-right">
+        <div class="search-box">
+          <input type="text" placeholder="Search..." />
+          <button aria-label="Search">🔍</button>
+        </div>
+        <a href="register.html" class="register-btn">🏛️ Register Your Municipality</a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ===== Main Content ===== -->
+  <main class="main-content">
+    <aside class="sidebar">
+      <div class="sidebar-card">
+        <div class="sidebar-icon">🏢</div>
+        <p>Municipality<br />Login</p>
+        <a href="login.html" class="sidebar-link">→</a>
+      </div>
+      <div class="sidebar-card highlight">
+        <div class="sidebar-icon">⚙️</div>
+        <p>SwachhLens<br />Admin</p>
+        <a href="admin-login.html" class="sidebar-link">→</a>
+      </div>
+    </aside>
+
+    <section class="hero">
+      <button class="carousel-arrow left" id="prevSlide" aria-label="Previous slide">‹</button>
+      <button class="carousel-arrow right" id="nextSlide" aria-label="Next slide">›</button>
+
+      <div class="carousel">
+        <div class="carousel-track" id="carouselTrack">
+          <div class="slide"><img src="assets/s1.png" alt="Slide 1" /></div>
+          <div class="slide"><img src="assets/s2.png" alt="Slide 2" /></div>
+          <div class="slide"><img src="assets/s3.png" alt="Slide 3" /></div>
+        </div>
+      </div>
+
+      <div class="carousel-dots" id="carouselDots"></div>
+    </section>
+  </main>
+
+  <!-- ===== Bottom Info Cards ===== -->
+  <section class="info-cards">
+    <div class="info-card">
+      <div class="info-icon">👥</div>
+      <div>
+        <h3>For Municipalities</h3>
+        <p>Join SwachhLens and transform your city's waste management.</p>
+      </div>
+      <span class="info-arrow">›</span>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">⚙️</div>
+      <div>
+        <h3>Our Services</h3>
+        <p>AI-powered tools for segregation, collection, disposal and more.</p>
+      </div>
+      <span class="info-arrow">›</span>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">📄</div>
+      <div>
+        <h3>Guidelines &amp; Resources</h3>
+        <p>Access documents, toolkits and best practices.</p>
+      </div>
+      <span class="info-arrow">›</span>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">🎧</div>
+      <div>
+        <h3>Need Help?</h3>
+        <p>Get in touch with our team for support.</p>
+      </div>
+      <span class="info-arrow">›</span>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>

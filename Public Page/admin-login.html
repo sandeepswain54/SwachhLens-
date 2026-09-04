@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SwachhLens Admin Login</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="login-page">
+
+    <!-- ===== Left: Image Panel ===== -->
+    <section class="login-image-panel admin-image-panel">
+      <img src="assets/image.png" alt="SwachhLens control room" class="login-bg-image" />
+
+      <div class="login-image-overlay">
+        <div class="login-image-tagline">
+          <h2>CLEAN CITIES<br />HEALTHY CITIZENS<br />BRIGHTER TOMORROW</h2>
+          <span class="leaf-icon">🍃</span>
+        </div>
+
+        <div class="login-image-footer">
+          <h3><span class="bar"></span>Together for<br />Cleaner &amp; Healthier Cities</h3>
+          <p>
+            Empowering municipalities with AI-driven solutions for waste
+            segregation, efficient disposal and improved sanitization systems.
+          </p>
+        </div>
+
+        <div class="login-signature">
+          Swachh<br />Bharat<br />Swasth Bharat
+        </div>
+
+        <div class="login-skyline"></div>
+      </div>
+    </section>
+
+    <!-- ===== Right: Admin Login Form Panel ===== -->
+    <section class="login-form-panel">
+      <img src="assets/logo3.jpg" alt="Swachh Bharat" class="login-campaign-logo" />
+
+      <div class="login-form-wrap">
+        <div class="login-brand">
+          <img src="assets/applogo.png" alt="SwachhLens Logo" />
+          <div>
+            <h1>SwachhLens</h1>
+            <p>AI-Powered Waste Management</p>
+          </div>
+        </div>
+
+        <div class="login-subtitle">
+          <span class="line"></span>
+          <p>Cleaner Cities. Healthier Tomorrow.</p>
+          <span class="line"></span>
+        </div>
+
+        <div class="admin-team-card">
+          <div class="admin-team-icon">👥</div>
+          <div>
+            <h2>SwachhLens Admin Team</h2>
+            <p>Login to manage municipalities, review applications, monitor usage and oversee platform operations.</p>
+          </div>
+        </div>
+
+        <p id="adminLoginError" class="admin-login-error">Invalid Admin ID or Password. Please try again.</p>
+
+        <form class="login-form" id="adminLoginForm">
+          <label class="input-field">
+            <span class="input-icon">👤</span>
+            <input type="text" placeholder="Admin ID / Email ID" id="adminUserId" autocomplete="username" />
+          </label>
+
+          <label class="input-field">
+            <span class="input-icon">🔒</span>
+            <input type="password" placeholder="Password" id="adminPassword" autocomplete="current-password" />
+            <button type="button" class="toggle-eye" id="toggleAdminPassword" aria-label="Show password">🙈</button>
+          </label>
+
+          <button type="submit" class="signin-btn">Sign In <span>→</span></button>
+        </form>
+
+        <hr />
+
+        <a href="index.html" class="back-home-link">← Back to Home</a>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

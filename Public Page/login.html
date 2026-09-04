@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Municipality Login - SwachhLens</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="login-page">
+
+    <!-- ===== Left: Image Panel ===== -->
+    <section class="login-image-panel">
+      <img src="assets/s4.png" alt="Clean cities, healthy citizens" class="login-bg-image" />
+
+      <div class="login-image-overlay">
+        <div class="login-gov-badge">
+          <img src="assets/logo2.png" alt="Ministry Emblem" />
+          <div>
+            <p>Ministry of Housing and Urban Affairs</p>
+            <p class="small">Government of India</p>
+            <p class="hi">आवास और शहरी कार्य मंत्रालय</p>
+            <p class="hi small">भारत सरकार</p>
+          </div>
+        </div>
+
+        <div class="login-image-tagline">
+          <h2>CLEAN CITIES<br />HEALTHY CITIZENS<br />BRIGHTER TOMORROW</h2>
+          <span class="leaf-icon">🍃</span>
+        </div>
+
+        <div class="login-image-footer">
+          <h3><span class="bar"></span>Together for<br />Cleaner &amp; Healthier Cities</h3>
+          <p>
+            Empowering municipalities with AI-driven solutions for waste
+            segregation, efficient disposal and improved sanitization systems.
+          </p>
+        </div>
+
+        <div class="login-signature">
+          Swachh<br />Bharat<br />Swasth Bharat
+        </div>
+
+        <div class="login-skyline"></div>
+      </div>
+    </section>
+
+    <!-- ===== Right: Login Form Panel ===== -->
+    <section class="login-form-panel">
+      <img src="assets/logo3.jpg" alt="Swachh Bharat" class="login-campaign-logo" />
+
+      <div class="login-form-wrap">
+        <div class="login-brand">
+          <img src="assets/applogo.png" alt="SwachhLens Logo" />
+          <div>
+            <h1>SwachhLens</h1>
+            <p>AI-Powered Waste Management</p>
+          </div>
+        </div>
+
+        <div class="login-subtitle">
+          <span class="line"></span>
+          <p>Cleaner Cities. Healthier Tomorrow.</p>
+          <span class="line"></span>
+        </div>
+
+        <div class="login-heading">
+          <div class="login-heading-icon">🏢</div>
+          <div>
+            <h2>Municipality Login</h2>
+            <p>Access your municipality dashboard to manage waste, sanitization and civic operations.</p>
+          </div>
+        </div>
+
+        <p id="loginFormMessage" class="form-message"></p>
+
+        <form class="login-form" id="municipalityLoginForm">
+          <label class="input-field">
+            <span class="input-icon">👤</span>
+            <input type="email" placeholder="User ID / Email ID" id="loginEmail" required />
+          </label>
+
+          <label class="input-field">
+            <span class="input-icon">🔒</span>
+            <input type="password" placeholder="Password" id="loginPassword" required />
+            <button type="button" class="toggle-eye" id="togglePassword" aria-label="Show password">🙈</button>
+          </label>
+
+          <button type="submit" class="signin-btn" id="municipalityLoginBtn">Sign In <span>→</span></button>
+
+          <a href="#" class="forgot-link">Forgot Password?</a>
+        </form>
+
+        <hr />
+
+        <div class="login-register-cta">
+          <p class="bold">New to SwachhLens?</p>
+          <p>Register your municipality to get access to our platform.</p>
+          <a href="register.html" class="outline-btn">🏢 Register Your Municipality</a>
+        </div>
+
+        <a href="index.html" class="back-home-link">← Back to Home</a>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="script.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

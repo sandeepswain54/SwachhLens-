@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Municipalities - SwachhLens Admin</title>
+<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="municipalities.css" />
+</head>
+<body>
+
+  <div class="admin-app">
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <div class="admin-sidebar-avatar">👥</div>
+        <div>
+          <h2>SwachhLens<br />Admin Team</h2>
+          <p>Central Admin</p>
+        </div>
+      </div>
+
+      <ul class="admin-nav">
+        <li><a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+        <li class="active"><a href="municipalities.html"><span class="nav-icon">🏢</span> Municipalities</a></li>
+        <li><a href="#"><span class="nav-icon">📄</span> Applications</a></li>
+        <li><a href="#"><span class="nav-icon">📚</span> Plan Management</a></li>
+        <li><a href="#"><span class="nav-icon">👤</span> User Management</a></li>
+        <li><a href="#"><span class="nav-icon">📊</span> Waste Reports</a></li>
+        <li><a href="#"><span class="nav-icon">🧠</span> AI Model &amp; Analytics</a></li>
+        <li><a href="#"><span class="nav-icon">🚛</span> Vehicles &amp; Collection</a></li>
+        <li><a href="#"><span class="nav-icon">📍</span> Sanitation Monitoring</a></li>
+        <li><a href="#"><span class="nav-icon">📢</span> Content &amp; Awareness</a></li>
+        <li><a href="#"><span class="nav-icon">⚙️</span> Settings</a></li>
+      </ul>
+
+      <div class="admin-sidebar-footer">
+        <p>Cleaner Cities<br />Healthier Tomorrow</p>
+      </div>
+    </aside>
+
+    <!-- ===== Main ===== -->
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div class="admin-breadcrumb">🏠 Home &nbsp;›&nbsp; Municipalities</div>
+        <div class="admin-topbar-right-group">
+          <div class="admin-bell">🔔<span class="badge" id="muniPendingBadge">0</span></div>
+          <a href="admin-login.html" id="adminLogout" class="admin-user-menu">
+            <span class="avatar">👤</span> Admin Team ▾
+          </a>
+        </div>
+      </div>
+
+      <div class="muni-mgmt-header">
+        <div>
+          <h1>Municipalities</h1>
+          <p>View and manage municipality registrations. Review details and approve or reject applications.</p>
+        </div>
+        <div class="muni-mgmt-search">
+          <input type="text" id="muniSearchInput" placeholder="Search municipality, district or state..." />
+        </div>
+      </div>
+
+      <div class="muni-tabs" id="muniTabs">
+        <button type="button" class="muni-tab active" data-tab="pending">Registration Applications (<span id="countPending">0</span>)</button>
+        <button type="button" class="muni-tab" data-tab="approved">Approved Municipalities (<span id="countApproved">0</span>)</button>
+        <button type="button" class="muni-tab" data-tab="rejected">Rejected Applications (<span id="countRejected">0</span>)</button>
+      </div>
+
+      <div class="muni-content-row">
+        <div class="panel muni-table-panel">
+          <div class="table-scroll">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Municipality Name</th>
+                  <th>State</th>
+                  <th>District</th>
+                  <th>Type</th>
+                  <th>Submitted On</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="muniTableBody">
+                <tr><td colspan="8" class="muni-empty">Loading municipalities…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== Detail Panel ===== -->
+        <div class="panel muni-detail-panel" id="muniDetailPanel" hidden>
+          <button type="button" class="muni-detail-close" id="muniDetailClose">✕</button>
+
+          <div class="muni-detail-head">
+            <div class="admin-sidebar-avatar" style="background:#fff;">🏢</div>
+            <div>
+              <h3 id="detailName">—</h3>
+              <span class="status-pill" id="detailStatusPill">—</span>
+              <span class="muni-detail-id">Application ID: <span id="detailId">—</span></span>
+            </div>
+          </div>
+
+          <div class="muni-detail-tabs">
+            <button type="button" class="muni-detail-tab active" data-detail-tab="basic">Basic Information</button>
+            <button type="button" class="muni-detail-tab" data-detail-tab="documents">Documents</button>
+          </div>
+
+          <div class="muni-detail-body" data-detail-panel="basic">
+            <dl class="muni-detail-list">
+              <dt>Municipality Name</dt><dd id="detailMunicipalityName">—</dd>
+              <dt>State</dt><dd id="detailState">—</dd>
+              <dt>District</dt><dd id="detailDistrict">—</dd>
+              <dt>Current Location</dt><dd id="detailLocation">—</dd>
+              <dt>Municipality Type</dt><dd id="detailType">—</dd>
+              <dt>Municipality Code</dt><dd id="detailCode">—</dd>
+              <dt>Official Email ID</dt><dd id="detailEmail">—</dd>
+              <dt>Contact Number</dt><dd id="detailContact">—</dd>
+              <dt>Designation</dt><dd id="detailDesignation">—</dd>
+            </dl>
+          </div>
+
+          <div class="muni-detail-body" data-detail-panel="documents" hidden>
+            <div class="muni-doc-row">
+              <span>📄 Authorization Document</span>
+              <a href="#" id="detailAuthDocLink" target="_blank" rel="noopener" class="panel-link">View →</a>
+            </div>
+            <div class="muni-doc-row">
+              <span>🖼️ Municipality Image</span>
+              <a href="#" id="detailImageLink" target="_blank" rel="noopener" class="panel-link">View →</a>
+            </div>
+          </div>
+
+          <div class="muni-review-section" id="muniReviewSection">
+            <h4>Review &amp; Action</h4>
+            <label for="muniComment">Comments <span class="req">(Required to reject)</span></label>
+            <textarea id="muniComment" rows="3" placeholder="Enter your comments here..."></textarea>
+            <div class="muni-review-actions">
+              <button type="button" class="reject-btn" id="muniRejectBtn">✕ Reject</button>
+              <button type="button" class="approve-btn" id="muniApproveBtn">✓ Approve</button>
+            </div>
+          </div>
+
+          <p id="muniDetailMessage" class="form-message"></p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="script.js"></script>
+  <script src="municipalities.js"></script>
+</body>
+</html>

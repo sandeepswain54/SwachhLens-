@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard - SwachhLens Admin</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="admin-app">
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <div class="admin-sidebar-avatar">👥</div>
+        <div>
+          <h2>SwachhLens<br />Admin Team</h2>
+          <p>Central Admin</p>
+        </div>
+      </div>
+
+      <ul class="admin-nav">
+        <li class="active"><a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+        <li><a href="municipalities.html"><span class="nav-icon">🏢</span> Municipalities</a></li>
+        <li><a href="#"><span class="nav-icon">📄</span> Applications</a></li>
+        <li><a href="#"><span class="nav-icon">📚</span> Plan Management</a></li>
+        <li><a href="#"><span class="nav-icon">👤</span> User Management</a></li>
+        <li><a href="#"><span class="nav-icon">📊</span> Waste Reports</a></li>
+        <li><a href="#"><span class="nav-icon">🧠</span> AI Model &amp; Analytics</a></li>
+        <li><a href="#"><span class="nav-icon">🚛</span> Vehicles &amp; Collection</a></li>
+        <li><a href="#"><span class="nav-icon">📍</span> Sanitation Monitoring</a></li>
+        <li><a href="#"><span class="nav-icon">📢</span> Content &amp; Awareness</a></li>
+        <li><a href="#"><span class="nav-icon">⚙️</span> Settings</a></li>
+      </ul>
+
+      <div class="admin-sidebar-footer">
+        <p>Cleaner Cities<br />Healthier Tomorrow</p>
+      </div>
+    </aside>
+
+    <!-- ===== Main ===== -->
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div class="admin-bell">🔔<span class="badge">5</span></div>
+        <a href="admin-login.html" id="adminLogout" class="admin-user-menu">
+          <span class="avatar">👤</span> Admin Team ▾
+        </a>
+      </div>
+
+      <div class="admin-welcome-row">
+        <div>
+          <h1>Welcome, SwachhLens Admin Team</h1>
+          <p>Monitor, manage and support municipalities for cleaner and healthier cities.</p>
+        </div>
+        <div class="admin-welcome-side">
+          <div class="admin-date-chip">📅 <span id="adminToday">Thursday, 04 Sep 2025</span></div>
+          <div class="admin-quote-chip">🍃 "Clean Cities. Healthy People. Stronger India."</div>
+        </div>
+      </div>
+
+      <!-- ===== Stat Cards ===== -->
+      <section class="admin-stats">
+        <div class="stat-card green">
+          <div class="stat-icon">🏢</div>
+          <div>
+            <div class="stat-value">128</div>
+            <p class="stat-label">Total Municipalities</p>
+            <span class="stat-trend up">↑ +12 this month</span>
+          </div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon">📄</div>
+          <div>
+            <div class="stat-value">37</div>
+            <p class="stat-label">Pending Applications</p>
+            <span class="stat-trend neutral">⇄ Needs Review</span>
+          </div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">✅</div>
+          <div>
+            <div class="stat-value">86</div>
+            <p class="stat-label">Approved Municipalities</p>
+            <span class="stat-trend up">↑ +8 this month</span>
+          </div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">✖</div>
+          <div>
+            <div class="stat-value">5</div>
+            <p class="stat-label">Rejected Applications</p>
+            <span class="stat-trend down">↓ -2 this month</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Municipalities / Application Status / Quick Actions ===== -->
+      <section class="admin-grid-3">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Municipalities by State</h3>
+          </div>
+          <div class="state-row"><span class="state-rank">1</span><span class="state-name">Maharashtra</span><span class="state-count">24</span></div>
+          <div class="state-row"><span class="state-rank">2</span><span class="state-name">Uttar Pradesh</span><span class="state-count">18</span></div>
+          <div class="state-row"><span class="state-rank">3</span><span class="state-name">Tamil Nadu</span><span class="state-count">15</span></div>
+          <div class="state-row"><span class="state-rank">4</span><span class="state-name">Karnataka</span><span class="state-count">12</span></div>
+          <div class="state-row"><span class="state-rank">5</span><span class="state-name">Telangana</span><span class="state-count">10</span></div>
+          <a href="#" class="view-all-btn">View All States →</a>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Application Status</h3>
+            <select><option>This Month</option></select>
+          </div>
+          <div class="donut-wrap">
+            <div class="donut">
+              <div class="donut-center">
+                <strong>128</strong>
+                <span>Total</span>
+              </div>
+            </div>
+            <div class="donut-legend">
+              <div><span class="legend-dot green"></span> Approved &nbsp;86 (67%)</div>
+              <div><span class="legend-dot yellow"></span> Under Review &nbsp;37 (29%)</div>
+              <div><span class="legend-dot red"></span> Rejected &nbsp;5 (4%)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Quick Actions</h3>
+          </div>
+          <div class="quick-actions-list">
+            <a href="municipalities.html">📄 View New Applications <span class="qa-arrow">›</span></a>
+            <a href="#">📚 Manage Plans <span class="qa-arrow">›</span></a>
+            <a href="#">🏢 Add Municipality <span class="qa-arrow">›</span></a>
+            <a href="#">📊 Generate Reports <span class="qa-arrow">›</span></a>
+            <a href="#">⚙️ System Settings <span class="qa-arrow">›</span></a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Recent Applications / Platform Usage ===== -->
+      <section class="admin-grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Recent Applications</h3>
+            <a href="#" class="panel-link">View All →</a>
+          </div>
+          <table class="admin-table">
+            <thead>
+              <tr><th>#</th><th>Municipality</th><th>State</th><th>Submitted On</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>Raipur Municipal Council</td><td>Chhattisgarh</td><td>04 Sep 2025</td><td><span class="status-pill review">Under Review</span></td></tr>
+              <tr><td>2</td><td>Mysuru City Corporation</td><td>Karnataka</td><td>03 Sep 2025</td><td><span class="status-pill approved">Approved</span></td></tr>
+              <tr><td>3</td><td>Gaya Municipal Council</td><td>Bihar</td><td>02 Sep 2025</td><td><span class="status-pill review">Under Review</span></td></tr>
+              <tr><td>4</td><td>Dehradun Municipal Corp.</td><td>Uttarakhand</td><td>01 Sep 2025</td><td><span class="status-pill approved">Approved</span></td></tr>
+              <tr><td>5</td><td>Udaipur Municipal Council</td><td>Rajasthan</td><td>31 Aug 2025</td><td><span class="status-pill rejected">Rejected</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Platform Usage (Last 30 Days)</h3>
+            <a href="#" class="panel-link">View Details →</a>
+          </div>
+          <div class="usage-grid">
+            <div class="usage-tile">
+              <div class="stat-icon green">👥</div>
+              <div>
+                <strong>1,245</strong>
+                <span class="usage-label">Total Users</span>
+                <span class="stat-trend up">↑ +18%</span>
+              </div>
+            </div>
+            <div class="usage-tile">
+              <div class="stat-icon blue">🚛</div>
+              <div>
+                <strong>3,420</strong>
+                <span class="usage-label">Waste Reports</span>
+                <span class="stat-trend up">↑ +12%</span>
+              </div>
+            </div>
+            <div class="usage-tile">
+              <div class="stat-icon green">📍</div>
+              <div>
+                <strong>820</strong>
+                <span class="usage-label">Issues Resolved</span>
+                <span class="stat-trend up">↑ +25%</span>
+              </div>
+            </div>
+            <div class="usage-tile">
+              <div class="stat-icon yellow">📶</div>
+              <div>
+                <strong>96%</strong>
+                <span class="usage-label">System Uptime</span>
+                <span class="stat-trend up">↑ +2%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
