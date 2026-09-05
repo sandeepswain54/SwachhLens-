@@ -187,6 +187,54 @@ const LANGUAGE_NAME: Record<string, string> = {
   or: 'Odia (ଓଡ଼ିଆ)',
 };
 
+// ---- Retry/timeout wrapper ----
+//
+// Gemini occasionally returns 503 ("model is currently experiencing high
+// demand") or other transient errors — these are momentary upstream
+// overload, not something wrong with the request, and used to bubble
+// straight up to the UI as a hard failure. Retrying a couple of times with
+// a short backoff clears almost all of them without the user ever seeing an
+// error. A per-attempt timeout also keeps a stalled request from hanging
+// the analysis screen indefinitely instead of failing fast enough to retry.
+const REQUEST_TIMEOUT_MS = 20000;
+const RETRY_DELAYS_MS = [600, 1800]; // 2 retries => 3 attempts total
+
+function isRetryableStatus(status: number) {
+  return status === 503 || status === 429 || status === 500 || status === 502 || status === 504;
+}
+
+async function fetchGeminiWithRetry(url: string, body: unknown): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!response.ok && isRetryableStatus(response.status) && attempt < RETRY_DELAYS_MS.length) {
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+        continue;
+      }
+      return response;
+    } catch (err) {
+      clearTimeout(timeout);
+      lastError = err;
+      if (attempt < RETRY_DELAYS_MS.length) {
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+        continue;
+      }
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Could not reach the AI service. Please check your connection and try again.');
+}
+
 function stripCodeFence(text: string) {
   const trimmed = text.trim();
   if (trimmed.startsWith('```')) {
@@ -223,23 +271,19 @@ export async function analyzeWasteMedia(params: {
       ? `\n\nLanguage: write every free-text value (explanation, visualEvidence, scaleReference, reason, and each risk's explanation) in ${languageName}, in natural everyday wording an ordinary citizen would use — not a literal machine translation. detectedObjects entries should also be in ${languageName}. Keep every enum field (primaryType, secondaryType, size, level, priority, typeComparison[].type) exactly as one of the fixed English tokens listed above — never translate those.`
       : '';
 
-  const response = await fetch(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            { text: PROMPT + locationContext + languageInstruction },
-            { inlineData: { mimeType: params.mimeType, data: params.base64 } },
-          ],
-        },
-      ],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: RESPONSE_SCHEMA,
+  const response = await fetchGeminiWithRetry(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
+    contents: [
+      {
+        parts: [
+          { text: PROMPT + locationContext + languageInstruction },
+          { inlineData: { mimeType: params.mimeType, data: params.base64 } },
+        ],
       },
-    }),
+    ],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: RESPONSE_SCHEMA,
+    },
   });
 
   if (!response.ok) {
@@ -311,24 +355,20 @@ export async function validateWasteImage(params: {
     throw new Error('Missing EXPO_PUBLIC_GEMINI_API_KEY. Check your .env file.');
   }
 
-  const response = await fetch(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            { text: VALIDATION_PROMPT },
-            { inlineData: { mimeType: params.mimeType, data: params.base64 } },
-          ],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.1,
-        responseMimeType: 'application/json',
-        responseSchema: VALIDATION_SCHEMA,
+  const response = await fetchGeminiWithRetry(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
+    contents: [
+      {
+        parts: [
+          { text: VALIDATION_PROMPT },
+          { inlineData: { mimeType: params.mimeType, data: params.base64 } },
+        ],
       },
-    }),
+    ],
+    generationConfig: {
+      temperature: 0.1,
+      responseMimeType: 'application/json',
+      responseSchema: VALIDATION_SCHEMA,
+    },
   });
 
   if (!response.ok) {

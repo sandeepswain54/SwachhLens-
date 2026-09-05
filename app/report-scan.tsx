@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -54,7 +54,14 @@ export default function ReportScanScreen() {
   const [completedSteps, setCompletedSteps] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [invalidImage, setInvalidImage] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
   const [spin] = useState(() => new Animated.Value(0));
+  // Holds the media this run actually operates on. Seeded from the initial
+  // media once, then kept in sync as the privacy-protection step swaps in
+  // the protected file — so a retry (after e.g. a transient network/503
+  // error) re-runs against the right file in place, without the user having
+  // to leave this screen and recapture/reselect the photo.
+  const activeMediaRef = useRef(media);
 
   const STEP_KEYS = useMemo(
     () => (media?.kind === 'video' ? VIDEO_STEP_KEYS : IMAGE_STEP_KEYS),
@@ -79,6 +86,9 @@ export default function ReportScanScreen() {
       router.replace('/report');
       return;
     }
+    if (retryToken === 0) {
+      activeMediaRef.current = media;
+    }
 
     let cancelled = false;
     const stepTimer = setInterval(() => {
@@ -86,23 +96,24 @@ export default function ReportScanScreen() {
     }, 900);
 
     async function run() {
+      const activeMedia = activeMediaRef.current!;
       try {
         const locationPromise = fetchLocation().catch(() => null);
-        const originalBase64 = await FileSystem.readAsStringAsync(media!.uri, {
+        const originalBase64 = await FileSystem.readAsStringAsync(activeMedia.uri, {
           encoding: FileSystem.EncodingType.Base64,
         });
 
         let analysisBase64 = originalBase64;
-        let analysisMimeType = media!.mimeType;
+        let analysisMimeType = activeMedia.mimeType;
 
-        if (media!.kind === 'image') {
+        if (activeMedia.kind === 'image') {
           // 1. Waste image validation — reject anything that isn't a
           // genuine waste/sanitation issue before any further processing,
           // so nothing invalid is ever privacy-processed, analyzed, or
           // stored.
           const validation = await validateWasteImage({
             base64: originalBase64,
-            mimeType: media!.mimeType,
+            mimeType: activeMedia.mimeType,
           });
           if (cancelled) return;
           if (!validation.isValid) {
@@ -117,7 +128,7 @@ export default function ReportScanScreen() {
           // unprotected photo.
           const protectedImage = await protectImagePrivacy({
             base64: originalBase64,
-            mimeType: media!.mimeType,
+            mimeType: activeMedia.mimeType,
           });
           if (cancelled) return;
 
@@ -131,8 +142,11 @@ export default function ReportScanScreen() {
           });
           // Every screen downstream (preview, Gemini analysis, upload) now
           // only ever sees this privacy-protected file — the original never
-          // gets read again.
-          setMedia({ uri: protectedUri, mimeType: protectedImage.mimeType, kind: 'image' });
+          // gets read again. Kept in the ref too, so a retry after this
+          // point re-runs against the protected file, not the original.
+          const protectedMedia = { uri: protectedUri, mimeType: protectedImage.mimeType, kind: 'image' as const };
+          activeMediaRef.current = protectedMedia;
+          setMedia(protectedMedia);
 
           analysisBase64 = protectedImage.base64;
           analysisMimeType = protectedImage.mimeType;
@@ -175,14 +189,17 @@ export default function ReportScanScreen() {
       cancelled = true;
       clearInterval(stepTimer);
     };
-    // Deliberately empty: this must run exactly once against the media this
-    // screen was navigated to with. It intentionally does NOT depend on
-    // `media` — the privacy-protection step below calls setMedia() partway
-    // through this same run() to swap in the protected file for downstream
-    // screens, and re-running this effect off that change would re-validate
-    // and re-protect the already-protected image.
+    // Deliberately excludes `media`: this must run exactly once per attempt
+    // against activeMediaRef, not re-fire off of it. The privacy-protection
+    // step calls setMedia() partway through run() to swap in the protected
+    // file for downstream screens — re-running this effect off of that
+    // context update would re-validate and re-protect the already-protected
+    // image. `retryToken` is the only intended re-run trigger: bumping it
+    // (from the "Try Again" button) re-runs run() against whatever
+    // activeMediaRef currently holds, in place, without navigating the user
+    // back to recapture/reselect the photo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [retryToken]);
 
   const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
@@ -197,7 +214,24 @@ export default function ReportScanScreen() {
           <Text style={styles.errorSubtitle}>{error}</Text>
           <Pressable
             style={styles.retryButton}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/report'))}>
+            onPress={() => {
+              // A rejected (non-waste) image needs a different photo, so send
+              // the user back to capture/pick one. Any other failure (network
+              // hiccup, upstream 503, timeout, ...) is retried in place against
+              // the same file — no need to make the user recapture anything.
+              if (invalidImage) {
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  router.replace('/report');
+                }
+              } else {
+                setError(null);
+                setInvalidImage(false);
+                setCompletedSteps(0);
+                setRetryToken((n) => n + 1);
+              }
+            }}>
             <Text style={styles.retryButtonText}>{t('reportScan.tryAgain')}</Text>
           </Pressable>
         </View>
